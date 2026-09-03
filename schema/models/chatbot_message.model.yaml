@@ -1,0 +1,64 @@
+# =============================================================================
+# livechat — the chatbot execution log: ChatbotMessage.
+#
+# PORT DECISIONS (SPEC.md §1.1, §6.1): upstream stored chatbot utterances as
+# mail messages keyed UNIQUE(mail_message_id). The port keeps the module's
+# OWN execution log linked to the carrier's message id by a partial unique
+# (WHERE carrier_message_id IS NOT NULL — landing in hardening; parked rows
+# carry no carrier id). read_only over HTTP — system-only writes through the
+# chokepoint.
+# =============================================================================
+
+models:
+
+  - name: ChatbotMessage
+    collection: chatbot_messages
+    read_only: true
+    description: "ChatbotMessage — the per-session chatbot execution log: one row per bot step posted (or per visitor answer captured), linked to the carrier message by a partial unique. This table plus sessions.chatbot_current_step_id is the ENTIRE bot runtime state. Read-only over HTTP (system-only writes)."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      session_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(Session.sessions)", "@indexed"]
+        description: "The session whose bot run this row logs."
+      step_id:
+        type: uuid?
+        attributes: ["@foreign_key(ChatbotStep.chatbot_steps)", "@indexed"]
+        description: "The step this row posted (NULL on visitor-answer captures)."
+      carrier_message_id:
+        type: string?
+        attributes: ["@max(200)", "@exclude_from_foreign_key_check"]
+        description: "The mail carrier's message id — partial UNIQUE WHERE NOT NULL (upstream's UNIQUE(mail_message_id) translated; a parked row has none yet)."
+      selected_answer_id:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check"]
+        description: "On answer captures: the chosen option (logical ref; the report's deterministic label join keys off it)."
+      visitor_answer:
+        type: string?
+        attributes: ["@max(2000)"]
+        description: "On answer/free-input captures: the SANITIZED plain text (raw HTML is never stored anywhere)."
+      created_at:
+        type: datetime
+        attributes: ["@required", "@default(now)", "@indexed"]
+        description: "When the row landed (the execution log's order)."
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Owning company (strict fence — logical corporate ref)."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    relations:
+      session:
+        type: Session
+        attributes: ["@one", "@foreign_key(session_id)", "@restrict"]
+        description: "The session whose bot run this row logs"
+      step:
+        type: ChatbotStep?
+        attributes: ["@one", "@foreign_key(step_id)", "@restrict"]
+        description: "The step this row posted (NULL on visitor-answer captures)"

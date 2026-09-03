@@ -1,0 +1,109 @@
+# =============================================================================
+# livechat — the URL routing rules: ChannelRule.
+#
+# PORT DECISIONS (SPEC.md §7.6, LC-R14):
+#  - channel_id is REQUIRED: orphan rules are not representable (declared
+#    delta from upstream).
+#  - regex_url is validated AT SAVE in Rust (regex::Regex::new): malformed →
+#    typed 422 livechat_rule_regex_invalid; the EMPTY string is refused —
+#    upstream's empty-regex-matches-everything is gone; match-all is an
+#    explicit ".*".
+#  - The regex matches the request Referer — display config ONLY, never an
+#    authorization input.
+#  - Matching is two-pass (country-specific rules first, then countryless);
+#    when no rule matches the availability answer is available:false
+#    explicitly (upstream silently omitted the key).
+#  - chatbot_script_id: inactive or stepless scripts are skipped at match
+#    time. FK strand-risk note: the pinned generator numbers table files
+#    alphabetically, and this table sorts before chatbot_scripts — the FK is
+#    hand-frozen and re-homed in the hardening migration (the events
+#    generator-defect freeze pattern).
+# =============================================================================
+
+models:
+
+  - name: ChannelRule
+    collection: channel_rules
+    description: "ChannelRule — a URL-regex display rule on a channel: which pages show the button/text, auto-popup with its timer, or hide it — and the optional chatbot script the match routes to. Referer matching is display config only, never authorization."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      channel_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(Channel.channels)", "@indexed"]
+        description: "The rule's channel (required — orphan rules are not representable)."
+      regex_url:
+        type: string
+        attributes: ["@required", "@max(500)"]
+        description: "The URL pattern matched against the Referer. Validated at save (malformed → 422 livechat_rule_regex_invalid); EMPTY is refused — match-all is an explicit '.*'."
+      action:
+        type: LivechatRuleAction
+        attributes: ["@required", "@default(display_button)"]
+        description: "What a match does to the widget."
+      auto_popup_timer:
+        type: int
+        attributes: ["@required", "@default(0)", "@non_negative"]
+        description: "Auto-popup delay in seconds (read only under action = auto_popup)."
+      chatbot_script_id:
+        type: uuid?
+        attributes: ["@foreign_key(ChatbotScript.chatbot_scripts)", "@indexed"]
+        description: "The chatbot script a match routes to (skipped at match when inactive or stepless). The human ladder runs only at a forward step or when no script matched."
+      chatbot_enabled_condition:
+        type: LivechatChatbotCondition
+        attributes: ["@required", "@default(always)"]
+        description: "When the matched script is offered: always, only with no operator online, or only with an operator online."
+      country_codes:
+        type: string[]
+        attributes: ["@required"]
+        description: "ISO-3166 alpha-2 codes narrowing the rule (empty = countryless pass). Country-specific rules match first (the two-pass order)."
+      sequence:
+        type: int
+        attributes: ["@required", "@default(1)", "@non_negative"]
+        description: "Tie-break order within a pass."
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Owning company (strict fence — logical corporate ref)."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    relations:
+      channel:
+        type: Channel
+        attributes: ["@one", "@foreign_key(channel_id)", "@restrict"]
+        description: "The rule's channel"
+      chatbot_script:
+        type: ChatbotScript?
+        attributes: ["@one", "@foreign_key(chatbot_script_id)", "@restrict"]
+        description: "The script a match routes to (optional)"
+
+
+enums:
+
+  - name: LivechatRuleAction
+    description: "What a matched URL rule does to the widget"
+    variants:
+      - name: display_button
+        description: "Show the chat button (the default)"
+        default: true
+      - name: display_button_and_text
+        description: "Show the button plus the welcome text"
+      - name: auto_popup
+        description: "Open the chat automatically after auto_popup_timer seconds"
+      - name: hide_button
+        description: "Hide the button on matching pages"
+
+  - name: LivechatChatbotCondition
+    description: "When a matched chatbot script is offered"
+    variants:
+      - name: always
+        description: "Offer the script on every match (the default)"
+        default: true
+      - name: only_if_no_operator
+        description: "Only when no operator passes the availability gate"
+      - name: only_if_operator
+        description: "Only when at least one operator is online"

@@ -1,0 +1,89 @@
+# =============================================================================
+# livechat — the member-history ledger: MemberHistory.
+#
+# PORT DECISIONS (SPEC.md §5, LEDGER-UNIQUES): the dual-duty ledger — the
+# per-participant reporting snapshot AND the table the ladder's ongoing
+# counts run against. The constraint family (3 partial uniques + the STRICT
+# persona trichotomy banning both-NULL rows too) lands in the hardening
+# migration of this module's own sequence (the events partial-unique
+# pattern). Rejoins re-point, never duplicate: inserts are ON CONFLICT
+# (persona unique index) DO UPDATE rebinds. read_only over HTTP —
+# system-only writes.
+# =============================================================================
+
+models:
+
+  - name: MemberHistory
+    collection: member_histories
+    read_only: true
+    description: "MemberHistory — the per-participant ledger: one row per (session, agent), (session, visitor), (session, bot) by partial unique; the escalation derive (>1 agent row), rating attribution, once-only response time, and per-participant message counts key off these rows. Read-only over HTTP (system-only writes)."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      session_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(Session.sessions)", "@indexed"]
+        description: "The session this participation belongs to (RESTRICT — ledger rows outlive nothing)."
+      persona:
+        type: LivechatPersona
+        attributes: ["@required", "@indexed"]
+        description: "agent | visitor | bot — frozen at create, never rewritten; each persona binds exactly its identity column (the strict trichotomy CHECK)."
+      operator_user_id:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check"]
+        description: "The agent's user id (persona = 'agent' only; logical ref)."
+      visitor_key:
+        type: string?
+        attributes: ["@max(120)"]
+        description: "The WEBSITE visitor digest (persona = 'visitor' only) — bridge-minted; livechat never mints its own visitor identity."
+      chatbot_script_id:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check"]
+        description: "The script the bot row ran (persona = 'bot' only; logical ref)."
+      joined_at:
+        type: datetime
+        attributes: ["@required", "@default(now)"]
+        description: "First join; a rejoin rebind resets this to now() and clears left_at."
+      left_at:
+        type: datetime?
+        description: "NULL = still a member (the bot row's left_at is the forward handoff's unfollow)."
+      message_count:
+        type: int
+        attributes: ["@required", "@default(0)", "@non_negative"]
+        description: "This participant's messages through the chokepoint."
+      response_time_secs:
+        type: int?
+        description: "The agent row's once-only first-response seconds (written only while NULL)."
+      expertise_names:
+        type: string[]?
+        description: "The agent-expertise freeze at join (labels, not ids — deterministic reporting)."
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check", "@indexed"]
+        description: "Owning company (strict fence — logical corporate ref)."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    relations:
+      session:
+        type: Session
+        attributes: ["@one", "@foreign_key(session_id)", "@restrict"]
+        description: "The session this participation belongs to"
+
+
+enums:
+
+  - name: LivechatPersona
+    description: "The ledger's persona trichotomy — each persona binds exactly its identity column"
+    variants:
+      - name: agent
+        description: "An operator (operator_user_id set)"
+        default: true
+      - name: visitor
+        description: "A visitor (visitor_key set)"
+      - name: bot
+        description: "The chatbot (chatbot_script_id set)"

@@ -1,0 +1,110 @@
+# =============================================================================
+# livechat Module - Schema Index
+# =============================================================================
+# Version: 1.0
+# Description: Module schema index. `module:`/`schema:` give this module its
+# OWN Postgres schema `livechat` (migrations emit `CREATE SCHEMA livechat`
+# and qualify tables as `livechat.<table>`) — the convention every backbone
+# module follows. The CRATE is `backbone-livechat` (the whole upstream
+# im_livechat + website_livechat addon pair absorbs into it) while the SCHEMA
+# is `livechat`, per the crate-name/schema-name relationship of
+# backbone-website/`website` and backbone-events/`event`. Routes mount under
+# the schema name: /api/v1/livechat.
+#
+# Enum types are created UNQUALIFIED in the `public` schema (the module
+# convention). Every enum name below is prefixed `livechat_` and was
+# census-checked against the module tree before landing; the census re-runs
+# before the enum migration lands.
+# =============================================================================
+
+module: livechat
+version: 1
+schema: livechat
+description: "livechat — the visitor/operator chat port: sessions under a deterministic operator-selection ladder (capacity, stickiness, language/expertise rungs — one window, a 120s anti-burst buffer on every path, no die roll), the member-history ledger behind three DB uniques plus a strict persona trichotomy, the chatbot pointer state machine (one column + message rows, seven closed step types), a declared public surface gated by Tier A HMAC guest capabilities with per-IP/per-identity throttles, and the operator-initiated website invite overlays re-homed onto this module's own tables (Odoo im_livechat + website_livechat port)"
+
+# =============================================================================
+# company_fence (ADR-0014): multi-tenant row-level-security posture
+# -----------------------------------------------------------------------------
+# Posture: strict — every table carries company_id NOT NULL. Livechat is a
+# per-company operating surface (channels, operators, sessions, transcripts
+# are all tenant-owned; there is NO shared master data in this domain — even
+# tags and expertise are per-company canonical namespaces). The RLS fence
+# from the generated enable_company_rls migration therefore admits exactly
+# the rows whose company_id equals the bound app.company_id; the NULL arm of
+# the standard policy text is inert by construction (company_id is NOT NULL
+# everywhere).
+# -----------------------------------------------------------------------------
+company_fence: strict
+
+config:
+  database: postgresql
+  soft_delete: false         # livechat rows hard-delete only through their
+                             # own verbs (config CRUD deletes); sessions are
+                             # NEVER deleted — endings are close_reason rows
+  audit: true
+  default_timestamps: true
+  generators:
+    disabled:
+      - graphql
+      - grpc
+      - proto
+
+# No sapiens edge: operators authenticate through the host's company_auth
+# (their user ids are logical uuid columns — @exclude_from_foreign_key_check,
+# the events partner-ref posture); visitors are website-visitor digests from
+# the host-composed website bridge, never a second identity family.
+
+# Shared value-object types available to all models in this module.
+shared_types:
+  Timestamps:
+    created_at:
+      type: datetime
+      attributes: ["@default(now)"]
+      description: "Record creation timestamp"
+    updated_at:
+      type: datetime
+      attributes: ["@updated_at"]
+      description: "Last update timestamp"
+    deleted_at:
+      type: datetime?
+      description: "Soft delete timestamp (unused under soft_delete: false — kept for the standard metadata shape)"
+
+  Actors:
+    # Plain nullable uuids — NO sapiens edge in this module (operators arrive
+    # through the host's company_auth; system edges — the sweeps, the bot —
+    # are NULL).
+    created_by:
+      type: uuid?
+      attributes: ["@exclude_from_foreign_key_check"]
+      description: "Officer who created this record (logical ref — no cross-schema constraint)"
+    updated_by:
+      type: uuid?
+      attributes: ["@exclude_from_foreign_key_check"]
+      description: "Officer who last updated this record (logical ref)"
+    deleted_by:
+      type: uuid?
+      attributes: ["@exclude_from_foreign_key_check"]
+      description: "Officer who deleted this record (logical ref)"
+
+  Metadata: [Timestamps, Actors]
+
+# Import each entity model. Discovery is a recursive glob, but the list is
+# kept accurate for readers.
+imports:
+  - channel.model.yaml                # Channel
+  - channel_member.model.yaml         # ChannelMember
+  - operator_profile.model.yaml       # OperatorProfile
+  - expertise_tag.model.yaml          # ExpertiseTag
+  - operator_expertise.model.yaml     # OperatorExpertise
+  - channel_rule.model.yaml           # ChannelRule
+  - session.model.yaml                # Session (runtime)
+  - member_history.model.yaml         # MemberHistory (the ledger)
+  - chatbot_script.model.yaml         # ChatbotScript
+  - chatbot_step.model.yaml           # ChatbotStep
+  - chatbot_answer.model.yaml         # ChatbotAnswer
+  - chatbot_step_trigger.model.yaml   # ChatbotStepTrigger
+  - chatbot_message.model.yaml        # ChatbotMessage (the execution log)
+  - rating.model.yaml                 # Rating
+  - conversation_tag.model.yaml       # ConversationTag
+  - session_tag.model.yaml            # SessionTag
+  - livechat_audit_log.model.yaml     # LivechatAuditLog

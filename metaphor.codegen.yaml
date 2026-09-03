@@ -1,0 +1,175 @@
+# Codegen policy for livechat (crate backbone-livechat).
+#
+# `user_owned` globs are hand-written files that live inside generator-owned
+# trees but are NOT schema-derived. `metaphor schema generate [--force]`
+# skips them wholesale (never reads, merges, or deletes them). Everything
+# else in src/ is regenerated from schema/models.
+#
+# Re-exports/declarations that must sit alongside generated code live inside
+# `// <<< CUSTOM ... // END CUSTOM` markers (application/service/
+# mod.rs, exports/services.rs) and are preserved by the marker mechanism,
+# not listed here. lib.rs is the one exception — see the freeze entry below.
+#
+# Declared BEFORE any file lands (the regen-safety contract): a landing
+# without the declaration is clobbered on the next regen; a declaration
+# without the file is the dangling class removed by review — later seats
+# extend this list on the same contract, declaring each hand file in the
+# same change that lands it.
+
+user_owned:
+
+  # ⚠ GENERATOR-DEFECT FREEZE (pinned generator only): the builder
+  # constructor's `LivechatModule { ... }` initializer in lib.rs
+  # carries a hand-added `livechat_pool: db_pool.clone(),` line the
+  # generator's template does not emit (the field IS in the struct's
+  # CUSTOM FIELDS block; the initializer is not). A `--force` regen
+  # rebuilds the constructor body and drops that line, leaving the
+  # crate at E0063 (missing field `livechat_pool`) — observed live on
+  # this module, and the same constructor-body marker unreliability
+  # the blog module documented (marker blocks nested inside emitted
+  # constructor bodies survived some regens and were silently dropped
+  # by others, in one sitting). lib.rs is frozen at its current state
+  # (generated wiring plus the marker blocks). Regen skips it
+  # wholesale. Unlist ONLY after the generator honors hand edits
+  # inside emitted constructor bodies deterministically; until then
+  # any schema change that alters the builder/module wiring must be
+  # hand-merged here.
+  - "src/lib.rs"
+
+  # The module's typed error surface (one enum, HTTP mappings) — shared by
+  # every hand service below.
+  - "src/application/service/livechat_error.rs"
+
+  # Tier A capability tokens (the guest/invite family): HMAC-SHA256,
+  # domain-separated ("livechat-capability-v1"), constant-time verify,
+  # fail-closed secret. Two purposes at this version: the 24h
+  # guest-session capability and the 15m invite-accept capability.
+  - "src/application/service/capability.rs"
+
+  # FixedWindows (per-IP/per-identity shaping) + LivechatRatePolicy —
+  # the declared throttle consts of the public surface.
+  - "src/application/service/throttle.rs"
+
+  # The deterministic operator-selection ladder: the ONE set-based
+  # statement (capacity + 120s buffer inside the pool, rung 0..9, total
+  # order, no randomness), the ONE 30-minute ongoing-window predicate
+  # shared with availability, and the audited assignment write.
+  - "src/application/service/selection_service.rs"
+
+  # Session verbs (the generated CRUD alias stays for lib.rs wiring) +
+  # open/resume, close, serialized take, forward, restart, need-help,
+  # the ONE message chokepoint (four duties), and the per-record
+  # outcome derive (never a recordset-wide assignment).
+  - "src/application/service/session_service.rs"
+
+  # The chatbot pointer state machine: the seven-type closure, lazy
+  # welcome materialization, forward-only routing, the answer/free-input
+  # contracts, the forward handoff, and bot-only completion.
+  - "src/application/service/chatbot_service.rs"
+
+  # The website button answer: host -> website -> channel, the two-pass
+  # rule match against the Referer (display config ONLY), the
+  # operators/chatbot availability decision, and the pending-invite
+  # surface.
+  - "src/application/service/availability_service.rs"
+
+  # The rating verb (generated CRUD alias + the once-per-session wall,
+  # 1/5/10 validation, operator-path attribution, notifier prompt).
+  - "src/application/service/rating_service.rs"
+
+  # The bounded-window report reads over the security_invoker view
+  # (required from/to, 366-day cap, windowed happiness KPI).
+  - "src/application/service/report_service.rs"
+
+  # The two scheduled passes (host jobs loop): the idle-close sweep and
+  # the invite-expiry sweep — SKIP LOCKED bounded batches, per-row
+  # audits, no untraced deletes.
+  - "src/application/service/sweep_service.rs"
+
+  # The operator-initiated website chat request lifecycle (per-visitor
+  # binding, invisible-until-operator-message, cancel-both-sides,
+  # audited expiry) + the merge relink verb.
+  - "src/application/service/website_request_service.rs"
+
+  # Ports (carriers that park loudly):
+  #  - website_bridge: resolve_website_by_host / track_visit /
+  #    visitor_key — refusing default 503 (blocking for open and
+  #    availability; the host composes over backbone-website).
+  #  - mail_port: post/fetch/remove messages — refusing default 503
+  #    (blocking for the message verbs; chatbot steps park on
+  #    sessions.error_detail + audit instead).
+  #  - transcript_port: the transcript mailer — refusing default 503
+  #    (blocking at the transcript verb).
+  #  - notifier_port: cancel/rating-prompt notices — the UNWIRED
+  #    default WARNs and answers notified=false (NON-blocking: the
+  #    write is never refused by the port).
+  #  - digest_port: the operator digest queue — refusing default 503
+  #    (blocking at the digest verb; KPI reads never need it).
+  #  - rtc_port: the realtime carrier — mounted nowhere at this pin;
+  #    exists to carry the join-not-start law (visitors may join an
+  #    existing session call, never start one) when a transport lands.
+  - "src/application/service/website_bridge.rs"
+  - "src/application/service/mail_port.rs"
+  - "src/application/service/transcript_port.rs"
+  - "src/application/service/notifier_port.rs"
+  - "src/application/service/digest_port.rs"
+  - "src/application/service/rtc_port.rs"
+
+  # Hand repositories carrying the transactional SQL the services
+  # compose (services hold no raw sqlx — the DDD boundary). Every
+  # transactional method binds the company scope first; direct-pool
+  # statements go through the backbone-orm company_scope *_scoped
+  # helpers.
+  - "src/infrastructure/persistence/selection_repository.rs"
+  - "src/infrastructure/persistence/session_command_repository.rs"
+  - "src/infrastructure/persistence/member_history_repository.rs"
+  - "src/infrastructure/persistence/chatbot_command_repository.rs"
+  - "src/infrastructure/persistence/rating_repository.rs"
+  - "src/infrastructure/persistence/website_request_repository.rs"
+  - "src/infrastructure/persistence/report_repository.rs"
+  - "src/infrastructure/persistence/sweep_repository.rs"
+
+  # The officer tree's law-carrying config verbs (channels, operator
+  # profiles, tags, rules, scripts/steps/answers/triggers): hand SQL
+  # through the company_scope helpers, save-time validators (regex
+  # compile, seven-type closure, forward-only triggers, canonical
+  # lower(name) uniques typed as 409s).
+  - "src/infrastructure/persistence/admin_config_repository.rs"
+
+  # The declared public surface (the nine-path allowlist) — mounted
+  # BARE of company_auth by the host; capability tokens + the
+  # per-IP/per-identity fixed windows are the fence. No CORS-permissive
+  # arm exists.
+  - "src/presentation/http/public_routes.rs"
+
+  # The officer tree. The host mounts it behind company_auth with the
+  # module-write gate keyed "livechat" as the innermost route layer;
+  # the LivechatActor request extension carries the officer id.
+  - "src/presentation/http/admin_routes.rs"
+
+  # Hand-written DDL: the session-report SQL view (security_invoker —
+  # the fence flows through the view) and the hardening tail (the
+  # ledger's 3 partial uniques + the strict persona trichotomy, the
+  # lower(name) canonical uniques, max_sessions > 0, the ended=>no-status
+  # CHECK, the chatbot_messages carrier partial unique, the ratings
+  # value CHECK, the forward-only trigger shape notes).
+  - "migrations/20260426220019_create_session_report_view.up.sql"
+  - "migrations/20260426220019_create_session_report_view.down.sql"
+  - "migrations/*hardening*"
+
+  # Hand-authored module documentation (operator + spec).
+  - "README.md"
+  - "SPEC.md"
+  - "CLAUDE.md"
+  - "docs/**"
+
+  # The fail-hard probe suite (fresh scratch DB on 5433,
+  # LIVECHAT_TEST_ADMIN_URL override; a missing scratch Postgres panics
+  # the suite): the ladder determinism + buffer-every-path + ONE-window
+  # gates, the per-record outcome derive, the ledger uniques + strict
+  # trichotomy, the chatbot pointer machine, the capability boundary
+  # (uniform 404 family, wrong-token-never-mints), the throttle windows,
+  # rating-once, the website bridge overlays, the sweep lifecycle, the
+  # audit trail, and the fenced-runtime RLS claims under a NOSUPERUSER
+  # NOBYPASSRLS probe role.
+  - "tests/**"

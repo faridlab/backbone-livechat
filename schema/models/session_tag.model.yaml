@@ -1,0 +1,46 @@
+# =============================================================================
+# livechat — the session/tag binding: SessionTag.
+# =============================================================================
+
+models:
+
+  - name: SessionTag
+    collection: session_tags
+    description: "SessionTag — the binding of a conversation tag to a session: (session_id, tag_id) UNIQUE. Tag delete cascades here (plain FK cascade)."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      session_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(Session.sessions)", "@indexed"]
+        description: "The tagged session."
+      tag_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(ConversationTag.conversation_tags)", "@indexed"]
+        description: "The tag (CASCADE on tag delete)."
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Owning company (strict fence — logical corporate ref)."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    relations:
+      session:
+        type: Session
+        attributes: ["@one", "@foreign_key(session_id)", "@restrict"]
+        description: "The tagged session"
+      tag:
+        type: ConversationTag
+        attributes: ["@one", "@foreign_key(tag_id)", "@cascade"]
+        description: "The tag (cascades here on tag delete)"
+
+
+indexes:
+      - type: unique
+        fields: [session_id, tag_id]
+        description: "One binding per (session, tag)"

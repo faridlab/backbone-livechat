@@ -1,0 +1,76 @@
+# =============================================================================
+# livechat — the rating: Rating (LC-8 hardened).
+#
+# PORT DECISIONS (SPEC.md §7.7): session_id is UNIQUE — one rating per
+# session by DB constraint (repeat submits are a typed 409; upstream's
+# silent overwrite is refused). value CHECK IN (1,5,10) lands in hardening;
+# validated at the verb. Attribution binds to the ledger's agent/bot row of
+# the session's operator at rating time (the ONE answer — upstream's
+# channel_partner_ids[0] vs livechat_operator_id disagreement is resolved
+# to the operator path).
+# =============================================================================
+
+models:
+
+  - name: Rating
+    collection: ratings
+    description: "Rating — the visitor's session rating: one per session (UNIQUE(session_id)), the three-emoji scale 1/5/10, and the persona-bound attribution snapshot (agent → operator_user_id; bot → chatbot_script_id)."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      session_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(Session.sessions)", "@unique", "@indexed"]
+        description: "The rated session — UNIQUE: the DB constraint that replaces read-then-create; a repeat submit is the typed 409 livechat_rating_already_submitted."
+      value:
+        type: int
+        attributes: ["@required"]
+        description: "1 (unhappy) | 5 (neutral) | 10 (happy) — validated at the verb and CHECK-constrained."
+      rated_persona:
+        type: LivechatRatedPersona
+        attributes: ["@required", "@default(agent)"]
+        description: "Which persona the rating attributes to (the ledger's agent/bot row of the session's operator at rating time)."
+      operator_user_id:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check"]
+        description: "The attributed agent (rated_persona = 'agent'): the session's operator at rating time."
+      chatbot_script_id:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check"]
+        description: "The attributed script (rated_persona = 'bot'): the ledger bot row's script."
+      comment:
+        type: string?
+        attributes: ["@max(2000)"]
+        description: "Free-text comment (sanitized plain text)."
+      created_at:
+        type: datetime
+        attributes: ["@required", "@default(now)"]
+        description: "When the rating landed."
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Owning company (strict fence — logical corporate ref)."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    relations:
+      session:
+        type: Session
+        attributes: ["@one", "@foreign_key(session_id)", "@restrict"]
+        description: "The rated session"
+
+
+enums:
+
+  - name: LivechatRatedPersona
+    description: "Which persona a rating attributes to"
+    variants:
+      - name: agent
+        description: "The human operator (operator_user_id snapshot — the resolved ONE answer)"
+        default: true
+      - name: bot
+        description: "The chatbot (chatbot_script_id snapshot off the ledger's bot row)"

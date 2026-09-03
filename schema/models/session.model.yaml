@@ -1,0 +1,193 @@
+# =============================================================================
+# livechat — the runtime row: Session.
+#
+# PORT DECISIONS (SPEC.md §4, §6, §10):
+#  - read_only over HTTP: sessions are born only through the public open
+#    verb / the invite verb / the test verb, and written only by the declared
+#    verbs (close/take/forward/restart/chokepoint/need-help/sweeps).
+#  - Open = closed_at IS NULL; close_reason records which ending fired;
+#    CHECK (closed_at IS NULL OR status IS NULL) lands in hardening
+#    (upstream's ended⇒no-status constraint).
+#  - status machine waiting | in_progress | need_help; failure column with
+#    declared writers only (born no_answer on the human path, no_failure on
+#    the bot path; the operator's first message clears; a forward that finds
+#    nobody writes no_agent).
+#  - operator_user_id and chatbot_current_step_id are LOGICAL uuids (no SQL
+#    FK — step deletion is refused at the verb, not by cascade).
+#  - Bridge columns (website_visitor_id, is_pending_request,
+#    visitor_country_code, visitor_timezone) re-home upstream's five
+#    website-side columns onto this module's own table — zero website-side
+#    schema changes.
+#  - error_detail is the loud parking lot (carrier refusals park here +
+#    audit; never a silent skip).
+# =============================================================================
+
+models:
+
+  - name: Session
+    collection: sessions
+    read_only: true
+    description: "Session — one visitor conversation. Open = closed_at IS NULL; the status machine (waiting/in_progress/need_help), the failure column with declared writers, the chatbot pointer, the operator binding, the bridge overlays (pending request, visitor facts), and the message counters. Read-only over HTTP — system-only writes through the declared verbs."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      channel_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(Channel.channels)", "@indexed"]
+        description: "The channel that routed this session."
+      title:
+        type: string?
+        attributes: ["@max(300)"]
+        description: "Officer-facing title — set at the forward handoff ('<visitor label> / <operator display name>')."
+      status:
+        type: LivechatSessionStatus?
+        attributes: ["@default(waiting)"]
+        description: "waiting | in_progress | need_help. Born waiting; flips to in_progress on assignment, first operator message, first visitor post; need_help only via the explicit verbs. NULL when closed (the ended⇒no-status CHECK)."
+      failure:
+        type: LivechatFailure
+        attributes: ["@required", "@default(no_failure)"]
+        description: "no_answer | no_agent | no_failure — declared writers only: born no_answer on the human path / no_failure on the bot path; the operator's first message clears to no_failure; a forward that finds nobody writes no_agent; a successful forward resets to no_answer until the human speaks."
+      outcome:
+        type: LivechatSessionOutcome?
+        description: "The stored report column, derived per record at the writes that change its inputs: 'escalated' when agent ledger rows > 1, else the failure value. Never assigned recordset-wise inside an iteration (the upstream compute-in-loop defect is not ported)."
+      close_reason:
+        type: LivechatCloseReason?
+        description: "Which ending fired: visitor_left | operator_closed | bot_completed | expired | cancelled | request_declined."
+      closed_at:
+        type: datetime?
+        description: "NULL = open. Every ending is an audited verb or sweep; sessions are never hard-deleted."
+      operator_user_id:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check", "@indexed"]
+        description: "The assigned operator — LOGICAL ref into the host identity store (no FK, no crate edge)."
+      chatbot_current_step_id:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check"]
+        description: "The chatbot pointer — a LOGICAL uuid into chatbot_steps (no SQL FK: step deletion is refused at the verb, never cascaded). NULL = no script running."
+      expertise_names:
+        type: string[]?
+        description: "The expertise labels frozen at forward time (the step's tags; labels, not ids)."
+      website_visitor_id:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check", "@indexed"]
+        description: "The website visitor row id (bridge overlay — logical ref; the visitor digest itself lives on ledger rows as visitor_key)."
+      visitor_country_code:
+        type: string?
+        attributes: ["@max(2)"]
+        description: "The visitor's ISO country at session create (bridge overlay; the country rung's input)."
+      visitor_timezone:
+        type: string?
+        attributes: ["@max(60)"]
+        description: "The visitor's IANA timezone at session create (bridge overlay)."
+      is_pending_request:
+        type: bool
+        attributes: ["@required", "@default(false)"]
+        description: "The operator-initiated invite flag (bridge overlay): the pending session is INVISIBLE to the visitor until the operator's first message; accept/decline/expiry/visitor-opens-own all clear it with audits."
+      visitor_language:
+        type: string?
+        attributes: ["@max(35)"]
+        description: "The visitor's BCP-47 language (rung 1-3 input)."
+      message_count:
+        type: int
+        attributes: ["@required", "@default(0)", "@non_negative"]
+        description: "Total messages through the chokepoint."
+      first_response_at:
+        type: datetime?
+        description: "The operator's first message instant — written ONCE (only while NULL); the report's time-to-answer source."
+      last_interest_at:
+        type: datetime
+        attributes: ["@required", "@default(now)", "@indexed"]
+        description: "The ONE ongoing-window anchor: any chokepoint write refreshes it. 'Ongoing' = closed_at IS NULL AND last_interest_at >= now() - LIVECHAT_ONGOING_WINDOW_SECS (the single 30-minute window; no second constant exists)."
+      last_visitor_message_at:
+        type: datetime?
+        description: "The visitor's last message instant."
+      last_operator_message_at:
+        type: datetime?
+        description: "The operator's last message instant."
+      is_test:
+        type: bool
+        attributes: ["@required", "@default(false)"]
+        description: "Test sessions are born through the operator-gated test verb, drive the REAL surface, and are excluded from availability counts and the report."
+      error_detail:
+        type: string?
+        attributes: ["@max(500)"]
+        description: "The loud parking lot: a typed carrier refusal that parked (chatbot steps, transcript cleanup) — audit row + this column is the durable trace; never a silent skip."
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check", "@indexed"]
+        description: "Owning company (strict fence — logical corporate ref)."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    relations:
+      channel:
+        type: Channel
+        attributes: ["@one", "@foreign_key(channel_id)", "@restrict"]
+        description: "The channel that routed this session"
+
+
+indexes:
+      - type: index
+        fields: [channel_id, last_interest_at]
+        description: "The console's per-channel recency read"
+      - type: index
+        fields: [operator_user_id]
+        description: "The assignment pool's ongoing count"
+
+enums:
+
+  - name: LivechatSessionStatus
+    description: "The session status machine (NULL when closed)"
+    variants:
+      - name: waiting
+        description: "Born here — no operator has engaged (the default)"
+        default: true
+      - name: in_progress
+        description: "Assigned, or the first message (either side) landed"
+      - name: need_help
+        description: "The explicit operator distress flag (set/cleared only by the verbs)"
+
+  - name: LivechatFailure
+    description: "The failure column — declared writers only"
+    variants:
+      - name: no_answer
+        description: "Human path: no operator message yet"
+      - name: no_agent
+        description: "A forward (or open) found nobody"
+      - name: no_failure
+        description: "The clear state (the default; the bot path's birth value)"
+        default: true
+
+  - name: LivechatSessionOutcome
+    description: "The stored report column: per-record derived at the writes that change its inputs"
+    variants:
+      - name: no_failure
+        description: "No failure recorded (an operator engaged)"
+        default: true
+      - name: no_answer
+        description: "Never answered"
+      - name: no_agent
+        description: "Nobody was available"
+      - name: escalated
+        description: "More than one agent ledger row (handed off)"
+
+  - name: LivechatCloseReason
+    description: "Which ending fired (audited)"
+    variants:
+      - name: visitor_left
+        description: "The visitor's own close verb"
+        default: true
+      - name: operator_closed
+        description: "The operator close verb (also the last-operator-unfollow path)"
+      - name: bot_completed
+        description: "The router hit last-step with no agent ever joining"
+      - name: expired
+        description: "The idle-close sweep (24h without interest)"
+      - name: cancelled
+        description: "The invite cancel verb (operator side)"
+      - name: request_declined
+        description: "The invite expiry sweep (nobody accepted)"

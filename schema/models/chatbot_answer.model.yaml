@@ -1,0 +1,43 @@
+# =============================================================================
+# livechat — the chatbot static graph: ChatbotAnswer.
+# =============================================================================
+
+models:
+
+  - name: ChatbotAnswer
+    collection: chatbot_answers
+    description: "ChatbotAnswer — one option of a question_selection step: (question_step_id, sequence) ordering, its label, and an optional external redirect that ends the script at the router."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      question_step_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(ChatbotStep.chatbot_steps)", "@indexed"]
+        description: "The question step this option belongs to (RESTRICT)."
+      sequence:
+        type: int
+        attributes: ["@required", "@non_negative"]
+        description: "Display order among the step's options."
+      label:
+        type: string
+        attributes: ["@required", "@max(200)"]
+        description: "The option's label (sanitized plain text)."
+      redirect_url:
+        type: url?
+        description: "External redirect on this answer — validated at the verb; choosing it ends the script."
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Owning company (strict fence — logical corporate ref)."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    relations:
+      question_step:
+        type: ChatbotStep
+        attributes: ["@one", "@foreign_key(question_step_id)", "@restrict"]
+        description: "The question step this option belongs to"

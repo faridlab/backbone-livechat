@@ -1,0 +1,52 @@
+# =============================================================================
+# livechat — the chatbot static graph: ChatbotStepTrigger.
+#
+# PORT DECISIONS (SPEC.md §6.3): forward-only at SAVE — a trigger whose
+# target step's sequence is <= the answering step's sequence is a typed 422
+# refusal (upstream pruned backwards edges with a stored-EDITABLE compute;
+# the port refuses them at the verb). The routing rule itself: the
+# no-triggering step wins first, else per-step AND / within-step OR.
+# =============================================================================
+
+models:
+
+  - name: ChatbotStepTrigger
+    collection: chatbot_step_triggers
+    description: "ChatbotStepTrigger — a conditional edge: choosing answer_id (on its question step) routes to target_step_id. UNIQUE(target_step_id, answer_id); forward-only at save (a backwards edge is a typed 422)."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      answer_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(ChatbotAnswer.chatbot_answers)", "@indexed"]
+        description: "The answer that fires the edge (its question step is the answering step)."
+      target_step_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(ChatbotStep.chatbot_steps)", "@indexed"]
+        description: "The step routed to (its sequence must be > the answering step's — checked at save)."
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Owning company (strict fence — logical corporate ref)."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    relations:
+      answer:
+        type: ChatbotAnswer
+        attributes: ["@one", "@foreign_key(answer_id)", "@restrict"]
+        description: "The answer that fires the edge"
+      target_step:
+        type: ChatbotStep
+        attributes: ["@one", "@foreign_key(target_step_id)", "@restrict"]
+        description: "The step routed to"
+
+
+indexes:
+      - type: unique
+        fields: [target_step_id, answer_id]
+        description: "One edge per (target, answer)"

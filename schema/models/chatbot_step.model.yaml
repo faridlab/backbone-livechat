@@ -1,0 +1,80 @@
+# =============================================================================
+# livechat — the chatbot static graph: ChatbotStep.
+#
+# PORT DECISIONS (SPEC.md §6.1/6.2, CHATBOT): the step vocabulary is CLOSED
+# at the seven community types — there is no create_lead / create_ticket arm
+# and no reserved seam for them (the docstring-promised crm/helpdesk bridges
+# are absent upstream). expertise_tag_ids is uuid[] (LOGICAL refs — labels
+# freeze onto the session at forward time).
+# =============================================================================
+
+models:
+
+  - name: ChatbotStep
+    collection: chatbot_steps
+    description: "ChatbotStep — one node of a script's static graph: (chatbot_script_id, sequence) UNIQUE, one of the seven closed step types, its message, and (on forward steps) the expertise tags the handoff stamps the session with. Step deletion is refused at the verb when a session's pointer references the step."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      chatbot_script_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(ChatbotScript.chatbot_scripts)", "@indexed"]
+        description: "The owning script (RESTRICT)."
+      sequence:
+        type: int
+        attributes: ["@required", "@non_negative"]
+        description: "The step's order within the script (UNIQUE per script). Routing is forward-only: sequence must increase."
+      step_type:
+        type: LivechatStepType
+        attributes: ["@required", "@default(text)"]
+        description: "One of the SEVEN closed types — text, question_selection, question_email, question_phone, forward_operator, free_input_single, free_input_multi."
+      message:
+        type: string?
+        attributes: ["@max(5000)"]
+        description: "The step's posted message (sanitized plain text; raw HTML is never stored)."
+      expertise_tag_ids:
+        type: uuid[]?
+        description: "On forward steps: the expertise tags the handoff stamps onto the session (LOGICAL refs into expertise_tags; labels freeze at forward)."
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Owning company (strict fence — logical corporate ref)."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    relations:
+      chatbot_script:
+        type: ChatbotScript
+        attributes: ["@one", "@foreign_key(chatbot_script_id)", "@restrict"]
+        description: "The owning script"
+
+
+indexes:
+      - type: unique
+        fields: [chatbot_script_id, sequence]
+        description: "One step per sequence per script (routing's total order)"
+
+enums:
+
+  - name: LivechatStepType
+    description: "The chatbot step vocabulary — CLOSED at the seven community types (no create_lead / create_ticket arms exist or are reserved)"
+    variants:
+      - name: text
+        description: "A one-way message (the default)"
+        default: true
+      - name: question_selection
+        description: "A multiple-choice question (answers live in chatbot_answers)"
+      - name: question_email
+        description: "An email capture (normalized at the verb; invalid → 422 livechat_input_invalid)"
+      - name: question_phone
+        description: "A phone capture (normalized at the verb; invalid → 422 livechat_input_invalid)"
+      - name: forward_operator
+        description: "The handoff to a human — runs the ladder, then the script continues"
+      - name: free_input_single
+        description: "One line of free text (sanitized)"
+      - name: free_input_multi
+        description: "Multi-line free text (sanitized)"

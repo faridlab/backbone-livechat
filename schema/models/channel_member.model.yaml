@@ -1,0 +1,49 @@
+# =============================================================================
+# livechat — the operator pool: ChannelMember.
+#
+# PORT DECISIONS (SPEC.md §7.2, LC-12): upstream modeled operator-ness as a
+# res.groups membership with a duplicated res.users/res.groups removal
+# cascade. The port makes membership a plain (channel_id, user_id) row —
+# membership IS operator-ness — and the removal cascade becomes ONE declared
+# verb ("leave all channels"). user_id is a LOGICAL uuid into the host's
+# identity store (no FK, no crate edge — the events partner-ref posture).
+# =============================================================================
+
+models:
+
+  - name: ChannelMember
+    collection: channel_members
+    description: "ChannelMember — an operator's membership of a channel's pool: (channel_id, user_id) UNIQUE. Membership IS operator-ness; the operator-removal cascade is the one declared leave-all verb, never a duplicated identity-store write."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      channel_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(Channel.channels)", "@indexed"]
+        description: "The pool this membership belongs to."
+      user_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check", "@indexed"]
+        description: "The operator's user id — LOGICAL ref into the host identity store (no FK, no crate edge)."
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Owning company (strict fence — logical corporate ref)."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    relations:
+      channel:
+        type: Channel
+        attributes: ["@one", "@foreign_key(channel_id)", "@restrict"]
+        description: "The pool this membership belongs to"
+
+
+    indexes:
+      - type: unique
+        fields: [channel_id, user_id]
+        description: "One membership row per (channel, operator) — add and remove are idempotent at the DB grain"

@@ -1,0 +1,112 @@
+# =============================================================================
+# livechat — the audit vocabulary: LivechatAuditLog (the website/events
+# record_audit shape).
+#
+# Append-only, service-emitted by the verbs. Rows are never updated, never
+# deleted by application code. The closed vocabulary carries every
+# security-relevant edge: capability refusals, throttle refusals, assignment
+# decisions (the ladder's replay — determinism makes the audit row a
+# faithful record), endings, invites, and carrier parks. Every refusal is a
+# durable fact too.
+# =============================================================================
+
+models:
+
+  - name: LivechatAuditLog
+    collection: livechat_audit_log
+    read_only: true
+    description: "LivechatAuditLog — the durable verb trail. Append-only: every session open/close/reopen, assignment decision (with rung and candidate count), chatbot pointer move/restart/forward, help flag, rating, invite lifecycle edge, relink, carrier park, and capability/throttle refusal lands as one row with structured detail."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      event:
+        type: LivechatAuditEvent
+        attributes: ["@required", "@indexed"]
+        description: "WHAT happened — the closed enum (one row shape per security-relevant edge)."
+      actor:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check"]
+        description: "WHO performed it — the acting operator (logical ref) or NULL for system edges (the sweeps, the bot)."
+      subject_type:
+        type: string?
+        attributes: ["@max(120)"]
+        description: "The subject's entity kind ('session', 'channel', 'capability')."
+      subject_id:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check"]
+        description: "The subject's id, when the subject is a row."
+      detail:
+        type: json?
+        description: "Structured context (rung, candidates, buffer/window consts, refusal codes) — facts only."
+      created_at:
+        type: datetime
+        attributes: ["@required", "@default(now)"]
+        description: "When the edge happened."
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Owning company (strict fence — logical corporate ref)."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    indexes:
+      - type: index
+        fields: [event, created_at]
+        description: "The per-event-kind timeline read"
+
+enums:
+
+  - name: LivechatAuditEvent
+    description: "The closed audit vocabulary — every verb edge, including refusals"
+    variants:
+      - name: session_opened
+        description: "The public open verb created a session (routing decision in detail)"
+        default: true
+      - name: operator_assigned
+        description: "The ladder assigned an operator (rung, candidates_considered, buffer_applied, window_secs in detail — the deterministic replay)"
+      - name: operator_busy
+        description: "A take/assign first-wins loser got the typed 409 (the serialized UPDATE refused)"
+      - name: assignment_empty
+        description: "The ladder found no candidate — the defined no_agent path (still audited)"
+      - name: session_closed
+        description: "An ending fired (visitor_left / operator_closed / bot_completed / expired / cancelled / request_declined in detail)"
+      - name: session_reopened
+        description: "The chatbot-restart verb reopened a closed session"
+      - name: session_rated
+        description: "A rating landed (value + persona in detail)"
+      - name: rating_refused
+        description: "A rating submit was refused (already-submitted / invalid value) — the refusal is a durable fact"
+      - name: chatbot_step_reached
+        description: "The pointer advanced (step id + sequence in detail)"
+      - name: chatbot_restarted
+        description: "The admin restart verb ran (reset_failure flag in detail — reset or EXPLICIT preserve)"
+      - name: chatbot_forwarded
+        description: "A forward step ran the ladder (outcome: assigned or no_agent)"
+      - name: help_requested
+        description: "The need-help verb set the flag"
+      - name: help_resolved
+        description: "The resolve-need-help verb cleared the flag"
+      - name: invite_created
+        description: "The operator-initiated invite verb created the pending session"
+      - name: invite_delivered
+        description: "The operator's first message surfaced the pending invite to the visitor"
+      - name: invite_cancelled
+        description: "A pending invite was cancelled (operator verb or visitor-opens-own — visitor wins)"
+      - name: invite_accepted
+        description: "The visitor accepted the invite (the livechat-invite-accept capability verified)"
+      - name: invite_expired
+        description: "The invite-expiry sweep closed a pending session nobody accepted"
+      - name: visitor_relinked
+        description: "The relink verb rebound sessions.website_visitor_id (composed with the website merge)"
+      - name: carrier_parked
+        description: "A carrier refusal parked on sessions.error_detail + this row (never a silent skip)"
+      - name: capability_refused
+        description: "A capability route refused a token (bad/expired/cross-session/secret-unset) — the uniform 404 family, still a durable fact"
+      - name: throttled
+        description: "A throttle window refused a request (route + window in detail)"
+      - name: test_session_opened
+        description: "The operator-gated test verb opened an is_test session on the real surface"

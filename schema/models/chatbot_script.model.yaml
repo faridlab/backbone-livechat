@@ -1,0 +1,39 @@
+# =============================================================================
+# livechat — the chatbot static graph: ChatbotScript.
+#
+# PORT DECISIONS (SPEC.md §6): upstream carried an archived bot partner row.
+# The port drops it — the bot IS a script; its display name is the title.
+# =============================================================================
+
+models:
+
+  - name: ChatbotScript
+    collection: chatbot_scripts
+    description: "ChatbotScript — a scripted conversation: the static graph of steps/answers/triggers. Inactive or stepless scripts are skipped at rule match."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      title:
+        type: string
+        attributes: ["@required", "@max(200)"]
+        description: "The script's title (also the bot's display name — no archived partner row exists)."
+      is_active:
+        type: bool
+        attributes: ["@required", "@default(true)"]
+        description: "Inactive scripts never match rules."
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check", "@indexed"]
+        description: "Owning company (strict fence — logical corporate ref)."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    relations:
+      steps:
+        type: ChatbotStep[]
+        attributes: ["@one_to_many", "@foreign_key(chatbot_script_id)", "@restrict"]
+        description: "The script's steps (the static graph)"

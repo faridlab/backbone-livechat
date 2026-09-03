@@ -1,0 +1,58 @@
+# =============================================================================
+# livechat — the operator's module-owned profile: OperatorProfile.
+#
+# PORT DECISIONS (SPEC.md §7.3, LC-13/LC-13b): upstream proxied livechat
+# operator settings through res.users preference fields under a sudo
+# privilege bridge. The port refuses the proxy: preferences are module-owned
+# columns behind a self/officer PUT verb. display_name is the ONLY operator
+# field any public projection ever exposes (the visitor-facing alias — the
+# company-suffix fence by construction).
+# =============================================================================
+
+models:
+
+  - name: OperatorProfile
+    collection: operator_profiles
+    description: "OperatorProfile — the module-owned operator surface: the visitor-facing display alias, the BCP-47 language list, the presence heartbeat, and last_assigned_at (the anti-burst buffer + the deterministic tiebreak anchor). (company_id, user_id) UNIQUE."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      user_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check", "@indexed"]
+        description: "The operator's user id — LOGICAL ref into the host identity store (no FK, no crate edge)."
+      display_name:
+        type: string?
+        attributes: ["@max(200)"]
+        description: "The visitor-facing alias — the ONLY operator field the public projection ever exposes (LC-13b fence by construction: no email, no company, no internal name)."
+      languages:
+        type: string[]
+        attributes: ["@required"]
+        description: "The operator's languages (BCP-47 tags, lowercase-normalized at the verb) — rung 1-3 of the selection ladder."
+      last_heartbeat_at:
+        type: datetime?
+        description: "Presence heartbeat: online iff within LIVECHAT_PRESENCE_WINDOW_SECS (60s). Touched by the heartbeat verb and the console refresh."
+      last_assigned_at:
+        type: datetime?
+        description: "The anti-burst anchor: a candidate whose last_assigned_at is within LIVECHAT_ASSIGNMENT_BUFFER_SECS (120s) is not eligible — inside the candidate pool, so EVERY path passes through it."
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check", "@indexed"]
+        description: "Owning company (strict fence — logical corporate ref)."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    relations:
+      expertise:
+        type: OperatorExpertise[]
+        attributes: ["@one_to_many", "@foreign_key(operator_profile_id)", "@restrict"]
+        description: "The operator's expertise bindings"
+
+    indexes:
+      - type: unique
+        fields: [company_id, user_id]
+        description: "One profile per operator per company"

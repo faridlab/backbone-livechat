@@ -1,0 +1,38 @@
+# =============================================================================
+# livechat — the expertise vocabulary: ExpertiseTag.
+#
+# PORT DECISIONS (SPEC.md §7.4, LC-14): upstream carried a translated-JSONB
+# name with a case-sensitive namespace. The port is canonical,
+# non-translated, case-insensitive: UNIQUE(company_id, lower(name)) lands in
+# the hardening migration as an expression unique — 'Bug'/'BUG'/'bug' cannot
+# coexist within a company.
+# =============================================================================
+
+models:
+
+  - name: ExpertiseTag
+    collection: expertise_tags
+    description: "ExpertiseTag — a company's canonical expertise label: UNIQUE(company_id, lower(name)) (hardening expression unique). Labels, not ids, freeze onto ledger rows and forward steps (deterministic reporting, no translation mining)."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      name:
+        type: string
+        attributes: ["@required", "@max(120)"]
+        description: "The canonical label (case-insensitive unique per company)."
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check", "@indexed"]
+        description: "Owning company (strict fence — logical corporate ref)."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    relations:
+      operators:
+        type: OperatorExpertise[]
+        attributes: ["@one_to_many", "@foreign_key(expertise_tag_id)", "@restrict"]
+        description: "The operators bound to this expertise"

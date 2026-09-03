@@ -1,0 +1,26 @@
+# Seed Execution Order Configuration
+# Seeds are executed in the order defined in this file.
+# This ensures foreign key dependencies are satisfied.
+
+# Format: seed_name_seed (without .sql extension)
+#
+# Note: You can manually edit this file to customize the order.
+# Seeds not listed here will be executed after in alphabetical order.
+
+- channel_seed
+- channel_member_seed
+- channel_rule_seed
+- chatbot_answer_seed
+- chatbot_message_seed
+- chatbot_script_seed
+- chatbot_step_seed
+- chatbot_step_trigger_seed
+- conversation_tag_seed
+- expertise_tag_seed
+- livechat_audit_log_seed
+- member_history_seed
+- operator_expertise_seed
+- operator_profile_seed
+- rating_seed
+- session_seed
+- session_tag_seed

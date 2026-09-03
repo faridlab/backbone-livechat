@@ -1,0 +1,46 @@
+# =============================================================================
+# livechat — the operator/expertise binding: OperatorExpertise.
+# =============================================================================
+
+models:
+
+  - name: OperatorExpertise
+    collection: operator_expertise
+    description: "OperatorExpertise — the binding of an expertise tag to an operator profile: (operator_profile_id, expertise_tag_id) UNIQUE. The selection ladder aggregates these labels per candidate (superset/intersects rungs)."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      operator_profile_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(OperatorProfile.operator_profiles)", "@indexed"]
+        description: "The bound operator profile."
+      expertise_tag_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(ExpertiseTag.expertise_tags)", "@indexed"]
+        description: "The bound expertise tag."
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Owning company (strict fence — logical corporate ref)."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    relations:
+      operator_profile:
+        type: OperatorProfile
+        attributes: ["@one", "@foreign_key(operator_profile_id)", "@restrict"]
+        description: "The bound operator profile"
+      expertise_tag:
+        type: ExpertiseTag
+        attributes: ["@one", "@foreign_key(expertise_tag_id)", "@restrict"]
+        description: "The bound expertise tag"
+
+
+indexes:
+      - type: unique
+        fields: [operator_profile_id, expertise_tag_id]
+        description: "One binding per (profile, tag)"

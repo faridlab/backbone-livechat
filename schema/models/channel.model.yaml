@@ -1,0 +1,100 @@
+# =============================================================================
+# livechat — the routing aggregate: Channel.
+#
+# PORT DECISIONS (source: docs/odoo/website/live-chat — SPEC.md §7.1):
+#  - Upstream im_livechat.channel carried four raw widget color strings;
+#    widget theming is the webapp's concern — dropped (declared delta).
+#  - max_sessions_mode is an EXPLICIT enum ('unlimited' | 'limited'); only
+#    'limited' channels count max_sessions (CHECK > 0 lands in the
+#    hardening migration).
+#  - block_assignment_during_call is ported as a column and documented INERT
+#    at this pin: no RTC carrier is composed, so in_call is uniformly false;
+#    the column arms when a transport lands.
+#  - website_id is the bridge binding (one channel to one website) — a
+#    LOGICAL ref to the website module's row (no cross-schema FK, no crate
+#    edge; the host-composed bridge resolves it).
+#  - review_link is validated http(s)+netloc at the verb, not in DDL.
+# =============================================================================
+
+models:
+
+  - name: Channel
+    collection: channels
+    description: "Channel — the livechat routing aggregate: the operator pool's home (membership lives in channel_members), the button/welcome copy, the capacity posture (explicit unlimited/limited mode), and the optional website binding of the bridge overlays."
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique record id"
+      name:
+        type: string
+        attributes: ["@required", "@max(200)"]
+        description: "Channel name (officer-facing)."
+      website_id:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check", "@indexed"]
+        description: "The bridge binding — the website this channel serves (logical ref to the website module; resolved by the host-composed LivechatWebsiteBridge). The wizard verb binds EVERY channel it creates; a channel without a binding serves no availability answer."
+      button_text:
+        type: string?
+        attributes: ["@max(120)"]
+        description: "The chat button label visitors see."
+      welcome_message:
+        type: string?
+        attributes: ["@max(1000)"]
+        description: "The channel's welcome greeting (the widget preview before any message row exists)."
+      max_sessions_mode:
+        type: LivechatMaxSessionsMode
+        attributes: ["@required", "@default(unlimited)"]
+        description: "Capacity gate shape: 'unlimited' never counts ongoing sessions; 'limited' enforces max_sessions per operator."
+      max_sessions:
+        type: int
+        attributes: ["@required", "@default(1)", "@non_negative"]
+        description: "Per-operator ongoing-session cap — counted ONLY when mode is 'limited' (CHECK > 0 in the hardening migration; the default 1 is inert under 'unlimited')."
+      block_assignment_during_call:
+        type: bool
+        attributes: ["@required", "@default(false)"]
+        description: "Refuse assignment to an operator in a call. INERT at this pin: no RTC carrier is composed so in_call is uniformly false; the column arms when a transport lands (the RTC GC's fix is that there is no in-call state yet)."
+      review_link:
+        type: url?
+        description: "External review page offered at session close (validated http(s)+netloc at the verb)."
+      is_active:
+        type: bool
+        attributes: ["@required", "@default(true)"]
+        description: "Inactive channels answer no availability and route no sessions."
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check", "@indexed"]
+        description: "Owning company (strict fence — logical corporate ref, never a cross-schema FK)."
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    relations:
+      members:
+        type: ChannelMember[]
+        attributes: ["@one_to_many", "@foreign_key(channel_id)", "@restrict"]
+        description: "The channel's operator pool"
+      rules:
+        type: ChannelRule[]
+        attributes: ["@one_to_many", "@foreign_key(channel_id)", "@restrict"]
+        description: "The channel's URL rules"
+      sessions:
+        type: Session[]
+        attributes: ["@one_to_many", "@foreign_key(channel_id)", "@restrict"]
+        description: "Sessions routed through this channel"
+
+    indexes:
+      - type: index
+        fields: [is_active]
+        description: "The availability read filters active channels"
+
+enums:
+  - name: LivechatMaxSessionsMode
+    description: "The capacity gate shape — only 'limited' counts max_sessions"
+    variants:
+      - name: unlimited
+        description: "No per-operator ongoing-session cap (the default)"
+        default: true
+      - name: limited
+        description: "Enforce max_sessions per operator (the ONE ongoing window counts the load)"

@@ -1,0 +1,91 @@
+[package]
+name = "backbone-livechat"
+version = "0.1.0"
+edition = "2021"
+description = "The livechat module (Odoo im_livechat + website_livechat port) — the deterministic operator-selection ladder (capacity, the 120s anti-burst buffer on every path, the one 30-minute ongoing window, total-order tie-breaks with no randomness), the visitor conversation lifecycle behind Tier A guest capabilities on a declared nine-path public surface, the member-history ledger under three partial uniques plus a strict persona trichotomy, the chatbot pointer state machine closed at the seven community step types, and the website bridge overlays (operator-initiated invites, message-piggyback heartbeats, merge relink) as columns and behavior inside this one crate"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+# -----------------------------------------------------------------------------
+# Backbone Framework crates
+#
+# Pulled directly from the public framework repository so this module works
+# anywhere on disk without path fix-up. Pinned to the framework tag current
+# at module creation (single-rev policy: every framework source in the
+# resolved graph resolves to this one tag — no branch floats, no [patch]).
+# -----------------------------------------------------------------------------
+backbone-core = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.11", features = ["postgres"] }
+backbone-orm = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.11" }
+backbone-auth = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.11" }
+backbone-rate-limit = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.11" }
+# NOTE (recorded deviation from SPEC.md §1.4, forced by the pinned
+# generator): the schema generator's emitted event scaffolding
+# (src/domain/event/*.rs — CrudEvent / CrudEventPublisher imports) does not
+# compile without this crate. The module itself stages NO outbox events,
+# subscribes to NONE (hooks index declares events: {}), owns no outbox
+# table, and the host's outbox_schemas set carries no livechat entry — the
+# same zero-events-with-plumbing-dep posture as the website, events, and
+# blog modules.
+backbone-messaging = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.11" }
+
+# Sibling modules NOT consumed by design — recorded here so no later seat
+# adds them casually (SPEC.md §1.4, §10, §11):
+#  - backbone-website: the LivechatWebsiteBridge port is host-composed over
+#    website's PgWebsiteSurface / VisitorEngine (seam adapter in the host's
+#    src/infrastructure/seams); livechat needs three methods of that surface
+#    and the port+adapter law keeps the refusing default typed here and the
+#    crate graph uncoupled.
+#  - backbone-mail: the LivechatMailCarrier port (post/fetch/remove) is
+#    host-composed over mail's message_post + read-back; message storage
+#    belongs to the composed carrier, never to this crate.
+#  - backbone-events / backbone-blog: no interaction surface.
+#  - backbone-sapiens / backbone-party / corporate / geo: logical uuid
+#    references only (@exclude_from_foreign_key_check), never crate edges.
+
+# Core async runtime and serialization
+tokio = { version = "1.0", features = ["full"] }
+async-trait = "0.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.0", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# Database (PostgreSQL primary)
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "json", "migrate"] }
+
+# HTTP framework (Axum) — the module exports pure routers; the host mounts.
+axum = { version = "0.7", features = ["macros"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+# Logging
+tracing = "0.1"
+
+# Validation / errors / config plumbing used by the generated tree
+validator = { version = "0.16", features = ["derive"] }
+anyhow = "1.0"
+thiserror = "1.0"
+config = "0.14"
+serde_yaml = "0.9"
+
+# Channel-rule regex_url validation at save time (a malformed or empty
+# pattern is refused typed; an operator who wants match-all writes ".*").
+regex = "1"
+
+# The Tier A capability tokens (ADR-0018): HMAC-SHA256 domain-separated by
+# purpose string, constant-time verified; the guest-session (24h) and
+# invite-accept (15m) mints.
+hmac = "0.12"
+sha2 = "0.10"
+rand = "0.8"
+subtle = "2.5"
+
+[dev-dependencies]
+tempfile = "3.0"
+tokio-test = "0.4"
+pretty_assertions = "1.0"
+futures = "0.3"
+tower = { version = "0.4", features = ["util"] }
+http-body-util = "0.1"
