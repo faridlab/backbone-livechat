@@ -5,6 +5,7 @@ pub mod common;
 pub mod audit_trail;
 pub mod boundary_gate;
 pub mod chatbot_pointer;
+pub mod crm_bridge;
 pub mod fenced_runtime;
 pub mod ladder_determinism;
 pub mod ledger_uniques;

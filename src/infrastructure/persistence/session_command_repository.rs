@@ -19,11 +19,12 @@ use crate::application::service::mail_port::MessageAuthor;
 use super::selection_repository::{audit_tx, recompute_outcome_tx};
 
 /// The session columns every read projects (one list, one order).
-const SESSION_COLUMNS: &str = "id, channel_id, title, status::text, failure::text, \
+pub(crate) const SESSION_COLUMNS: &str = "id, channel_id, title, status::text, failure::text, \
      outcome::text, close_reason::text, closed_at, operator_user_id, chatbot_current_step_id, \
      expertise_names, website_visitor_id, visitor_country_code, visitor_timezone, \
-     is_pending_request, visitor_language, message_count, first_response_at, last_interest_at, \
-     last_visitor_message_at, last_operator_message_at, is_test, error_detail, company_id";
+     is_pending_request, crm_lead_id, visitor_language, message_count, first_response_at, \
+     last_interest_at, last_visitor_message_at, last_operator_message_at, is_test, error_detail, \
+     company_id";
 
 /// A session row (enum columns projected as text).
 #[derive(Debug, Clone, serde::Serialize, sqlx::FromRow)]
@@ -43,6 +44,9 @@ pub struct SessionRow {
     pub visitor_country_code: Option<String>,
     pub visitor_timezone: Option<String>,
     pub is_pending_request: bool,
+    /// The CRM lead minted from this conversation (NULL = none yet);
+    /// stamped only by the CRM bridge's first-wins link verb.
+    pub crm_lead_id: Option<Uuid>,
     pub visitor_language: Option<String>,
     pub message_count: i32,
     pub first_response_at: Option<DateTime<Utc>>,

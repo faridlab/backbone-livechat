@@ -85,6 +85,10 @@ models:
         type: bool
         attributes: ["@required", "@default(false)"]
         description: "The operator-initiated invite flag (bridge overlay): the pending session is INVISIBLE to the visitor until the operator's first message; accept/decline/expiry/visitor-opens-own all clear it with audits."
+      crm_lead_id:
+        type: uuid?
+        attributes: ["@exclude_from_foreign_key_check", "@indexed"]
+        description: "The CRM lead minted from this conversation (the CRM bridge overlay) — LOGICAL ref into the lead module's leads table (no FK, no crate edge; the mint itself runs through the host-composed CRM port). NULL = no lead yet. One lead per session and one session per lead (a partial UNIQUE, the has-crm-lead partial-index shape); the ONLY writer is the mint verb, which stamps it server-side — no client surface accepts a lead id."
       visitor_language:
         type: string?
         attributes: ["@max(35)"]

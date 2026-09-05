@@ -325,7 +325,8 @@ forward_operator | free_input_single | free_input_multi`. There are no `create_l
 are absent upstream; the reserved-but-absent posture is refused). Lead capture stays
 message-mining: first email + first phone from sanitized answers, surfaced through the report +
 the invite/visitor views — no partner materialization in this module (the host's lead modules own
-that, via a seam if ever composed).
+that; the CRM bridge port is that seam, and the mint it carries is an operator-driven verb,
+never a chatbot step type).
 
 ### 6.3 Routing (forward-only, verbatim semantics)
 
@@ -527,6 +528,19 @@ shape is plain (channels/tags/expertise/scripts listing) and hand verbs where a 
   (the operator side of the chokepoint); `POST .../chatbot/restart {reset_failure}` (§4);
   `POST .../tags {tag_ids}`; `POST .../transcript {email?}` (the transcript-mailer seam — parks
   loudly when uncomposed).
+- **CRM bridge**: `POST /admin/sessions/:id/lead {lead_name?, note?, email?, phone?}` — the
+  conversation-becomes-a-lead verb. All facts stamp server-side (the session row, the chatbot's
+  earliest answered email/phone steps, the acting operator; the visitor-spine context
+  `website_visitor_id`/country/timezone rides the mint). The lead id is NEVER client-supplied:
+  the CRM port (`crm_port.rs`, host-composed over the lead module's capture verb) mints it and
+  the verb's conditional first-wins `UPDATE ... WHERE crm_lead_id IS NULL` stamps it — a replay
+  or race loser gets `409 livechat_session_already_has_lead` with an audited refusal; the port
+  uncomposed parks the verb at `503 livechat_crm_bridge_not_composed` with nothing written.
+  `GET /admin/lead-sessions/:lead_id` + `POST /admin/lead-sessions/:lead_id/join` are the
+  lead-linked read grants (the lead's existence is what makes the conversation readable; the
+  join adds an agent ledger row + outcome recompute, refusing closed conversations typed while
+  the read keeps serving history). One lead per session, one session per lead — the partial
+  UNIQUE `session_crm_lead_uq` is the wall, not verb etiquette.
 - **Website chat requests** (§10): `POST /admin/website-chat-requests {website_id,
   website_visitor_id}` — single-visitor by design (a batch is repeated audited calls; each row
   binds its own country/timezone and its own operator ledger row — WLC-2b's loop leakage cannot

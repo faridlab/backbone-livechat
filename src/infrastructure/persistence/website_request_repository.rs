@@ -118,7 +118,8 @@ impl WebsiteRequestRepository {
                           outcome::text, close_reason::text, closed_at, operator_user_id,
                           chatbot_current_step_id, expertise_names, website_visitor_id,
                           visitor_country_code, visitor_timezone, is_pending_request,
-                          visitor_language, message_count, first_response_at, last_interest_at,
+                          crm_lead_id, visitor_language, message_count, first_response_at,
+                          last_interest_at,
                           last_visitor_message_at, last_operator_message_at, is_test,
                           error_detail, company_id
                      FROM livechat.sessions
@@ -152,7 +153,8 @@ impl WebsiteRequestRepository {
                           outcome::text, close_reason::text, closed_at, operator_user_id,
                           chatbot_current_step_id, expertise_names, website_visitor_id,
                           visitor_country_code, visitor_timezone, is_pending_request,
-                          visitor_language, message_count, first_response_at, last_interest_at,
+                          crm_lead_id, visitor_language, message_count, first_response_at,
+                          last_interest_at,
                           last_visitor_message_at, last_operator_message_at, is_test,
                           error_detail, company_id
                      FROM livechat.sessions
@@ -191,7 +193,8 @@ impl WebsiteRequestRepository {
                           outcome::text, close_reason::text, closed_at, operator_user_id,
                           chatbot_current_step_id, expertise_names, website_visitor_id,
                           visitor_country_code, visitor_timezone, is_pending_request,
-                          visitor_language, message_count, first_response_at, last_interest_at,
+                          crm_lead_id, visitor_language, message_count, first_response_at,
+                          last_interest_at,
                           last_visitor_message_at, last_operator_message_at, is_test,
                           error_detail, company_id"#,
         )
@@ -253,7 +256,8 @@ impl WebsiteRequestRepository {
                           outcome::text, close_reason::text, closed_at, operator_user_id,
                           chatbot_current_step_id, expertise_names, website_visitor_id,
                           visitor_country_code, visitor_timezone, is_pending_request,
-                          visitor_language, message_count, first_response_at, last_interest_at,
+                          crm_lead_id, visitor_language, message_count, first_response_at,
+                          last_interest_at,
                           last_visitor_message_at, last_operator_message_at, is_test,
                           error_detail, company_id"#,
         )

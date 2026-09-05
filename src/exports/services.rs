@@ -14,16 +14,17 @@
 // ports a host or sibling module composes. Writes go through these
 // typed verbs — never through the generic CRUD services.
 pub use crate::application::service::{
-    AvailabilityService, ChatbotService, LivechatError, LivechatResult, RatingSubmitService,
-    ReportService, SelectionService, SessionCommandService, SweepService, WebsiteRequestService,
-    REPORT_WINDOW_MAX_DAYS,
+    AvailabilityService, ChatbotService, CrmBridgeService, LeadMintInput, LivechatError,
+    LivechatResult, RatingSubmitService, ReportService, SelectionService, SessionCommandService,
+    SweepService, WebsiteRequestService, REPORT_WINDOW_MAX_DAYS,
 };
 pub use crate::application::service::{
-    CarrierMessage, DigestEntry, LivechatDigestQueue, LivechatMailCarrier, LivechatNotice,
-    LivechatNotifier, LivechatRtcCarrier, LivechatTranscriptMailer, LivechatWebsiteBridge,
-    MessageAuthor, RefusingDigestQueue, RefusingLivechatWebsiteBridge, RefusingMailCarrier,
-    RefusingRtcCarrier, RefusingTranscriptMailer, TranscriptRequest, UnwiredNotifier, VisitFacts,
-    VisitorIdentity, WebsiteBinding,
+    CarrierMessage, DigestEntry, LeadFromSession, LeadMinted, LivechatCrmLeadPort,
+    LivechatDigestQueue, LivechatMailCarrier, LivechatNotice, LivechatNotifier, LivechatRtcCarrier,
+    LivechatTranscriptMailer, LivechatWebsiteBridge, MessageAuthor, RefusingCrmLeadPort,
+    RefusingDigestQueue, RefusingLivechatWebsiteBridge, RefusingMailCarrier, RefusingRtcCarrier,
+    RefusingTranscriptMailer, TranscriptRequest, UnwiredNotifier, VisitFacts, VisitorIdentity,
+    WebsiteBinding,
 };
 pub use crate::infrastructure::persistence::{
     AssignOutcome, OpenSessionInput, SessionListFilter, SessionRow,

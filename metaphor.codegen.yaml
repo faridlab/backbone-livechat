@@ -91,6 +91,12 @@ user_owned:
   # audited expiry) + the merge relink verb.
   - "src/application/service/website_request_service.rs"
 
+  # The CRM bridge service: the conversation-becomes-a-lead verb (the
+  # mint through the CRM port, the first-wins link stamp, the chatbot
+  # contact harvest) + the two lead-linked grants (the lead-owner read
+  # and the lead-granted agent join).
+  - "src/application/service/crm_bridge_service.rs"
+
   # Ports (carriers that park loudly):
   #  - website_bridge: resolve_website_by_host / track_visit /
   #    visitor_key — refusing default 503 (blocking for open and
@@ -108,12 +114,16 @@ user_owned:
   #  - rtc_port: the realtime carrier — mounted nowhere at this pin;
   #    exists to carry the join-not-start law (visitors may join an
   #    existing session call, never start one) when a transport lands.
+  #  - crm_port: mint a lead from session facts — refusing default 503
+  #    (blocking at the mint verb; the host composes over the lead
+  #    module's capture verb).
   - "src/application/service/website_bridge.rs"
   - "src/application/service/mail_port.rs"
   - "src/application/service/transcript_port.rs"
   - "src/application/service/notifier_port.rs"
   - "src/application/service/digest_port.rs"
   - "src/application/service/rtc_port.rs"
+  - "src/application/service/crm_port.rs"
 
   # Hand repositories carrying the transactional SQL the services
   # compose (services hold no raw sqlx — the DDD boundary). Every
@@ -122,6 +132,7 @@ user_owned:
   # helpers.
   - "src/infrastructure/persistence/selection_repository.rs"
   - "src/infrastructure/persistence/session_command_repository.rs"
+  - "src/infrastructure/persistence/crm_bridge_repository.rs"
   - "src/infrastructure/persistence/member_history_repository.rs"
   - "src/infrastructure/persistence/chatbot_command_repository.rs"
   - "src/infrastructure/persistence/rating_repository.rs"
@@ -156,6 +167,13 @@ user_owned:
   - "migrations/20260426220019_create_session_report_view.up.sql"
   - "migrations/20260426220019_create_session_report_view.down.sql"
   - "migrations/*hardening*"
+
+  # Hand-authored reshape: the CRM lead link column on sessions (the
+  # generator only emits create-table migrations for NEW entities) +
+  # the partial UNIQUE (the has-crm-lead partial-index translation)
+  # and the four lead-bridge audit events.
+  - "migrations/20260906120000_crm_lead_link.up.sql"
+  - "migrations/20260906120000_crm_lead_link.down.sql"
 
   # Hand-authored module documentation (operator + spec).
   - "README.md"

@@ -216,6 +216,10 @@ async fn apply_module_migrations(pool: &PgPool, marker: &str) -> Result<(), Stri
 use async_trait::async_trait;
 use std::sync::Mutex;
 
+use backbone_livechat::application::service::crm_port::{
+    LeadFromSession, LeadMinted, LivechatCrmLeadPort,
+};
+use backbone_livechat::application::service::livechat_error::LivechatError;
 use backbone_livechat::application::service::mail_port::{
     LivechatMailCarrier, MessageAuthor, RefusingMailCarrier,
 };
@@ -226,6 +230,39 @@ use backbone_livechat::application::service::website_bridge::{
     WebsiteBinding,
 };
 use backbone_livechat::infrastructure::persistence::SessionCommandRepository;
+
+/// The recording CRM port: mints a FRESH lead id per call and records
+/// every request the bridge probes assert against (the seam's success
+/// arm — the lead module itself is host-composed, never a sibling
+/// crate here).
+#[derive(Default)]
+pub struct RecordingCrmLeadPort {
+    pub minted: Mutex<Vec<(LeadFromSession, Uuid)>>,
+}
+
+impl RecordingCrmLeadPort {
+    /// The lead ids this port minted, in mint order.
+    pub fn lead_ids(&self) -> Vec<Uuid> {
+        self.minted
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .iter()
+            .map(|(_, id)| *id)
+            .collect()
+    }
+}
+
+#[async_trait]
+impl LivechatCrmLeadPort for RecordingCrmLeadPort {
+    async fn mint_lead(&self, req: &LeadFromSession) -> Result<LeadMinted, LivechatError> {
+        let lead_id = Uuid::new_v4();
+        self.minted
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .push((req.clone(), lead_id));
+        Ok(LeadMinted { lead_id })
+    }
+}
 
 /// The recording carrier: an in-memory transcript the probes assert
 /// against (the seam's success arm, no external dependency).

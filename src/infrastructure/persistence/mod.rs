@@ -29,6 +29,7 @@ mod session_tag_repository;
 // repositories keep their own files — these are the verb layer's.
 pub mod admin_config_repository;
 pub mod chatbot_command_repository;
+pub mod crm_bridge_repository;
 pub mod report_repository;
 pub mod selection_repository;
 pub mod session_command_repository;
@@ -69,6 +70,7 @@ pub use admin_config_repository::{
 pub use chatbot_command_repository::{
     AnswerRow, ChatbotCommandRepository, ChatbotMessageRow, StepRow,
 };
+pub use crm_bridge_repository::{CrmBridgeRepository, HarvestedContact};
 pub use member_history_repository::{MemberHistoryLedgerRepository, MemberHistoryRow};
 pub use rating_repository::{RatingCommandRepository, RatingRow};
 pub use report_repository::{OutcomeMixRow, ReportRepository, SeriesBucketRow, SessionSummaryRow};

@@ -72,6 +72,18 @@ pub enum LivechatError {
     #[error("livechat digest queue not composed")]
     DigestNotComposed,
 
+    /// The CRM lead port is not composed (its refusing default): the
+    /// conversation-becomes-a-lead mint verb parks loudly — no link is
+    /// stamped and no lead is minted.
+    #[error("livechat crm bridge not composed")]
+    CrmBridgeNotComposed,
+
+    /// A second mint on a session that already carries its (one) lead
+    /// — the conditional first-wins UPDATE lost (or the verb refused a
+    /// replay). One lead per session, one session per lead.
+    #[error("livechat session already has a lead")]
+    SessionAlreadyHasLead,
+
     /// The serialized first-wins assignment/take loser: another
     /// operator's conditional UPDATE won the row (or the session is
     /// closed/no longer assignable).
@@ -147,6 +159,8 @@ impl LivechatError {
             Self::CarrierNotComposed => "livechat_carrier_not_composed",
             Self::TranscriptNotComposed => "livechat_transcript_not_composed",
             Self::DigestNotComposed => "livechat_digest_not_composed",
+            Self::CrmBridgeNotComposed => "livechat_crm_bridge_not_composed",
+            Self::SessionAlreadyHasLead => "livechat_session_already_has_lead",
             Self::OperatorBusy => "livechat_operator_busy",
             Self::ActorUnresolved => "livechat_actor_unresolved",
             Self::RatingAlreadySubmitted => "livechat_rating_already_submitted",
@@ -168,9 +182,10 @@ impl LivechatError {
             }
             Self::GuestTokenInvalid => StatusCode::UNAUTHORIZED,
             Self::ActorUnresolved => StatusCode::FORBIDDEN,
-            Self::OperatorBusy | Self::RatingAlreadySubmitted | Self::TagNameConflict { .. } => {
-                StatusCode::CONFLICT
-            }
+            Self::OperatorBusy
+            | Self::RatingAlreadySubmitted
+            | Self::SessionAlreadyHasLead
+            | Self::TagNameConflict { .. } => StatusCode::CONFLICT,
             Self::RuleRegexInvalid
             | Self::AnswerInvalid
             | Self::InputInvalid
@@ -181,7 +196,8 @@ impl LivechatError {
             | Self::WebsiteBridgeNotComposed
             | Self::CarrierNotComposed
             | Self::TranscriptNotComposed
-            | Self::DigestNotComposed => StatusCode::SERVICE_UNAVAILABLE,
+            | Self::DigestNotComposed
+            | Self::CrmBridgeNotComposed => StatusCode::SERVICE_UNAVAILABLE,
             Self::Database(_) | Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

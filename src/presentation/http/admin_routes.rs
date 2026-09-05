@@ -41,6 +41,13 @@
 //! - POST /admin/sessions/:id/take|close|need-help|resolve-need-help|forward
 //! - GET/POST /admin/sessions/:id/messages        the operator side
 //! - POST /admin/sessions/:id/chatbot-restart|tags|transcript|cancel-request
+//! - POST /admin/sessions/:id/lead                mint a CRM lead from the session (the
+//!                                                CRM bridge; typed 503 uncomposed, 409
+//!                                                when the session already carries a lead)
+//! - GET  /admin/lead-sessions/:lead_id           the session behind a lead (the lead-owner
+//!                                                read grant)
+//! - POST /admin/lead-sessions/:lead_id/join      join that conversation as an agent
+//!                                                participant (the join grant)
 //! - POST /admin/website-chat-requests            the operator-initiated invite
 //! - GET /admin/report/session-summary            the bounded report window
 
@@ -58,6 +65,8 @@ use serde_json::{json, Value};
 use uuid::Uuid;
 
 use crate::application::service::chatbot_service::ChatbotService;
+use crate::application::service::crm_bridge_service::{CrmBridgeService, LeadMintInput};
+use crate::application::service::crm_port::{LivechatCrmLeadPort, RefusingCrmLeadPort};
 use crate::application::service::livechat_error::LivechatError;
 use crate::application::service::mail_port::{LivechatMailCarrier, MessageAuthor};
 use crate::application::service::notifier_port::LivechatNotifier;
@@ -88,6 +97,7 @@ pub struct LivechatAdminState {
     pub config: Arc<AdminConfigRepository>,
     pub sessions: Arc<SessionCommandService>,
     pub chatbot: Arc<ChatbotService>,
+    pub crm: Arc<CrmBridgeService>,
     pub ratings: Arc<RatingSubmitService>,
     pub reports: Arc<ReportService>,
     pub website_requests: Arc<WebsiteRequestService>,
@@ -111,13 +121,37 @@ impl LivechatAdminState {
 
     /// [`Self::new`] with the website bridge composed (the host
     /// installs the real adapter over backbone-website — the invite
-    /// verbs read the visitor's geo through it).
+    /// verbs read the visitor's geo through it). The CRM lead port
+    /// stays REFUSING here: an uncomposed CRM bridge parks the mint
+    /// verb loudly (typed 503) while the read/join grants keep
+    /// working.
     pub fn with_bridge(
         pool: sqlx::PgPool,
         bridge: Arc<dyn crate::application::service::website_bridge::LivechatWebsiteBridge>,
         carrier: Arc<dyn LivechatMailCarrier>,
         notifier: Arc<dyn LivechatNotifier>,
         transcript: Arc<dyn LivechatTranscriptMailer>,
+    ) -> Self {
+        Self::with_crm_bridge(
+            pool,
+            bridge,
+            carrier,
+            notifier,
+            transcript,
+            Arc::new(RefusingCrmLeadPort),
+        )
+    }
+
+    /// [`Self::with_bridge`] with the CRM lead port composed too (the
+    /// host installs the adapter over the lead module's capture verb —
+    /// the only arm that can mint).
+    pub fn with_crm_bridge(
+        pool: sqlx::PgPool,
+        bridge: Arc<dyn crate::application::service::website_bridge::LivechatWebsiteBridge>,
+        carrier: Arc<dyn LivechatMailCarrier>,
+        notifier: Arc<dyn LivechatNotifier>,
+        transcript: Arc<dyn LivechatTranscriptMailer>,
+        crm: Arc<dyn LivechatCrmLeadPort>,
     ) -> Self {
         Self {
             config: Arc::new(AdminConfigRepository::new(pool.clone())),
@@ -128,6 +162,7 @@ impl LivechatAdminState {
                 transcript,
             )),
             chatbot: Arc::new(ChatbotService::new(pool.clone(), carrier)),
+            crm: Arc::new(CrmBridgeService::new(pool.clone(), crm)),
             ratings: Arc::new(RatingSubmitService::new(pool.clone(), notifier.clone())),
             reports: Arc::new(ReportService::new(pool.clone())),
             website_requests: Arc::new(WebsiteRequestService::new(pool, bridge, notifier)),
@@ -240,6 +275,15 @@ pub fn livechat_admin_routes(state: LivechatAdminState) -> Router {
         .route(
             "/admin/sessions/:id/cancel-request",
             post(session_cancel_request),
+        )
+        // the CRM bridge: mint a lead from a session + the two
+        // lead-linked grants (read the conversation behind a lead,
+        // join it as an agent participant)
+        .route("/admin/sessions/:id/lead", post(session_mint_lead))
+        .route("/admin/lead-sessions/:lead_id", get(lead_session_get))
+        .route(
+            "/admin/lead-sessions/:lead_id/join",
+            post(lead_session_join),
         )
         // website chat requests + report
         .route("/admin/website-chat-requests", post(website_chat_request))
@@ -441,6 +485,30 @@ struct TranscriptBody {
 struct WebsiteChatRequestBody {
     website_id: Uuid,
     website_visitor_id: Uuid,
+}
+
+/// The mint verb's body: display name / note / explicit contact
+/// facts, ALL optional — the session, the chatbot's harvested
+/// answers, and the acting operator stamp everything else. A lead id
+/// is deliberately NOT accepted: the port mints it, the verb stamps
+/// it.
+#[derive(Deserialize)]
+struct MintLeadBody {
+    #[serde(default)]
+    lead_name: Option<String>,
+    #[serde(default)]
+    note: Option<String>,
+    #[serde(default)]
+    email: Option<String>,
+    #[serde(default)]
+    phone: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct LeadJoinBody {
+    /// The joining user; defaults to the acting operator.
+    #[serde(default)]
+    user_id: Option<Uuid>,
 }
 
 #[derive(Deserialize)]
@@ -1032,6 +1100,76 @@ async fn session_take(
     let operator = body.operator_user_id.unwrap_or(actor);
     answer_row(
         state.sessions.take(id, operator, Some(actor)).await,
+        "session",
+    )
+}
+
+// ── The CRM bridge (conversation -> lead, and back) ───────────────
+
+/// Mint a CRM lead from the session (the operator's
+/// conversation-becomes-a-lead verb). Every refusal is typed: the
+/// uniform 404 for a missing/cross-company session, 409 when the
+/// session already carries its one lead, 503 while the CRM port is
+/// uncomposed — and NOTHING is written on any refusal.
+async fn session_mint_lead(
+    State(state): State<LivechatAdminState>,
+    Path(id): Path<Uuid>,
+    extensions: Extensions,
+    body: Option<Json<MintLeadBody>>,
+) -> Response {
+    let actor = actor_of(&extensions);
+    let input = LeadMintInput {
+        lead_name: body.as_ref().and_then(|Json(b)| b.lead_name.clone()),
+        note: body.as_ref().and_then(|Json(b)| b.note.clone()),
+        email: body.as_ref().and_then(|Json(b)| b.email.clone()),
+        phone: body.as_ref().and_then(|Json(b)| b.phone.clone()),
+    };
+    match state.crm.mint_lead_for_session(id, &input, actor).await {
+        Ok((row, lead_id)) => (
+            axum::http::StatusCode::CREATED,
+            Json(json!({ "session": row, "lead_id": lead_id })),
+        )
+            .into_response(),
+        Err(e) => e.into_response(),
+    }
+}
+
+/// The lead-owner read grant: the conversation behind a lead,
+/// addressable by the lead id alone (the partial index serves exactly
+/// this lookup). No membership required — the LEAD's existence is
+/// what makes the session readable, the donor rule translated.
+async fn lead_session_get(
+    State(state): State<LivechatAdminState>,
+    Path(lead_id): Path<Uuid>,
+) -> Response {
+    answer_opt(
+        state
+            .crm
+            .session_for_lead(lead_id)
+            .await
+            .map(|row| row.map(|r| json!({ "session": r }))),
+    )
+}
+
+/// The lead-owner join grant: the actor becomes an agent participant
+/// of the conversation behind the lead (no channel membership, no
+/// ownership change — the ladder is untouched). Closed conversations
+/// refuse typed; their history stays on the read verb.
+async fn lead_session_join(
+    State(state): State<LivechatAdminState>,
+    Path(lead_id): Path<Uuid>,
+    extensions: Extensions,
+    body: Option<Json<LeadJoinBody>>,
+) -> Response {
+    let Some(actor) = actor_of(&extensions) else {
+        return LivechatError::ActorUnresolved.into_response();
+    };
+    let user_id = body.and_then(|Json(b)| b.user_id).unwrap_or(actor);
+    answer_row(
+        state
+            .crm
+            .join_session_for_lead(lead_id, user_id, Some(actor))
+            .await,
         "session",
     )
 }

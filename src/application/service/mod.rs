@@ -33,6 +33,8 @@ pub mod session_tag_service;
 pub mod availability_service;
 pub mod capability;
 pub mod chatbot_service;
+pub mod crm_bridge_service;
+pub mod crm_port;
 pub mod digest_port;
 pub mod livechat_error;
 pub mod mail_port;
@@ -72,6 +74,8 @@ pub use capability::{
     PURPOSE_GUEST_SESSION, PURPOSE_INVITE_ACCEPT,
 };
 pub use chatbot_service::{ChatbotService, StepPreview};
+pub use crm_bridge_service::{CrmBridgeService, LeadMintInput};
+pub use crm_port::{LeadFromSession, LeadMinted, LivechatCrmLeadPort, RefusingCrmLeadPort};
 pub use digest_port::{DigestEntry, LivechatDigestQueue, RefusingDigestQueue};
 pub use livechat_error::{LivechatError, LivechatResult};
 pub use mail_port::{CarrierMessage, LivechatMailCarrier, MessageAuthor, RefusingMailCarrier};
