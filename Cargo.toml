@@ -1,6 +1,6 @@
 [package]
 name = "backbone-livechat"
-version = "0.2.1"
+version = "0.2.3"
 edition = "2021"
 description = "The livechat module (Odoo im_livechat + website_livechat port) — the deterministic operator-selection ladder (capacity, the 120s anti-burst buffer on every path, the one 30-minute ongoing window, total-order tie-breaks with no randomness), the visitor conversation lifecycle behind Tier A guest capabilities on a declared nine-path public surface, the member-history ledger under three partial uniques plus a strict persona trichotomy, the chatbot pointer state machine closed at the seven community step types, and the website bridge overlays (operator-initiated invites, message-piggyback heartbeats, merge relink) as columns and behavior inside this one crate"
 
@@ -16,10 +16,10 @@ path = "src/lib.rs"
 # at module creation (single-rev policy: every framework source in the
 # resolved graph resolves to this one tag — no branch floats, no [patch]).
 # -----------------------------------------------------------------------------
-backbone-core = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.16", features = ["postgres"] }
-backbone-orm = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.16" }
-backbone-auth = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.16" }
-backbone-rate-limit = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.16" }
+backbone-core = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.17", features = ["postgres"] }
+backbone-orm = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.17" }
+backbone-auth = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.17" }
+backbone-rate-limit = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.17" }
 # NOTE (recorded deviation from SPEC.md §1.4, forced by the pinned
 # generator): the schema generator's emitted event scaffolding
 # (src/domain/event/*.rs — CrudEvent / CrudEventPublisher imports) does not
@@ -28,7 +28,7 @@ backbone-rate-limit = { git = "https://github.com/faridlab/backbone-framework", 
 # table, and the host's outbox_schemas set carries no livechat entry — the
 # same zero-events-with-plumbing-dep posture as the website, events, and
 # blog modules.
-backbone-messaging = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.16" }
+backbone-messaging = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.17" }
 
 # Sibling modules NOT consumed by design — recorded here so no later seat
 # adds them casually (SPEC.md §1.4, §10, §11):
