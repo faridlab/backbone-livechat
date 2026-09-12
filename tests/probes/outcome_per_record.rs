@@ -19,43 +19,40 @@ use super::common::{open_session, seed_channel_with_operators, TestDb};
 async fn outcomes_derive_per_record_never_per_recordset() {
     let db = TestDb::new("outcome").await;
     let pool = db.pool.clone();
-    let company = Uuid::new_v4();
     let website = Uuid::new_v4();
     let op_a = Uuid::new_v4();
     let op_b = Uuid::new_v4();
-    let channel = seed_channel_with_operators(&pool, company, website, &[op_a, op_b]).await;
+    let channel = seed_channel_with_operators(&pool, website, &[op_a, op_b]).await;
 
     // Three sessions with three DIFFERENT shapes: the per-record
     // derive must land a different outcome on each row from one
     // statement — a loop that assigned through a set handle would
     // smear one value across the batch.
-    let s_answer = open_session(&pool, company, channel, "outcome:answer").await;
-    let s_escalated = open_session(&pool, company, channel, "outcome:escalated").await;
-    let s_agent = open_session(&pool, company, channel, "outcome:agent").await;
+    let s_answer = open_session(&pool, channel, "outcome:answer").await;
+    let s_escalated = open_session(&pool, channel, "outcome:escalated").await;
+    let s_agent = open_session(&pool, channel, "outcome:agent").await;
 
     // s_answer: never answered, never assigned (failure no_answer).
     // s_escalated: TWO agent ledger rows (escalated).
     // s_agent: one agent ledger row, answered (no_failure).
     sqlx::query(
         r#"INSERT INTO livechat.member_histories
-               (session_id, persona, operator_user_id, expertise_names, company_id)
-           VALUES ($1, 'agent', $2, '{}', $4), ($1, 'agent', $3, '{}', $4)"#,
+               (session_id, persona, operator_user_id, expertise_names)
+           VALUES ($1, 'agent', $2, '{}'), ($1, 'agent', $3, '{}')"#,
     )
     .bind(s_escalated.id)
     .bind(op_a)
     .bind(op_b)
-    .bind(company)
     .execute(&pool)
     .await
     .unwrap_or_else(|e| panic!("escalated ledger seed failed: {e}"));
     sqlx::query(
         r#"INSERT INTO livechat.member_histories
-               (session_id, persona, operator_user_id, expertise_names, company_id)
-           VALUES ($1, 'agent', $2, '{}', $3)"#,
+               (session_id, persona, operator_user_id, expertise_names)
+           VALUES ($1, 'agent', $2, '{}')"#,
     )
     .bind(s_agent.id)
     .bind(op_a)
-    .bind(company)
     .execute(&pool)
     .await
     .unwrap_or_else(|e| panic!("agent ledger seed failed: {e}"));
@@ -139,10 +136,9 @@ async fn outcomes_derive_per_record_never_per_recordset() {
 async fn report_reads_require_bounded_windows() {
     let db = TestDb::new("report").await;
     let pool = db.pool.clone();
-    let company = Uuid::new_v4();
     let website = Uuid::new_v4();
-    let channel = seed_channel_with_operators(&pool, company, website, &[Uuid::new_v4()]).await;
-    let _ = open_session(&pool, company, channel, "report:seed").await;
+    let channel = seed_channel_with_operators(&pool, website, &[Uuid::new_v4()]).await;
+    let _ = open_session(&pool, channel, "report:seed").await;
 
     let reports = ReportService::new(pool.clone());
 
@@ -196,15 +192,14 @@ async fn report_reads_require_bounded_windows() {
 
     // The windowed happiness KPI: ratings count ONLY inside the
     // window (never a lifetime average).
-    let rated = open_session(&pool, company, channel, "report:rated").await;
+    let rated = open_session(&pool, channel, "report:rated").await;
     sqlx::query(
         r#"INSERT INTO livechat.ratings
-               (session_id, value, rated_persona, operator_user_id, company_id)
-           VALUES ($1, 10, 'agent', $2, $3)"#,
+               (session_id, value, rated_persona, operator_user_id)
+           VALUES ($1, 10, 'agent', $2)"#,
     )
     .bind(rated.id)
     .bind(Uuid::new_v4())
-    .bind(company)
     .execute(&pool)
     .await
     .unwrap_or_else(|e| panic!("rating seed failed: {e}"));
@@ -222,26 +217,6 @@ async fn report_reads_require_bounded_windows() {
     assert_eq!(
         summary.summary.happy_count, 1,
         "a 10 is happy in the windowed mix"
-    );
-
-    // The view itself carries no company leak: reading through the
-    // scoped helper under ANOTHER company sees zero rows. This MUST
-    // run on the fenced app role — the owner role bypasses row-level
-    // security even with the company GUC set, so a leak check on the
-    // owner pool proves nothing.
-    let other_company = Uuid::new_v4();
-    let fenced = super::common::fenced_role_pool(&pool, &db.name).await;
-    let (leak,): (i64,) =
-        backbone_orm::company_scope::with_company_scope(Some(other_company), async {
-            sqlx::query_as::<_, (i64,)>("SELECT count(*) FROM livechat.session_report")
-                .fetch_one(&fenced)
-                .await
-        })
-        .await
-        .unwrap_or_else(|e| panic!("fenced view read failed: {e}"));
-    assert_eq!(
-        leak, 0,
-        "the report view flows the fence (no cross-company rows)"
     );
 
     // The report and the ladder share the ONE window constant.

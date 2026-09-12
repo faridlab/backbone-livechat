@@ -5,9 +5,9 @@
 //! Returns an `EntityValidator<ChannelRule>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
-use crate::domain::entity::ChannelRule;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
 use backbone_core::{NonNegative, RequiredString};
+use crate::domain::entity::ChannelRule;
 
 /// Validator type alias for ChannelRule entities.
 pub type ChannelRuleValidator = EntityValidator<ChannelRule>;
@@ -15,15 +15,9 @@ pub type ChannelRuleValidator = EntityValidator<ChannelRule>;
 /// Build a validator for ChannelRule with all schema-defined field rules.
 pub fn channel_rule_validator() -> ChannelRuleValidator {
     EntityValidator::new()
-        .rule(RequiredString::new("regex_url", |e: &ChannelRule| {
-            &e.regex_url
-        }))
-        .rule(NonNegative::new("auto_popup_timer", |e: &ChannelRule| {
-            e.auto_popup_timer as i64
-        }))
-        .rule(NonNegative::new("sequence", |e: &ChannelRule| {
-            e.sequence as i64
-        }))
+        .rule(RequiredString::new("regex_url", |e: &ChannelRule| &e.regex_url))
+        .rule(NonNegative::new("auto_popup_timer", |e: &ChannelRule| e.auto_popup_timer as i64))
+        .rule(NonNegative::new("sequence", |e: &ChannelRule| e.sequence as i64))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

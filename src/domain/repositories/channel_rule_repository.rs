@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the ChannelRule aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
 use crate::domain::entity::{ChannelRule, LivechatChatbotCondition, LivechatRuleAction};
@@ -49,18 +49,12 @@ pub struct ChannelRuleFilter {
     pub action: Option<LivechatRuleAction>,
     pub chatbot_script_id: Option<Uuid>,
     pub chatbot_enabled_condition: Option<LivechatChatbotCondition>,
-    pub company_id: Option<Uuid>,
 }
 
 impl ChannelRuleFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.channel_id.is_some()
-            || self.regex_url.is_some()
-            || self.action.is_some()
-            || self.chatbot_script_id.is_some()
-            || self.chatbot_enabled_condition.is_some()
-            || self.company_id.is_some()
+        self.channel_id.is_some() || self.regex_url.is_some() || self.action.is_some() || self.chatbot_script_id.is_some() || self.chatbot_enabled_condition.is_some()
     }
 }
 
@@ -70,6 +64,7 @@ impl ChannelRuleFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait ChannelRuleRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -94,15 +89,10 @@ pub trait ChannelRuleRepository: Send + Sync {
     // =========================================================================
 
     /// List channel_rule with pagination
-    async fn list(&self, params: ChannelRulePaginationParams)
-        -> Result<ChannelRulePaginatedResult>;
+    async fn list(&self, params: ChannelRulePaginationParams) -> Result<ChannelRulePaginatedResult>;
 
     /// List channel_rule with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: ChannelRulePaginationParams,
-        filters: ChannelRuleFilter,
-    ) -> Result<ChannelRulePaginatedResult>;
+    async fn list_with_filters(&self, params: ChannelRulePaginationParams, filters: ChannelRuleFilter) -> Result<ChannelRulePaginatedResult>;
 
     /// Count all channel_rule entities
     async fn count(&self) -> Result<u64>;
@@ -124,10 +114,7 @@ pub trait ChannelRuleRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<ChannelRule>>;
 
     /// List soft-deleted channel_rule entities
-    async fn list_deleted(
-        &self,
-        params: ChannelRulePaginationParams,
-    ) -> Result<ChannelRulePaginatedResult>;
+    async fn list_deleted(&self, params: ChannelRulePaginationParams) -> Result<ChannelRulePaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

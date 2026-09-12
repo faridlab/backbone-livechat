@@ -5,9 +5,9 @@
 //! Returns an `EntityValidator<Channel>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
-use crate::domain::entity::Channel;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
 use backbone_core::{NonNegative, OptionalNotBlank, RequiredString};
+use crate::domain::entity::Channel;
 
 /// Validator type alias for Channel entities.
 pub type ChannelValidator = EntityValidator<Channel>;
@@ -16,18 +16,10 @@ pub type ChannelValidator = EntityValidator<Channel>;
 pub fn channel_validator() -> ChannelValidator {
     EntityValidator::new()
         .rule(RequiredString::new("name", |e: &Channel| &e.name))
-        .rule(OptionalNotBlank::new("button_text", |e: &Channel| {
-            e.button_text.as_deref()
-        }))
-        .rule(OptionalNotBlank::new("welcome_message", |e: &Channel| {
-            e.welcome_message.as_deref()
-        }))
-        .rule(NonNegative::new("max_sessions", |e: &Channel| {
-            e.max_sessions as i64
-        }))
-        .rule(OptionalNotBlank::new("review_link", |e: &Channel| {
-            e.review_link.as_deref()
-        }))
+        .rule(OptionalNotBlank::new("button_text", |e: &Channel| e.button_text.as_deref()))
+        .rule(OptionalNotBlank::new("welcome_message", |e: &Channel| e.welcome_message.as_deref()))
+        .rule(NonNegative::new("max_sessions", |e: &Channel| e.max_sessions as i64))
+        .rule(OptionalNotBlank::new("review_link", |e: &Channel| e.review_link.as_deref()))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

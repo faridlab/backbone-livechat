@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::OperatorProfile;
+use crate::domain::entity::AuditMetadata;
 
 // =============================================================================
 // Create DTO
@@ -32,38 +32,17 @@ use crate::domain::entity::OperatorProfile;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateOperatorProfileDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "user_id")]
     pub user_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 200)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "display_name"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "display_name")]
     pub display_name: Option<String>,
     pub languages: Vec<String>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "last_heartbeat_at"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "last_heartbeat_at")]
     pub last_heartbeat_at: Option<DateTime<Utc>>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "last_assigned_at"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "last_assigned_at")]
     pub last_assigned_at: Option<DateTime<Utc>>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -79,38 +58,17 @@ pub struct CreateOperatorProfileDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateOperatorProfileDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "user_id")]
     pub user_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 200)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "display_name"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "display_name")]
     pub display_name: Option<String>,
     pub languages: Vec<String>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "last_heartbeat_at"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "last_heartbeat_at")]
     pub last_heartbeat_at: Option<DateTime<Utc>>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "last_assigned_at"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "last_assigned_at")]
     pub last_assigned_at: Option<DateTime<Utc>>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -126,10 +84,7 @@ pub struct UpdateOperatorProfileDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchOperatorProfileDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "user_id")]
     pub user_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 200)))]
@@ -141,23 +96,12 @@ pub struct PatchOperatorProfileDto {
     pub last_heartbeat_at: Option<DateTime<Utc>>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "last_assigned_at")]
     pub last_assigned_at: Option<DateTime<Utc>>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
 }
 
 impl PatchOperatorProfileDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.user_id.is_some()
-            || self.display_name.is_some()
-            || self.languages.is_some()
-            || self.last_heartbeat_at.is_some()
-            || self.last_assigned_at.is_some()
-            || self.company_id.is_some()
+        self.user_id.is_some() || self.display_name.is_some() || self.languages.is_some() || self.last_heartbeat_at.is_some() || self.last_assigned_at.is_some()
     }
 }
 
@@ -173,25 +117,14 @@ impl PatchOperatorProfileDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct OperatorProfileResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub user_id: Uuid,
     pub display_name: Option<String>,
     pub languages: Vec<String>,
     pub last_heartbeat_at: Option<DateTime<Utc>>,
     pub last_assigned_at: Option<DateTime<Utc>>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
     pub metadata: AuditMetadata,
 }
 
@@ -225,12 +158,7 @@ pub struct OperatorProfileListResponseDto {
 
 impl OperatorProfileListResponseDto {
     /// Create a new list response from items and pagination info
-    pub fn new(
-        items: Vec<OperatorProfileResponseDto>,
-        total: u64,
-        page: u32,
-        per_page: u32,
-    ) -> Self {
+    pub fn new(items: Vec<OperatorProfileResponseDto>, total: u64, page: u32, per_page: u32) -> Self {
         let total_pages = if per_page > 0 {
             ((total as f64) / (per_page as f64)).ceil() as u32
         } else {
@@ -273,7 +201,6 @@ impl From<OperatorProfile> for OperatorProfileResponseDto {
             languages: entity.languages,
             last_heartbeat_at: entity.last_heartbeat_at,
             last_assigned_at: entity.last_assigned_at,
-            company_id: entity.company_id,
             metadata: entity.metadata,
         }
     }
@@ -301,7 +228,6 @@ impl From<CreateOperatorProfileDto> for OperatorProfile {
             languages: dto.languages,
             last_heartbeat_at: dto.last_heartbeat_at,
             last_assigned_at: dto.last_assigned_at,
-            company_id: dto.company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -316,7 +242,6 @@ impl From<&OperatorProfile> for OperatorProfileResponseDto {
             languages: entity.languages.clone(),
             last_heartbeat_at: entity.last_heartbeat_at.clone(),
             last_assigned_at: entity.last_assigned_at.clone(),
-            company_id: entity.company_id.clone(),
             metadata: entity.metadata.clone(),
         }
     }
@@ -335,7 +260,6 @@ impl backbone_core::ApplyUpdateDto<UpdateOperatorProfileDto> for OperatorProfile
         self.languages = dto.languages;
         self.last_heartbeat_at = dto.last_heartbeat_at;
         self.last_assigned_at = dto.last_assigned_at;
-        self.company_id = dto.company_id;
         Ok(self)
     }
 }

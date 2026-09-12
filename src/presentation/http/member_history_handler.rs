@@ -8,9 +8,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use axum::Router;
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 // Backbone framework imports
 use backbone_core::http::BackboneCrudHandler;
@@ -22,13 +22,12 @@ use backbone_auth::middleware::AuthContext;
 use backbone_auth::AuthMiddleware;
 
 // Domain imports
-use crate::application::service::{MemberHistoryService, ServiceError};
 use crate::domain::entity::*;
+use crate::application::service::{MemberHistoryService, ServiceError};
 
 // DTO imports
-use crate::presentation::dto::{
-    CreateMemberHistoryDto, MemberHistoryResponseDto, PatchMemberHistoryDto, UpdateMemberHistoryDto,
-};
+use crate::presentation::dto::{CreateMemberHistoryDto, UpdateMemberHistoryDto, PatchMemberHistoryDto, MemberHistoryResponseDto};
+
 
 /// Application error type
 #[derive(Debug, thiserror::Error)]
@@ -63,14 +62,8 @@ impl axum::response::IntoResponse for MemberHistoryError {
         let (status, code) = match &self {
             Self::NotFound(_) => (StatusCode::NOT_FOUND, "MEMBERHISTORY_NOT_FOUND"),
             Self::Validation(_) => (StatusCode::BAD_REQUEST, "MEMBERHISTORY_VALIDATION_ERROR"),
-            Self::Database(_) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "MEMBERHISTORY_DATABASE_ERROR",
-            ),
-            Self::Internal(_) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "MEMBERHISTORY_INTERNAL_ERROR",
-            ),
+            Self::Database(_) => (StatusCode::INTERNAL_SERVER_ERROR, "MEMBERHISTORY_DATABASE_ERROR"),
+            Self::Internal(_) => (StatusCode::INTERNAL_SERVER_ERROR, "MEMBERHISTORY_INTERNAL_ERROR"),
         };
 
         let body = serde_json::json!({
@@ -116,13 +109,10 @@ impl axum::response::IntoResponse for MemberHistoryError {
 /// let router = create_member_history_routes(service);
 /// ```
 pub fn create_member_history_routes(service: Arc<MemberHistoryService>) -> Router {
-    BackboneCrudHandler::<
-        MemberHistoryService,
-        MemberHistory,
-        CreateMemberHistoryDto,
-        UpdateMemberHistoryDto,
-        MemberHistoryResponseDto,
-    >::routes(service, "/member_histories")
+    BackboneCrudHandler::<MemberHistoryService, MemberHistory, CreateMemberHistoryDto, UpdateMemberHistoryDto, MemberHistoryResponseDto>::routes(
+        service,
+        "/member_histories",
+    )
 }
 
 /// Create Axum router with only the read (GET) endpoints for MemberHistory.
@@ -131,13 +121,10 @@ pub fn create_member_history_routes(service: Arc<MemberHistoryService>) -> Route
 /// Mutations must be served separately via `create_member_history_write_routes`,
 /// typically wrapped in an auth middleware layer.
 pub fn create_member_history_read_routes(service: Arc<MemberHistoryService>) -> Router {
-    BackboneCrudHandler::<
-        MemberHistoryService,
-        MemberHistory,
-        CreateMemberHistoryDto,
-        UpdateMemberHistoryDto,
-        MemberHistoryResponseDto,
-    >::read_routes(service, "/member_histories")
+    BackboneCrudHandler::<MemberHistoryService, MemberHistory, CreateMemberHistoryDto, UpdateMemberHistoryDto, MemberHistoryResponseDto>::read_routes(
+        service,
+        "/member_histories",
+    )
 }
 
 /// Create Axum router with only the write (mutation) endpoints for MemberHistory.
@@ -152,13 +139,10 @@ pub fn create_member_history_read_routes(service: Arc<MemberHistoryService>) -> 
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
 pub fn create_member_history_write_routes(service: Arc<MemberHistoryService>) -> Router {
-    BackboneCrudHandler::<
-        MemberHistoryService,
-        MemberHistory,
-        CreateMemberHistoryDto,
-        UpdateMemberHistoryDto,
-        MemberHistoryResponseDto,
-    >::write_routes(service, "/member_histories")
+    BackboneCrudHandler::<MemberHistoryService, MemberHistory, CreateMemberHistoryDto, UpdateMemberHistoryDto, MemberHistoryResponseDto>::write_routes(
+        service,
+        "/member_histories",
+    )
 }
 
 /// Create authenticated routes with auth middleware.
@@ -175,35 +159,30 @@ pub fn create_protected_member_history_routes<A: AuthMiddleware + Send + Sync + 
     use axum::response::IntoResponse;
 
     let auth_layer = auth.clone();
-    create_member_history_routes(service).layer(middleware::from_fn(
-        move |mut req: axum::extract::Request, next: axum::middleware::Next| {
+    create_member_history_routes(service)
+        .layer(middleware::from_fn(move |mut req: axum::extract::Request, next: axum::middleware::Next| {
             let auth = auth_layer.clone();
             async move {
-                let token = req
-                    .headers()
+                let token = req.headers()
                     .get(axum::http::header::AUTHORIZATION)
                     .and_then(|h| h.to_str().ok())
-                    .and_then(|raw| {
-                        raw.strip_prefix("Bearer ")
-                            .or_else(|| raw.strip_prefix("bearer "))
-                    })
+                    .and_then(|raw| raw.strip_prefix("Bearer ").or_else(|| raw.strip_prefix("bearer ")))
                     .unwrap_or("");
                 match auth.authenticate(token).await {
                     Ok(ctx) => {
                         req.extensions_mut().insert(ctx);
                         next.run(req).await
                     }
-                    Err(_) => (
-                        axum::http::StatusCode::UNAUTHORIZED,
-                        axum::Json(serde_json::json!({
-                            "success": false,
-                            "error": "unauthorized",
-                            "message": "Authentication required"
-                        })),
-                    )
-                        .into_response(),
+                    Err(_) => {
+                        (axum::http::StatusCode::UNAUTHORIZED,
+                         axum::Json(serde_json::json!({
+                             "success": false,
+                             "error": "unauthorized",
+                             "message": "Authentication required"
+                         }))
+                        ).into_response()
+                    }
                 }
             }
-        },
-    ))
+        }))
 }

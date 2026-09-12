@@ -5,13 +5,11 @@
 //! This trait defines the repository contract for the Session aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
-use crate::domain::entity::{
-    LivechatCloseReason, LivechatFailure, LivechatSessionOutcome, LivechatSessionStatus, Session,
-};
+use crate::domain::entity::{Session, LivechatCloseReason, LivechatFailure, LivechatSessionOutcome, LivechatSessionStatus};
 
 /// Pagination parameters for list queries
 #[derive(Debug, Clone, Default)]
@@ -58,31 +56,16 @@ pub struct SessionFilter {
     pub visitor_country_code: Option<String>,
     pub visitor_timezone: Option<String>,
     pub is_pending_request: Option<bool>,
+    pub crm_lead_id: Option<Uuid>,
     pub visitor_language: Option<String>,
     pub is_test: Option<bool>,
     pub error_detail: Option<String>,
-    pub company_id: Option<Uuid>,
 }
 
 impl SessionFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.channel_id.is_some()
-            || self.title.is_some()
-            || self.status.is_some()
-            || self.failure.is_some()
-            || self.outcome.is_some()
-            || self.close_reason.is_some()
-            || self.operator_user_id.is_some()
-            || self.chatbot_current_step_id.is_some()
-            || self.website_visitor_id.is_some()
-            || self.visitor_country_code.is_some()
-            || self.visitor_timezone.is_some()
-            || self.is_pending_request.is_some()
-            || self.visitor_language.is_some()
-            || self.is_test.is_some()
-            || self.error_detail.is_some()
-            || self.company_id.is_some()
+        self.channel_id.is_some() || self.title.is_some() || self.status.is_some() || self.failure.is_some() || self.outcome.is_some() || self.close_reason.is_some() || self.operator_user_id.is_some() || self.chatbot_current_step_id.is_some() || self.website_visitor_id.is_some() || self.visitor_country_code.is_some() || self.visitor_timezone.is_some() || self.is_pending_request.is_some() || self.crm_lead_id.is_some() || self.visitor_language.is_some() || self.is_test.is_some() || self.error_detail.is_some()
     }
 }
 
@@ -92,6 +75,7 @@ impl SessionFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait SessionRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -119,11 +103,7 @@ pub trait SessionRepository: Send + Sync {
     async fn list(&self, params: SessionPaginationParams) -> Result<SessionPaginatedResult>;
 
     /// List session with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: SessionPaginationParams,
-        filters: SessionFilter,
-    ) -> Result<SessionPaginatedResult>;
+    async fn list_with_filters(&self, params: SessionPaginationParams, filters: SessionFilter) -> Result<SessionPaginatedResult>;
 
     /// Count all session entities
     async fn count(&self) -> Result<u64>;
@@ -145,8 +125,7 @@ pub trait SessionRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<Session>>;
 
     /// List soft-deleted session entities
-    async fn list_deleted(&self, params: SessionPaginationParams)
-        -> Result<SessionPaginatedResult>;
+    async fn list_deleted(&self, params: SessionPaginationParams) -> Result<SessionPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

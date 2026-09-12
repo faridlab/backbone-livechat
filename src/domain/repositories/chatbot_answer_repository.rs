@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the ChatbotAnswer aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
 use crate::domain::entity::ChatbotAnswer;
@@ -46,13 +46,12 @@ pub struct ChatbotAnswerPaginatedResult {
 pub struct ChatbotAnswerFilter {
     pub question_step_id: Option<Uuid>,
     pub label: Option<String>,
-    pub company_id: Option<Uuid>,
 }
 
 impl ChatbotAnswerFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.question_step_id.is_some() || self.label.is_some() || self.company_id.is_some()
+        self.question_step_id.is_some() || self.label.is_some()
     }
 }
 
@@ -62,6 +61,7 @@ impl ChatbotAnswerFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait ChatbotAnswerRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -86,17 +86,10 @@ pub trait ChatbotAnswerRepository: Send + Sync {
     // =========================================================================
 
     /// List chatbot_answer with pagination
-    async fn list(
-        &self,
-        params: ChatbotAnswerPaginationParams,
-    ) -> Result<ChatbotAnswerPaginatedResult>;
+    async fn list(&self, params: ChatbotAnswerPaginationParams) -> Result<ChatbotAnswerPaginatedResult>;
 
     /// List chatbot_answer with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: ChatbotAnswerPaginationParams,
-        filters: ChatbotAnswerFilter,
-    ) -> Result<ChatbotAnswerPaginatedResult>;
+    async fn list_with_filters(&self, params: ChatbotAnswerPaginationParams, filters: ChatbotAnswerFilter) -> Result<ChatbotAnswerPaginatedResult>;
 
     /// Count all chatbot_answer entities
     async fn count(&self) -> Result<u64>;
@@ -118,10 +111,7 @@ pub trait ChatbotAnswerRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<ChatbotAnswer>>;
 
     /// List soft-deleted chatbot_answer entities
-    async fn list_deleted(
-        &self,
-        params: ChatbotAnswerPaginationParams,
-    ) -> Result<ChatbotAnswerPaginatedResult>;
+    async fn list_deleted(&self, params: ChatbotAnswerPaginationParams) -> Result<ChatbotAnswerPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

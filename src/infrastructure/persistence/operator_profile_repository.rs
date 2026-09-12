@@ -23,9 +23,7 @@ pub struct OperatorProfileRepository(
 
 impl std::ops::Deref for OperatorProfileRepository {
     type Target = backbone_orm::GenericCrudRepository<OperatorProfile, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl OperatorProfileRepository {

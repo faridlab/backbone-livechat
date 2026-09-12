@@ -22,19 +22,12 @@ version: 1
 schema: livechat
 description: "livechat — the visitor/operator chat port: sessions under a deterministic operator-selection ladder (capacity, stickiness, language/expertise rungs — one window, a 120s anti-burst buffer on every path, no die roll), the member-history ledger behind three DB uniques plus a strict persona trichotomy, the chatbot pointer state machine (one column + message rows, seven closed step types), a declared public surface gated by Tier A HMAC guest capabilities with per-IP/per-identity throttles, and the operator-initiated website invite overlays re-homed onto this module's own tables (Odoo im_livechat + website_livechat port)"
 
-# =============================================================================
-# company_fence (ADR-0014): multi-tenant row-level-security posture
-# -----------------------------------------------------------------------------
-# Posture: strict — every table carries company_id NOT NULL. Livechat is a
-# per-company operating surface (channels, operators, sessions, transcripts
-# are all tenant-owned; there is NO shared master data in this domain — even
-# tags and expertise are per-company canonical namespaces). The RLS fence
-# from the generated enable_company_rls migration therefore admits exactly
-# the rows whose company_id equals the bound app.company_id; the NULL arm of
-# the standard policy text is inert by construction (company_id is NOT NULL
-# everywhere).
-# -----------------------------------------------------------------------------
-company_fence: strict
+# Tenancy: none, by design (ADR-0029). The module is tenant-agnostic and
+# reusable — it ships no scoping column and no fence declaration. A composing
+# backend-service that wants these tables org-scoped declares them in its
+# tenancy.yaml; the decorator installs org_unit_id, the RLS policy, and the
+# org-scoped uniques (one operator profile per unit, the case-insensitive
+# tag/script namespaces) at composition time.
 
 config:
   database: postgresql

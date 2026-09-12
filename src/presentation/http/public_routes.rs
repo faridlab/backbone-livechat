@@ -6,9 +6,11 @@
 //! host nests BARE of `company_auth` under the schema name —
 //! `Router::new().nest("/api/v1/livechat", livechat_public_routes(state))`.
 //! The Tier A capability + the fixed-window throttle + the
-//! website-host fence are the fence; there is no session, no company
-//! auth middleware, no CORS mirror here (the host composes CORS at
-//! its own edge — this module never answers `*` for anything).
+//! website-host binding are the module edge; row scoping itself is
+//! the composing service's tenancy decorator (ADR-0029). There is no
+//! session, no company auth middleware, no CORS mirror here (the
+//! host composes CORS at its own edge — this module never answers
+//! `*` for anything).
 //!
 //! The allowlist (exhaustive — the boundary probe's target):
 //! - `GET  /public/availability`                    the button answer
@@ -22,11 +24,13 @@
 //! - `POST /public/invites/:capability/accept`      the invite handoff
 //!
 //! THE FENCE ON THE PUBLIC SURFACE: every handler resolves the
-//! request Host through the website bridge, takes the website's
-//! company off the binding, and binds that company scope around
-//! every repository call — a token minted on another site verifies
-//! (the HMAC secret is per-install), then reads as MISSING under the
-//! fence: the uniform `livechat_session_not_found` 404, no oracle.
+//! request Host through the website bridge, so channel and rule
+//! routing are pinned to the site the Host names. Row isolation is
+//! the composing service's tenancy decorator (ADR-0029 — the fence
+//! is the composer's, not the module's): a token minted on another
+//! site verifies (the HMAC secret is per-install), then reads as
+//! MISSING under that fence — the uniform
+//! `livechat_session_not_found` 404, no oracle.
 //!
 //! The secret: `LIVECHAT_CAPABILITY_SECRET` at compose; unset = the
 //! minting verbs answer the typed 503
@@ -368,7 +372,8 @@ async fn open_handler(
         return refused;
     }
 
-    // The host fence: the website the Host header names.
+    // The website the Host header names (the channel anchor for the
+    // open; row scoping rides the composing service's decorator).
     let host = match host_header(&headers) {
         Some(h) => h,
         None => return LivechatError::ChannelNotFound.into_response(),
@@ -382,7 +387,7 @@ async fn open_handler(
         .and_then(|v| v.to_str().ok())
         .map(str::to_string);
 
-    let result = backbone_orm::company_scope::with_company_scope(Some(binding.company_id), async {
+    let result = async {
         // The website's bound active channel + the matched rule's
         // script (bot-first routing; the human path stands when the
         // match routes nowhere).
@@ -477,7 +482,7 @@ async fn open_handler(
             visitor_key,
             fresh: true,
         })
-    })
+    }
     .await;
 
     let outcome = match result {
@@ -525,12 +530,11 @@ struct OpenOutcome {
 async fn session_handler(
     State(state): State<LivechatPublicState>,
     Path(capability): Path<String>,
-    headers: HeaderMap,
 ) -> Response {
     let Some((session_id, _visitor_key)) = verify_guest(&state, &capability) else {
         return LivechatError::SessionNotFound.into_response();
     };
-    match fenced_session(&state, &headers, session_id).await {
+    match token_session(&state, session_id).await {
         Ok(row) => {
             let view = public_view(&state.sessions, &state.chatbot, &row).await;
             (StatusCode::OK, Json(view)).into_response()
@@ -544,7 +548,6 @@ async fn session_handler(
 async fn poll_handler(
     State(state): State<LivechatPublicState>,
     Path(capability): Path<String>,
-    headers: HeaderMap,
     Query(query): Query<MessagesQuery>,
 ) -> Response {
     let Some((session_id, visitor_key)) = verify_guest(&state, &capability) else {
@@ -562,21 +565,18 @@ async fn poll_handler(
             Vec<crate::application::service::mail_port::CarrierMessage>,
         ),
         LivechatError,
-    > = backbone_orm::company_scope::with_company_scope(
-        company_of(&state, &headers).await,
-        async {
-            let row = state
-                .sessions
-                .find(session_id)
-                .await?
-                .ok_or(LivechatError::SessionNotFound)?;
-            let messages = state
-                .sessions
-                .messages(session_id, query.after.as_deref(), POLL_LIMIT)
-                .await?;
-            Ok((row, messages))
-        },
-    )
+    > = async {
+        let row = state
+            .sessions
+            .find(session_id)
+            .await?
+            .ok_or(LivechatError::SessionNotFound)?;
+        let messages = state
+            .sessions
+            .messages(session_id, query.after.as_deref(), POLL_LIMIT)
+            .await?;
+        Ok((row, messages))
+    }
     .await;
     match result {
         Ok((row, messages)) => {
@@ -634,13 +634,13 @@ async fn message_handler(
         return LivechatError::InputInvalid.into_response();
     }
 
-    // The host fence + the visitor-facts website arm (the heartbeat
-    // piggyback needs the site the session lives on).
+    // The website the Host header names (the visitor-facts arm — the
+    // heartbeat piggyback needs the site the session lives on).
     let binding = match binding_of(&state, &headers).await {
         Some(b) => b,
         None => return LivechatError::SessionNotFound.into_response(),
     };
-    let result = backbone_orm::company_scope::with_company_scope(Some(binding.company_id), async {
+    let result = async {
         let row = state
             .sessions
             .find(session_id)
@@ -683,7 +683,7 @@ async fn message_handler(
             .await?
             .ok_or(LivechatError::SessionNotFound)?;
         Ok((message, fresh))
-    })
+    }
     .await;
     match result {
         Ok((message, fresh)) => {
@@ -712,7 +712,6 @@ async fn message_handler(
 async fn answer_handler(
     State(state): State<LivechatPublicState>,
     Path(capability): Path<String>,
-    headers: HeaderMap,
     Json(payload): Json<AnswerRequest>,
 ) -> Response {
     let Some((session_id, visitor_key)) = verify_guest(&state, &capability) else {
@@ -734,23 +733,20 @@ async fn answer_handler(
             .into_response()
         }
     };
-    let result = backbone_orm::company_scope::with_company_scope(
-        company_of(&state, &headers).await,
-        async {
-            let row = state
-                .sessions
-                .find(session_id)
-                .await?
-                .ok_or(LivechatError::SessionNotFound)?;
-            if row.closed_at.is_some() {
-                return Err(LivechatError::Validation("session is closed".into()));
-            }
-            state
-                .chatbot
-                .answer(session_id, payload.step_id, parsed, None)
-                .await
-        },
-    )
+    let result = async {
+        let row = state
+            .sessions
+            .find(session_id)
+            .await?
+            .ok_or(LivechatError::SessionNotFound)?;
+        if row.closed_at.is_some() {
+            return Err(LivechatError::Validation("session is closed".into()));
+        }
+        state
+            .chatbot
+            .answer(session_id, payload.step_id, parsed, None)
+            .await
+    }
     .await;
     match result {
         Ok(outcome) => {
@@ -781,16 +777,11 @@ async fn answer_handler(
 async fn close_handler(
     State(state): State<LivechatPublicState>,
     Path(capability): Path<String>,
-    headers: HeaderMap,
 ) -> Response {
     let Some((session_id, _)) = verify_guest(&state, &capability) else {
         return LivechatError::SessionNotFound.into_response();
     };
-    let result = backbone_orm::company_scope::with_company_scope(
-        company_of(&state, &headers).await,
-        async { state.sessions.close(session_id, "visitor_left", None).await },
-    )
-    .await;
+    let result = state.sessions.close(session_id, "visitor_left", None).await;
     match result {
         Ok(outcome) => {
             let row = match outcome {
@@ -809,7 +800,6 @@ async fn close_handler(
 async fn rating_handler(
     State(state): State<LivechatPublicState>,
     Path(capability): Path<String>,
-    headers: HeaderMap,
     Json(payload): Json<RatingRequest>,
 ) -> Response {
     let Some((session_id, visitor_key)) = verify_guest(&state, &capability) else {
@@ -821,22 +811,16 @@ async fn rating_handler(
     ) {
         return refused;
     }
-    let result = backbone_orm::company_scope::with_company_scope(
-        company_of(&state, &headers).await,
-        async {
-            state
-                .ratings
-                .submit(
-                    session_id,
-                    payload.value,
-                    &payload.rated_persona,
-                    payload.comment.as_deref(),
-                    None,
-                )
-                .await
-        },
-    )
-    .await;
+    let result = state
+        .ratings
+        .submit(
+            session_id,
+            payload.value,
+            &payload.rated_persona,
+            payload.comment.as_deref(),
+            None,
+        )
+        .await;
     match result {
         Ok(row) => (
             StatusCode::CREATED,
@@ -857,7 +841,6 @@ async fn rating_handler(
 async fn accept_handler(
     State(state): State<LivechatPublicState>,
     Path(capability): Path<String>,
-    headers: HeaderMap,
 ) -> Response {
     if !state.secret_is_configured() {
         return LivechatError::CapabilitySecretNotConfigured.into_response();
@@ -877,16 +860,10 @@ async fn accept_handler(
     let Some(visitor_key) = claims.visitor_key().map(str::to_string) else {
         return LivechatError::SessionNotFound.into_response();
     };
-    let result = backbone_orm::company_scope::with_company_scope(
-        company_of(&state, &headers).await,
-        async {
-            state
-                .website_requests
-                .accept(session_id, &visitor_key, None)
-                .await
-        },
-    )
-    .await;
+    let result = state
+        .website_requests
+        .accept(session_id, &visitor_key, None)
+        .await;
     let row = match result {
         Ok(row) => row,
         Err(e) => return e.into_response(),
@@ -938,31 +915,24 @@ fn verify_guest(state: &LivechatPublicState, token: &str) -> Option<(Uuid, Strin
 }
 
 /// Resolve the request Host to the bound website (`None` when the
-/// Host does not name a bound site — the scoped reads then see
-/// nothing, the uniform 404).
+/// Host does not name a bound site — the caller answers the uniform
+/// 404).
 async fn binding_of(state: &LivechatPublicState, headers: &HeaderMap) -> Option<WebsiteBinding> {
     let host = host_header(headers)?;
     state.bridge.resolve_website_by_host(&host).await.ok()
 }
 
-/// The company whose fence owns the session (see [`binding_of`]).
-async fn company_of(state: &LivechatPublicState, headers: &HeaderMap) -> Option<Uuid> {
-    binding_of(state, headers).await.map(|b| b.company_id)
-}
-
-/// A session read under the Host-derived fence (a token minted on
-/// another site verifies, then reads as missing — no oracle).
-async fn fenced_session(
+/// The session read behind a verified guest token. Row isolation is
+/// the composing service's tenancy decorator (ADR-0029): a token
+/// minted on another site verifies, then reads as missing — no
+/// oracle.
+async fn token_session(
     state: &LivechatPublicState,
-    headers: &HeaderMap,
     session_id: Uuid,
 ) -> Result<SessionRow, LivechatError> {
-    backbone_orm::company_scope::with_company_scope(company_of(state, headers).await, async {
-        state
-            .sessions
-            .find(session_id)
-            .await?
-            .ok_or(LivechatError::SessionNotFound)
-    })
-    .await
+    state
+        .sessions
+        .find(session_id)
+        .await?
+        .ok_or(LivechatError::SessionNotFound)
 }

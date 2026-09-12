@@ -2,8 +2,9 @@
 # livechat — the conversation tag vocabulary: ConversationTag (LC-19).
 #
 # PORT DECISIONS: canonical, non-translated, case-insensitive —
-# UNIQUE(company_id, lower(name)) lands in hardening ('Bug'/'bug' cannot
-# coexist). Deleting a tag is a plain FK cascade off session_tags — there
+# The case-insensitive namespace ('Bug'/'bug' cannot coexist) is an
+# org-scoped expression unique re-declared by the composing tenancy
+# decorator (ADR-0029). Deleting a tag is a plain FK cascade off session_tags — there
 # are no denormalized display names to resync, so upstream's sudo pre-delete
 # resync hack has no equivalent to keep. The random kanban color default is
 # dropped.
@@ -13,7 +14,7 @@ models:
 
   - name: ConversationTag
     collection: conversation_tags
-    description: "ConversationTag — a company's canonical conversation label: UNIQUE(company_id, lower(name)) (hardening expression unique). Deleting a tag cascades its session_tags rows (plain FK cascade)."
+    description: "ConversationTag — a company's canonical conversation label: case-insensitive unique per org unit (decorator-declared). Deleting a tag cascades its session_tags rows (plain FK cascade)."
     fields:
       id:
         type: uuid
@@ -22,11 +23,7 @@ models:
       name:
         type: string
         attributes: ["@required", "@max(120)"]
-        description: "The canonical label (case-insensitive unique per company)."
-      company_id:
-        type: uuid
-        attributes: ["@required", "@exclude_from_foreign_key_check", "@indexed"]
-        description: "Owning company (strict fence — logical corporate ref)."
+        description: "The canonical label (case-insensitive unique per org unit)."
       metadata:
         type: Metadata
         attributes: ["@audit_metadata"]

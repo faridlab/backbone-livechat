@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::ChatbotScript;
+use crate::domain::entity::AuditMetadata;
 
 // =============================================================================
 // Create DTO
@@ -38,12 +38,6 @@ pub struct CreateChatbotScriptDto {
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(alias = "is_active")]
     pub is_active: bool,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -65,12 +59,6 @@ pub struct UpdateChatbotScriptDto {
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(alias = "is_active")]
     pub is_active: bool,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -93,18 +81,12 @@ pub struct PatchChatbotScriptDto {
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "is_active")]
     pub is_active: Option<bool>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
 }
 
 impl PatchChatbotScriptDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.title.is_some() || self.is_active.is_some() || self.company_id.is_some()
+        self.title.is_some() || self.is_active.is_some()
     }
 }
 
@@ -120,20 +102,12 @@ impl PatchChatbotScriptDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ChatbotScriptResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub title: String,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     pub is_active: bool,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
     pub metadata: AuditMetadata,
 }
 
@@ -193,7 +167,6 @@ pub struct ChatbotScriptSummaryDto {
     pub id: Uuid,
     pub title: String,
     pub is_active: bool,
-    pub company_id: Uuid,
     pub created_at: Option<DateTime<Utc>>,
 }
 
@@ -207,7 +180,6 @@ impl From<ChatbotScript> for ChatbotScriptResponseDto {
             id: entity.id,
             title: entity.title,
             is_active: entity.is_active,
-            company_id: entity.company_id,
             metadata: entity.metadata,
         }
     }
@@ -220,7 +192,6 @@ impl From<ChatbotScript> for ChatbotScriptSummaryDto {
             id: entity.id,
             title: entity.title,
             is_active: entity.is_active,
-            company_id: entity.company_id,
             created_at,
         }
     }
@@ -232,7 +203,6 @@ impl From<CreateChatbotScriptDto> for ChatbotScript {
             id: Uuid::new_v4(),
             title: dto.title,
             is_active: dto.is_active,
-            company_id: dto.company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -244,7 +214,6 @@ impl From<&ChatbotScript> for ChatbotScriptResponseDto {
             id: entity.id.clone(),
             title: entity.title.clone(),
             is_active: entity.is_active.clone(),
-            company_id: entity.company_id.clone(),
             metadata: entity.metadata.clone(),
         }
     }
@@ -260,7 +229,6 @@ impl backbone_core::ApplyUpdateDto<UpdateChatbotScriptDto> for ChatbotScript {
     fn apply_update(mut self, dto: UpdateChatbotScriptDto) -> backbone_core::ServiceResult<Self> {
         self.title = dto.title;
         self.is_active = dto.is_active;
-        self.company_id = dto.company_id;
         Ok(self)
     }
 }

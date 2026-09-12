@@ -5,8 +5,8 @@
 //! Returns an `EntityValidator<ChannelMember>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
 use crate::domain::entity::ChannelMember;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for ChannelMember entities.
 pub type ChannelMemberValidator = EntityValidator<ChannelMember>;
@@ -16,7 +16,7 @@ pub fn channel_member_validator() -> ChannelMemberValidator {
     EntityValidator::new()
     // <<< CUSTOM RULES
     // END CUSTOM RULES
-    // No schema-derived rules — add custom rules above.
+        // No schema-derived rules — add custom rules above.
 }
 
 // <<< CUSTOM

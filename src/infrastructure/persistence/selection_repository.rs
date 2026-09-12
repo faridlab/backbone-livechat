@@ -32,9 +32,14 @@
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use backbone_orm::company_scope;
+// The typed multi-row read twins live only in the legacy `company_scope` module. Their
+// connection discipline is what this repository needs — request-dedicated connection when
+// the composing service bound one, plain pool otherwise. The helper's legacy task-local
+// branch is never taken: this module sets no legacy scope of its own (ADR-0029).
+use backbone_orm::org_scope;
 
 use crate::application::service::livechat_error::LivechatError;
+use super::relay_ambient_scope;
 
 /// THE ONE WINDOW: an ongoing session is `closed_at IS NULL AND
 /// last_interest_at >= now() - 1800s`. 30 minutes.
@@ -70,18 +75,18 @@ const POOL_CTE: &str = r#"cfg AS (
   WHERE c.id = $1
 ),
 heartbeats AS (
-  SELECT m.user_id, m.company_id, p.id AS profile_id,
+  SELECT m.user_id, p.id AS profile_id,
          p.languages, p.last_assigned_at
   FROM livechat.channel_members m
   JOIN livechat.operator_profiles p
-    ON p.user_id = m.user_id AND p.company_id = m.company_id
+    ON p.user_id = m.user_id
   WHERE m.channel_id = $1
     AND p.last_heartbeat_at >= now() - make_interval(secs => $3::bigint)
     AND (p.last_assigned_at IS NULL
          OR p.last_assigned_at < now() - make_interval(secs => $4::bigint))
 ),
 pool AS (
-  SELECT h.user_id, h.company_id, h.profile_id, h.languages, h.last_assigned_at,
+  SELECT h.user_id, h.profile_id, h.languages, h.last_assigned_at,
          cnt.ongoing,
          ARRAY(SELECT t.name
                  FROM livechat.operator_expertise oe
@@ -97,8 +102,7 @@ pool AS (
   CROSS JOIN LATERAL (
     SELECT count(*)::int AS ongoing
     FROM livechat.sessions s
-    WHERE s.company_id = h.company_id
-      AND s.operator_user_id = h.user_id
+    WHERE s.operator_user_id = h.user_id
       AND s.closed_at IS NULL
       AND s.last_interest_at >= now() - make_interval(secs => $2::bigint)
   ) cnt
@@ -229,15 +233,15 @@ LIMIT 1"#
     }
 
     /// The serialized, audited assignment write. ONE transaction:
-    /// bind the company fence → the ladder statement → the
-    /// first-wins conditional UPDATE (`operator_user_id IS NULL AND
-    /// closed_at IS NULL`; zero rows = someone else won, typed 409) →
+    /// the ladder statement → the first-wins conditional UPDATE
+    /// (`operator_user_id IS NULL AND closed_at IS NULL`; zero rows =
+    /// someone else won, typed 409) →
     /// the agent ledger upsert (rejoin re-points, never duplicates) →
     /// `last_assigned_at` stamp → the per-record outcome recompute →
     /// the `operator_assigned` audit row with the replay facts.
     pub async fn assign(&self, input: &AssignInput) -> Result<AssignOutcome, LivechatError> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
 
         // The ladder (inside the same transaction — the pool the
         // decision saw and the row it wins are one snapshot).
@@ -301,13 +305,13 @@ LIMIT 1"#
             r#"UPDATE livechat.sessions
                   SET operator_user_id = $2, status = 'in_progress'
                 WHERE id = $1 AND operator_user_id IS NULL AND closed_at IS NULL
-                RETURNING company_id"#,
+                RETURNING id"#,
         )
         .bind(input.session_id)
         .bind(pick.user_id)
         .fetch_optional(&mut *tx)
         .await?;
-        let Some((company_id,)) = won else {
+        if won.is_none() {
             // The loser of the race: commit the refusal audit (the
             // session row itself is untouched), then answer typed.
             audit_tx(
@@ -321,38 +325,35 @@ LIMIT 1"#
             .await?;
             tx.commit().await?;
             return Err(LivechatError::OperatorBusy);
-        };
+        }
 
         // The agent ledger row (rejoin re-points: ON CONFLICT on the
         // agent partial unique clears left_at, never duplicates).
         sqlx::query(
             r#"INSERT INTO livechat.member_histories
-                   (session_id, persona, operator_user_id, expertise_names, company_id)
+                   (session_id, persona, operator_user_id, expertise_names)
                VALUES ($1, 'agent', $2,
                        COALESCE((SELECT ARRAY(SELECT t.name
                                   FROM livechat.operator_expertise oe
                                   JOIN livechat.expertise_tags t ON t.id = oe.expertise_tag_id
                                  WHERE oe.operator_profile_id = p.id)
                                 FROM livechat.operator_profiles p
-                                WHERE p.user_id = $2 AND p.company_id = $3), '{}'),
-                       $3)
+                                WHERE p.user_id = $2), '{}'))
                ON CONFLICT (session_id, operator_user_id)
                WHERE persona = 'agent' AND operator_user_id IS NOT NULL
                DO UPDATE SET left_at = NULL, joined_at = now()"#,
         )
         .bind(input.session_id)
         .bind(pick.user_id)
-        .bind(company_id)
         .execute(&mut *tx)
         .await?;
 
         // The buffer's anchor.
         sqlx::query(
             "UPDATE livechat.operator_profiles SET last_assigned_at = now() \
-             WHERE user_id = $1 AND company_id = $2",
+             WHERE user_id = $1",
         )
         .bind(pick.user_id)
-        .bind(company_id)
         .execute(&mut *tx)
         .await?;
 
@@ -433,7 +434,7 @@ impl SelectionRepository {
         input: &ForwardAssignInput,
     ) -> Result<AssignOutcome, LivechatError> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
 
         let pick_sql = format!(
             r#"WITH {POOL_CTE},
@@ -523,14 +524,13 @@ LIMIT 1"#
                       title = CASE WHEN $3::text IS NOT NULL THEN
                           $3 || ' / ' || COALESCE((SELECT p.display_name
                                                      FROM livechat.operator_profiles p
-                                                    WHERE p.user_id = $2
-                                                      AND p.company_id = livechat.sessions.company_id),
+                                                    WHERE p.user_id = $2),
                                                     'operator')
                           ELSE title END,
                       expertise_names = CASE WHEN cardinality($4::text[]) > 0
                                              THEN $4 ELSE expertise_names END
                 WHERE id = $1 AND closed_at IS NULL
-                RETURNING company_id"#,
+                RETURNING id"#,
         )
         .bind(input.session_id)
         .bind(pick.user_id)
@@ -545,7 +545,7 @@ LIMIT 1"#
                 return Err(LivechatError::Database(e.to_string()));
             }
         };
-        let Some((company_id,)) = won else {
+        if won.is_none() {
             // The session closed under the handoff: commit the
             // refusal audit, answer the busy family.
             audit_tx(
@@ -559,28 +559,26 @@ LIMIT 1"#
             .await?;
             tx.commit().await?;
             return Err(LivechatError::OperatorBusy);
-        };
+        }
 
         // The new agent's ledger row (the previous agent's row stays;
         // >1 agent rows is the escalation derive's input).
         sqlx::query(
             r#"INSERT INTO livechat.member_histories
-                   (session_id, persona, operator_user_id, expertise_names, company_id)
+                   (session_id, persona, operator_user_id, expertise_names)
                VALUES ($1, 'agent', $2,
                        COALESCE((SELECT ARRAY(SELECT t.name
                                   FROM livechat.operator_expertise oe
                                   JOIN livechat.expertise_tags t ON t.id = oe.expertise_tag_id
                                  WHERE oe.operator_profile_id = p.id)
                                 FROM livechat.operator_profiles p
-                                WHERE p.user_id = $2 AND p.company_id = $3), '{}'),
-                       $3)
+                                WHERE p.user_id = $2), '{}'))
                ON CONFLICT (session_id, operator_user_id)
                WHERE persona = 'agent' AND operator_user_id IS NOT NULL
                DO UPDATE SET left_at = NULL, joined_at = now()"#,
         )
         .bind(input.session_id)
         .bind(pick.user_id)
-        .bind(company_id)
         .execute(&mut *tx)
         .await?;
 
@@ -596,10 +594,9 @@ LIMIT 1"#
         // The buffer's anchor.
         sqlx::query(
             "UPDATE livechat.operator_profiles SET last_assigned_at = now() \
-             WHERE user_id = $1 AND company_id = $2",
+             WHERE user_id = $1",
         )
         .bind(pick.user_id)
-        .bind(company_id)
         .execute(&mut *tx)
         .await?;
 
@@ -689,9 +686,8 @@ pub async fn audit_tx(
 ) -> Result<(), LivechatError> {
     sqlx::query(
         r#"INSERT INTO livechat.livechat_audit_log
-               (event, actor, subject_type, subject_id, detail, company_id)
-           VALUES ($1::livechat_audit_event, $2, $3, $4, $5,
-                   NULLIF(current_setting('app.company_id', true), '')::uuid)"#,
+               (event, actor, subject_type, subject_id, detail)
+           VALUES ($1::livechat_audit_event, $2, $3, $4, $5)"#,
     )
     .bind(kind)
     .bind(actor)
@@ -703,7 +699,7 @@ pub async fn audit_tx(
     Ok(())
 }
 
-/// Append one audit row on the pool (company-scoped).
+/// Append one audit row on the pool.
 pub async fn record_audit(
     pool: &PgPool,
     kind: &str,
@@ -712,13 +708,12 @@ pub async fn record_audit(
     subject_id: Uuid,
     detail: serde_json::Value,
 ) {
-    let _ = backbone_orm::company_scope::execute_scoped(
+    let _ = org_scope::execute_scoped(
         pool,
         sqlx::query(
             r#"INSERT INTO livechat.livechat_audit_log
-               (event, actor, subject_type, subject_id, detail, company_id)
-           VALUES ($1::livechat_audit_event, $2, $3, $4, $5,
-                   NULLIF(current_setting('app.company_id', true), '')::uuid)"#,
+               (event, actor, subject_type, subject_id, detail)
+           VALUES ($1::livechat_audit_event, $2, $3, $4, $5)"#,
         )
         .bind(kind)
         .bind(actor)

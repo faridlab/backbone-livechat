@@ -1,8 +1,8 @@
-use super::AuditMetadata;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for ChatbotMessage
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -10,15 +10,9 @@ use uuid::Uuid;
 pub struct ChatbotMessageId(pub Uuid);
 
 impl ChatbotMessageId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for ChatbotMessageId {
@@ -35,28 +29,20 @@ impl std::str::FromStr for ChatbotMessageId {
 }
 
 impl From<Uuid> for ChatbotMessageId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<ChatbotMessageId> for Uuid {
-    fn from(id: ChatbotMessageId) -> Self {
-        id.0
-    }
+    fn from(id: ChatbotMessageId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for ChatbotMessageId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for ChatbotMessageId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -68,7 +54,6 @@ pub struct ChatbotMessage {
     pub selected_answer_id: Option<Uuid>,
     pub visitor_answer: Option<String>,
     pub created_at: DateTime<Utc>,
-    pub company_id: Uuid,
     #[serde(default)]
     #[sqlx(json)]
     pub metadata: AuditMetadata,
@@ -81,7 +66,7 @@ impl ChatbotMessage {
     }
 
     /// Create a new ChatbotMessage with required fields
-    pub fn new(session_id: Uuid, company_id: Uuid) -> Self {
+    pub fn new(session_id: Uuid) -> Self {
         Self {
             id: Uuid::new_v4(),
             session_id,
@@ -90,7 +75,6 @@ impl ChatbotMessage {
             selected_answer_id: None,
             visitor_answer: None,
             created_at: Utc::now(),
-            company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -145,6 +129,7 @@ impl ChatbotMessage {
         self.metadata.deleted_by.as_ref()
     }
 
+
     // ==========================================================
     // Fluent Setters (with_* for optional fields)
     // ==========================================================
@@ -182,34 +167,19 @@ impl ChatbotMessage {
         for (key, value) in fields {
             match key.as_str() {
                 "session_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.session_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.session_id = v; }
                 }
                 "step_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.step_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.step_id = v; }
                 }
                 "carrier_message_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.carrier_message_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.carrier_message_id = v; }
                 }
                 "selected_answer_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.selected_answer_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.selected_answer_id = v; }
                 }
                 "visitor_answer" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.visitor_answer = v;
-                    }
-                }
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.company_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.visitor_answer = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -268,20 +238,13 @@ impl backbone_orm::EntityRepoMeta for ChatbotMessage {
         m.insert("session_id".to_string(), "uuid".to_string());
         m.insert("step_id".to_string(), "uuid".to_string());
         m.insert("selected_answer_id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &[]
     }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
-    }
     fn relations() -> &'static [(&'static str, &'static str, &'static str)] {
-        &[
-            ("session", "sessions", "sessionId"),
-            ("step", "chatbot_steps", "stepId"),
-        ]
+        &[("session", "sessions", "sessionId"), ("step", "chatbot_steps", "stepId")]
     }
 }
 
@@ -296,7 +259,6 @@ pub struct ChatbotMessageBuilder {
     carrier_message_id: Option<String>,
     selected_answer_id: Option<Uuid>,
     visitor_answer: Option<String>,
-    company_id: Option<Uuid>,
 }
 
 impl ChatbotMessageBuilder {
@@ -330,22 +292,11 @@ impl ChatbotMessageBuilder {
         self
     }
 
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Build the ChatbotMessage entity
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<ChatbotMessage, String> {
-        let session_id = self
-            .session_id
-            .ok_or_else(|| "session_id is required".to_string())?;
-        let company_id = self
-            .company_id
-            .ok_or_else(|| "company_id is required".to_string())?;
+        let session_id = self.session_id.ok_or_else(|| "session_id is required".to_string())?;
 
         Ok(ChatbotMessage {
             id: Uuid::new_v4(),
@@ -355,7 +306,6 @@ impl ChatbotMessageBuilder {
             selected_answer_id: self.selected_answer_id,
             visitor_answer: self.visitor_answer,
             created_at: Utc::now(),
-            company_id,
             metadata: AuditMetadata::default(),
         })
     }

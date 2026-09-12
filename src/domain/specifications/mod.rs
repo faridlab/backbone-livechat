@@ -4,11 +4,11 @@
 //!
 //! Combinators (AND/OR/NOT) come from `backbone_core::Specification`.
 
-pub use backbone_core::{AndSpecification, NotSpecification, OrSpecification, Specification};
+pub use backbone_core::{Specification, AndSpecification, OrSpecification, NotSpecification};
 
+pub mod channel_specification;
 pub mod channel_member_specification;
 pub mod channel_rule_specification;
-pub mod channel_specification;
 pub mod chatbot_answer_specification;
 pub mod chatbot_message_specification;
 pub mod chatbot_script_specification;

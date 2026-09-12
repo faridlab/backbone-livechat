@@ -5,16 +5,17 @@
 //! Returns an `EntityValidator<ChatbotScript>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
+use backbone_core::{RequiredString};
 use crate::domain::entity::ChatbotScript;
-use backbone_core::RequiredString;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for ChatbotScript entities.
 pub type ChatbotScriptValidator = EntityValidator<ChatbotScript>;
 
 /// Build a validator for ChatbotScript with all schema-defined field rules.
 pub fn chatbot_script_validator() -> ChatbotScriptValidator {
-    EntityValidator::new().rule(RequiredString::new("title", |e: &ChatbotScript| &e.title))
+    EntityValidator::new()
+        .rule(RequiredString::new("title", |e: &ChatbotScript| &e.title))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

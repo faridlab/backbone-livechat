@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::AuditMetadata;
 use super::LivechatStepType;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for ChatbotStep
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -12,15 +12,9 @@ use super::LivechatStepType;
 pub struct ChatbotStepId(pub Uuid);
 
 impl ChatbotStepId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for ChatbotStepId {
@@ -37,28 +31,20 @@ impl std::str::FromStr for ChatbotStepId {
 }
 
 impl From<Uuid> for ChatbotStepId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<ChatbotStepId> for Uuid {
-    fn from(id: ChatbotStepId) -> Self {
-        id.0
-    }
+    fn from(id: ChatbotStepId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for ChatbotStepId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for ChatbotStepId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -69,7 +55,6 @@ pub struct ChatbotStep {
     pub step_type: LivechatStepType,
     pub message: Option<String>,
     pub expertise_tag_ids: Vec<Uuid>,
-    pub company_id: Uuid,
     #[serde(default)]
     #[sqlx(json)]
     pub metadata: AuditMetadata,
@@ -82,13 +67,7 @@ impl ChatbotStep {
     }
 
     /// Create a new ChatbotStep with required fields
-    pub fn new(
-        chatbot_script_id: Uuid,
-        sequence: i32,
-        step_type: LivechatStepType,
-        expertise_tag_ids: Vec<Uuid>,
-        company_id: Uuid,
-    ) -> Self {
+    pub fn new(chatbot_script_id: Uuid, sequence: i32, step_type: LivechatStepType, expertise_tag_ids: Vec<Uuid>) -> Self {
         Self {
             id: Uuid::new_v4(),
             chatbot_script_id,
@@ -96,7 +75,6 @@ impl ChatbotStep {
             step_type,
             message: None,
             expertise_tag_ids,
-            company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -151,6 +129,7 @@ impl ChatbotStep {
         self.metadata.deleted_by.as_ref()
     }
 
+
     // ==========================================================
     // Fluent Setters (with_* for optional fields)
     // ==========================================================
@@ -170,34 +149,19 @@ impl ChatbotStep {
         for (key, value) in fields {
             match key.as_str() {
                 "chatbot_script_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.chatbot_script_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.chatbot_script_id = v; }
                 }
                 "sequence" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.sequence = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.sequence = v; }
                 }
                 "step_type" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.step_type = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.step_type = v; }
                 }
                 "message" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.message = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.message = v; }
                 }
                 "expertise_tag_ids" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.expertise_tag_ids = v;
-                    }
-                }
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.company_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.expertise_tag_ids = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -254,15 +218,11 @@ impl backbone_orm::EntityRepoMeta for ChatbotStep {
         let mut m = std::collections::HashMap::new();
         m.insert("id".to_string(), "uuid".to_string());
         m.insert("chatbot_script_id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m.insert("step_type".to_string(), "livechat_step_type".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &[]
-    }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
     }
     fn relations() -> &'static [(&'static str, &'static str, &'static str)] {
         &[("chatbotScript", "chatbot_scripts", "chatbotScriptId")]
@@ -280,7 +240,6 @@ pub struct ChatbotStepBuilder {
     step_type: Option<LivechatStepType>,
     message: Option<String>,
     expertise_tag_ids: Option<Vec<Uuid>>,
-    company_id: Option<Uuid>,
 }
 
 impl ChatbotStepBuilder {
@@ -314,28 +273,13 @@ impl ChatbotStepBuilder {
         self
     }
 
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Build the ChatbotStep entity
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<ChatbotStep, String> {
-        let chatbot_script_id = self
-            .chatbot_script_id
-            .ok_or_else(|| "chatbot_script_id is required".to_string())?;
-        let sequence = self
-            .sequence
-            .ok_or_else(|| "sequence is required".to_string())?;
-        let expertise_tag_ids = self
-            .expertise_tag_ids
-            .ok_or_else(|| "expertise_tag_ids is required".to_string())?;
-        let company_id = self
-            .company_id
-            .ok_or_else(|| "company_id is required".to_string())?;
+        let chatbot_script_id = self.chatbot_script_id.ok_or_else(|| "chatbot_script_id is required".to_string())?;
+        let sequence = self.sequence.ok_or_else(|| "sequence is required".to_string())?;
+        let expertise_tag_ids = self.expertise_tag_ids.ok_or_else(|| "expertise_tag_ids is required".to_string())?;
 
         Ok(ChatbotStep {
             id: Uuid::new_v4(),
@@ -344,7 +288,6 @@ impl ChatbotStepBuilder {
             step_type: self.step_type.unwrap_or_default(),
             message: self.message,
             expertise_tag_ids,
-            company_id,
             metadata: AuditMetadata::default(),
         })
     }

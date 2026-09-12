@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::ChatbotMessage;
+use crate::domain::entity::AuditMetadata;
 
 // =============================================================================
 // Create DTO
@@ -32,40 +32,19 @@ use crate::domain::entity::ChatbotMessage;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateChatbotMessageDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "session_id")]
     pub session_id: Uuid,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "step_id")]
     pub step_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 200)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "carrier_message_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "carrier_message_id")]
     pub carrier_message_id: Option<String>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "selected_answer_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "selected_answer_id")]
     pub selected_answer_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 2000)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "visitor_answer"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "visitor_answer")]
     pub visitor_answer: Option<String>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -81,40 +60,19 @@ pub struct CreateChatbotMessageDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateChatbotMessageDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "session_id")]
     pub session_id: Uuid,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "step_id")]
     pub step_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 200)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "carrier_message_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "carrier_message_id")]
     pub carrier_message_id: Option<String>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "selected_answer_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "selected_answer_id")]
     pub selected_answer_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 2000)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "visitor_answer"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "visitor_answer")]
     pub visitor_answer: Option<String>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -130,10 +88,7 @@ pub struct UpdateChatbotMessageDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchChatbotMessageDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "session_id")]
     pub session_id: Option<Uuid>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "step_id")]
@@ -146,23 +101,12 @@ pub struct PatchChatbotMessageDto {
     #[cfg_attr(feature = "validation", validate(length(max = 2000)))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "visitor_answer")]
     pub visitor_answer: Option<String>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
 }
 
 impl PatchChatbotMessageDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.session_id.is_some()
-            || self.step_id.is_some()
-            || self.carrier_message_id.is_some()
-            || self.selected_answer_id.is_some()
-            || self.visitor_answer.is_some()
-            || self.company_id.is_some()
+        self.session_id.is_some() || self.step_id.is_some() || self.carrier_message_id.is_some() || self.selected_answer_id.is_some() || self.visitor_answer.is_some()
     }
 }
 
@@ -178,15 +122,9 @@ impl PatchChatbotMessageDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ChatbotMessageResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub session_id: Uuid,
     pub step_id: Option<Uuid>,
     pub carrier_message_id: Option<String>,
@@ -194,11 +132,6 @@ pub struct ChatbotMessageResponseDto {
     pub visitor_answer: Option<String>,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     pub created_at: DateTime<Utc>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
     pub metadata: AuditMetadata,
 }
 
@@ -232,12 +165,7 @@ pub struct ChatbotMessageListResponseDto {
 
 impl ChatbotMessageListResponseDto {
     /// Create a new list response from items and pagination info
-    pub fn new(
-        items: Vec<ChatbotMessageResponseDto>,
-        total: u64,
-        page: u32,
-        per_page: u32,
-    ) -> Self {
+    pub fn new(items: Vec<ChatbotMessageResponseDto>, total: u64, page: u32, per_page: u32) -> Self {
         let total_pages = if per_page > 0 {
             ((total as f64) / (per_page as f64)).ceil() as u32
         } else {
@@ -281,7 +209,6 @@ impl From<ChatbotMessage> for ChatbotMessageResponseDto {
             selected_answer_id: entity.selected_answer_id,
             visitor_answer: entity.visitor_answer,
             created_at: entity.created_at,
-            company_id: entity.company_id,
             metadata: entity.metadata,
         }
     }
@@ -309,7 +236,6 @@ impl From<CreateChatbotMessageDto> for ChatbotMessage {
             selected_answer_id: dto.selected_answer_id,
             visitor_answer: dto.visitor_answer,
             created_at: Utc::now(),
-            company_id: dto.company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -325,7 +251,6 @@ impl From<&ChatbotMessage> for ChatbotMessageResponseDto {
             selected_answer_id: entity.selected_answer_id.clone(),
             visitor_answer: entity.visitor_answer.clone(),
             created_at: entity.created_at.clone(),
-            company_id: entity.company_id.clone(),
             metadata: entity.metadata.clone(),
         }
     }
@@ -344,7 +269,6 @@ impl backbone_core::ApplyUpdateDto<UpdateChatbotMessageDto> for ChatbotMessage {
         self.carrier_message_id = dto.carrier_message_id;
         self.selected_answer_id = dto.selected_answer_id;
         self.visitor_answer = dto.visitor_answer;
-        self.company_id = dto.company_id;
         Ok(self)
     }
 }

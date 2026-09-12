@@ -7,7 +7,6 @@
 -- INSERT INTO livechat.conversation_tags (
 --     id,
 --     name,
---     company_id,
 --     metadata
 -- ) VALUES
 -- (

@@ -27,10 +27,6 @@ models:
         type: uuid
         attributes: ["@required", "@exclude_from_foreign_key_check", "@indexed"]
         description: "The operator's user id — LOGICAL ref into the host identity store (no FK, no crate edge)."
-      company_id:
-        type: uuid
-        attributes: ["@required", "@exclude_from_foreign_key_check"]
-        description: "Owning company (strict fence — logical corporate ref)."
       metadata:
         type: Metadata
         attributes: ["@audit_metadata"]

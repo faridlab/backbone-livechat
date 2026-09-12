@@ -1,7 +1,7 @@
 //! The audit trail probe: every decision leaves its row (open,
-//! assign, help flags, close — each with actor, subject, and the
-//! company fence), the take is first-wins typed, and the event
-//! vocabulary is a CLOSED enum (an unknown event cannot be written).
+//! assign, help flags, close — each with actor and subject), the
+//! take is first-wins typed, and the event vocabulary is a CLOSED
+//! enum (an unknown event cannot be written).
 
 use uuid::Uuid;
 
@@ -16,11 +16,10 @@ use super::common::{open_session, seed_channel_with_operators, TestDb};
 async fn every_decision_leaves_its_row_and_the_vocabulary_is_closed() {
     let db = TestDb::new("audit").await;
     let pool = db.pool.clone();
-    let company = Uuid::new_v4();
     let website = Uuid::new_v4();
     let op_a = Uuid::new_v4();
     let op_b = Uuid::new_v4();
-    let channel = seed_channel_with_operators(&pool, company, website, &[op_a, op_b]).await;
+    let channel = seed_channel_with_operators(&pool, website, &[op_a, op_b]).await;
 
     let sessions = SessionCommandService::new(
         pool.clone(),
@@ -30,56 +29,47 @@ async fn every_decision_leaves_its_row_and_the_vocabulary_is_closed() {
     );
 
     // The full human lifecycle, each verb with its actor.
-    let session = open_session(&pool, company, channel, "audit:visitor").await;
-    let taken = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        sessions.take(session.id, op_a, Some(op_a)).await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("take: {e:?}"));
+    let session = open_session(&pool, channel, "audit:visitor").await;
+    let taken = sessions
+        .take(session.id, op_a, Some(op_a))
+        .await
+        .unwrap_or_else(|e| panic!("take: {e:?}"));
     assert_eq!(
         taken.operator_user_id,
         Some(op_a),
         "the first take wins the row"
     );
-    backbone_orm::company_scope::with_company_scope(Some(company), async {
-        sessions.set_need_help(session.id, true, Some(op_a)).await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("help on: {e:?}"));
-    backbone_orm::company_scope::with_company_scope(Some(company), async {
-        sessions.set_need_help(session.id, false, Some(op_a)).await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("help off: {e:?}"));
+    sessions
+        .set_need_help(session.id, true, Some(op_a))
+        .await
+        .unwrap_or_else(|e| panic!("help on: {e:?}"));
+    sessions
+        .set_need_help(session.id, false, Some(op_a))
+        .await
+        .unwrap_or_else(|e| panic!("help off: {e:?}"));
 
     // The serialized loser: a second operator's take is the typed 409.
-    let refused = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        sessions.take(session.id, op_b, Some(op_b)).await
-    })
-    .await;
+    let refused = sessions.take(session.id, op_b, Some(op_b)).await;
     assert!(
         matches!(refused, Err(LivechatError::OperatorBusy)),
         "the second take loses first-wins typed, got {refused:?}"
     );
 
-    backbone_orm::company_scope::with_company_scope(Some(company), async {
-        sessions
-            .close(session.id, "operator_closed", Some(op_a))
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("close: {e:?}"));
+    sessions
+        .close(session.id, "operator_closed", Some(op_a))
+        .await
+        .unwrap_or_else(|e| panic!("close: {e:?}"));
 
-    // ── Every decision left its audit row, fenced to the company ──
-    let trail: Vec<(String, Option<Uuid>, Option<Uuid>)> = sqlx::query_as(
-        r#"SELECT event::text, actor, company_id FROM livechat.livechat_audit_log
+    // ── Every decision left its audit row ─────────────────────────
+    let trail: Vec<(String, Option<Uuid>)> = sqlx::query_as(
+        r#"SELECT event::text, actor FROM livechat.livechat_audit_log
             WHERE subject_id = $1 ORDER BY created_at, id"#,
     )
     .bind(session.id)
     .fetch_all(&pool)
     .await
     .unwrap_or_else(|e| panic!("trail read: {e}"));
-    let events: Vec<&str> = trail.iter().map(|(e, _, _)| e.as_str()).collect();
+    let events: Vec<&str> = trail.iter().map(|(e, _)| e.as_str()).collect();
     for expected in [
         "session_opened",
         "operator_assigned",
@@ -94,14 +84,10 @@ async fn every_decision_leaves_its_row_and_the_vocabulary_is_closed() {
         );
     }
     assert!(
-        trail.iter().all(|(_, _, cid)| *cid == Some(company)),
-        "every audit row is fenced to the owning company"
-    );
-    assert!(
         trail
             .iter()
-            .filter(|(e, _, _)| e == "operator_assigned")
-            .all(|(_, actor, _)| *actor == Some(op_a)),
+            .filter(|(e, _)| e == "operator_assigned")
+            .all(|(_, actor)| *actor == Some(op_a)),
         "the assignment audit names the acting operator"
     );
     // The assignment row carries the replay facts (the ladder probe

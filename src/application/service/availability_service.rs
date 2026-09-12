@@ -82,8 +82,9 @@ impl AvailabilityService {
     /// The bot-first routing input shared by the open verb: the
     /// matched rule's script when it is ROUTABLE (active, non-deleted,
     /// at least one step); an unroutable or unmatched script leaves
-    /// the human path standing. Runs INSIDE the caller's company
-    /// scope (the open verb binds the website's company first).
+    /// the human path standing. Row scoping is owned by the composing
+    /// service's tenancy decorator — every statement rides the ambient
+    /// org scope it installs, public surfaces included (ADR-0029).
     pub async fn routed_script(
         &self,
         channel_id: Uuid,
@@ -115,15 +116,13 @@ impl AvailabilityService {
         secret: &str,
     ) -> Result<AvailabilityAnswer, LivechatError> {
         let binding = self.bridge.resolve_website_by_host(host).await?;
-        backbone_orm::company_scope::with_company_scope(Some(binding.company_id), async {
-            self.answer_scoped(binding.website_id, referer, visitor_key, secret)
-                .await
-        })
-        .await
+        self.answer_scoped(binding.website_id, referer, visitor_key, secret)
+            .await
     }
 
-    /// The scoped half (the fence is bound by [`Self::answer`] — the
-    /// fence is the fence on every surface, public included).
+    /// The body half of [`Self::answer`] (after the Host → website
+    /// resolution). Row scoping is owned by the composing service's
+    /// tenancy decorator, not by this module (ADR-0029).
     async fn answer_scoped(
         &self,
         website_id: Uuid,

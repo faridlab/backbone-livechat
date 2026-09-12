@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::ConversationTag;
+use crate::domain::entity::AuditMetadata;
 
 // =============================================================================
 // Create DTO
@@ -35,12 +35,6 @@ pub struct CreateConversationTagDto {
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -59,12 +53,6 @@ pub struct UpdateConversationTagDto {
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -84,18 +72,12 @@ pub struct PatchConversationTagDto {
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
 }
 
 impl PatchConversationTagDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.name.is_some() || self.company_id.is_some()
+        self.name.is_some()
     }
 }
 
@@ -111,18 +93,10 @@ impl PatchConversationTagDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ConversationTagResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
     pub metadata: AuditMetadata,
 }
 
@@ -156,12 +130,7 @@ pub struct ConversationTagListResponseDto {
 
 impl ConversationTagListResponseDto {
     /// Create a new list response from items and pagination info
-    pub fn new(
-        items: Vec<ConversationTagResponseDto>,
-        total: u64,
-        page: u32,
-        per_page: u32,
-    ) -> Self {
+    pub fn new(items: Vec<ConversationTagResponseDto>, total: u64, page: u32, per_page: u32) -> Self {
         let total_pages = if per_page > 0 {
             ((total as f64) / (per_page as f64)).ceil() as u32
         } else {
@@ -186,7 +155,6 @@ impl ConversationTagListResponseDto {
 pub struct ConversationTagSummaryDto {
     pub id: Uuid,
     pub name: String,
-    pub company_id: Uuid,
     pub created_at: Option<DateTime<Utc>>,
 }
 
@@ -199,7 +167,6 @@ impl From<ConversationTag> for ConversationTagResponseDto {
         Self {
             id: entity.id,
             name: entity.name,
-            company_id: entity.company_id,
             metadata: entity.metadata,
         }
     }
@@ -211,7 +178,6 @@ impl From<ConversationTag> for ConversationTagSummaryDto {
         Self {
             id: entity.id,
             name: entity.name,
-            company_id: entity.company_id,
             created_at,
         }
     }
@@ -222,7 +188,6 @@ impl From<CreateConversationTagDto> for ConversationTag {
         Self {
             id: Uuid::new_v4(),
             name: dto.name,
-            company_id: dto.company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -233,7 +198,6 @@ impl From<&ConversationTag> for ConversationTagResponseDto {
         Self {
             id: entity.id.clone(),
             name: entity.name.clone(),
-            company_id: entity.company_id.clone(),
             metadata: entity.metadata.clone(),
         }
     }
@@ -248,7 +212,6 @@ impl backbone_core::FromCreateDto<CreateConversationTagDto> for ConversationTag 
 impl backbone_core::ApplyUpdateDto<UpdateConversationTagDto> for ConversationTag {
     fn apply_update(mut self, dto: UpdateConversationTagDto) -> backbone_core::ServiceResult<Self> {
         self.name = dto.name;
-        self.company_id = dto.company_id;
         Ok(self)
     }
 }

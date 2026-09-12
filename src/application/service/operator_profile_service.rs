@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
+use crate::presentation::dto::{CreateOperatorProfileDto, UpdateOperatorProfileDto};
 use crate::domain::entity::OperatorProfile;
 use crate::infrastructure::persistence::OperatorProfileRepository;
-use crate::presentation::dto::{CreateOperatorProfileDto, UpdateOperatorProfileDto};
 
 /// Application service for OperatorProfile entities.
 ///

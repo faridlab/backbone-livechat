@@ -4,8 +4,8 @@
 //!
 //! Uses backbone-orm's `DatabaseOperations<T>` trait.
 
-mod channel_member_repository;
 mod channel_repository;
+mod channel_member_repository;
 mod channel_rule_repository;
 mod chatbot_answer_repository;
 mod chatbot_message_repository;
@@ -35,11 +35,23 @@ pub mod selection_repository;
 pub mod session_command_repository;
 pub mod sweep_repository;
 pub mod website_request_repository;
+
+// Re-bind the caller's ambient org scope onto a transaction opened on the plain pool — the
+// scope is task-local and a fresh pool transaction carries none of it. With no ambient scope
+// (standalone deployment, jobs) the transaction stays plain: the module is tenant-agnostic and
+// the composing service's tenancy decorator owns isolation (ADR-0029). Same convention as the
+// backbone-pos write service's helper.
+pub(crate) async fn relay_ambient_scope(conn: &mut sqlx::PgConnection) -> Result<(), sqlx::Error> {
+    if let Some(scope) = backbone_orm::org_scope::current_org_scope() {
+        backbone_orm::org_scope::bind_org_scope_on(conn, &scope).await?;
+    }
+    Ok(())
+}
 // END CUSTOM
 
 // Re-exports
-pub use channel_member_repository::ChannelMemberRepository;
 pub use channel_repository::ChannelRepository;
+pub use channel_member_repository::ChannelMemberRepository;
 pub use channel_rule_repository::ChannelRuleRepository;
 pub use chatbot_answer_repository::ChatbotAnswerRepository;
 pub use chatbot_message_repository::ChatbotMessageRepository;
@@ -58,8 +70,9 @@ pub use session_tag_repository::SessionTagRepository;
 
 // Re-export backbone-orm types
 pub use backbone_orm::repository::{
-    DatabaseOperations, FilterCondition, FilterParams, PaginatedResult, PaginationInfo,
-    PaginationParams, PostgresRepository, SortDirection, SortParams,
+    DatabaseOperations, PostgresRepository,
+    PaginationParams, PaginationInfo, PaginatedResult,
+    FilterParams, FilterCondition, SortParams, SortDirection,
 };
 
 // Re-export custom persistence types

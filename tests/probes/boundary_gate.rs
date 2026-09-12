@@ -1,10 +1,12 @@
 //! THE BOUNDARY PROBE — the declared public surface, exercised
-//! through the REAL router (tower oneshot) on a pool connected AS
-//! THE FENCED NOSUPERUSER ROLE (the production posture: the RLS
-//! fence is what turns an unbound Host into the uniform 404).
+//! through the REAL router (tower oneshot) on the plain scratch pool.
+//! The module is tenant-agnostic (ADR-0029): row scoping is the
+//! composing service's tenancy decorator's law (its default-deny is
+//! pinned by the posture probe), so this probe pins what the module
+//! itself owns.
 //!
 //! The allowlist is exhaustive; a wrong guest token fails TYPED
-//! (401) without minting anything; the capability-gate family is ONE
+//! (401) without minting anything; an unverifiable capability is ONE
 //! uniform 404 with no oracle; no response ever mirrors
 //! `Access-Control-Allow-Origin`; the fixed windows shape the open.
 
@@ -26,8 +28,8 @@ use backbone_livechat::presentation::http::public_routes::{
 };
 
 use super::common::{
-    fenced_role_pool, open_session, seed_channel_with_operators, RecordingMailCarrier,
-    StubWebsiteBridge, TestDb, PROBE_SECRET,
+    open_session, seed_channel_with_operators, RecordingMailCarrier, StubWebsiteBridge, TestDb,
+    PROBE_SECRET,
 };
 
 use uuid::Uuid;
@@ -80,22 +82,23 @@ fn id_of(row: &serde_json::Value) -> Uuid {
 async fn the_public_surface_is_the_declared_allowlist_behind_the_fence() {
     let db = TestDb::new("boundary").await;
     let owner = db.pool.clone();
-    let company = Uuid::new_v4();
     let website = Uuid::new_v4();
     let operator = Uuid::new_v4();
-    let channel = seed_channel_with_operators(&owner, company, website, &[operator]).await;
+    let channel = seed_channel_with_operators(&owner, website, &[operator]).await;
 
-    // The serving pool connects AS THE FENCED ROLE — every unscoped
-    // read the router could make sees ZERO rows (the production
-    // posture; this is what turns a wrong Host into the 404).
-    let fenced = fenced_role_pool(&owner, &db.name).await;
-
-    let bridge = std::sync::Arc::new(StubWebsiteBridge::new("site.example", website, company));
+    // The website binding's `company_id` is the website module's legacy
+    // ownership echo (ADR-0029) — the stub feeds it, the module never
+    // reads it.
+    let bridge = std::sync::Arc::new(StubWebsiteBridge::new(
+        "site.example",
+        website,
+        Uuid::new_v4(),
+    ));
     let bridge_dyn: std::sync::Arc<
         dyn backbone_livechat::application::service::website_bridge::LivechatWebsiteBridge,
     > = bridge.clone();
     let state = LivechatPublicState::compose_with_trusted_proxy(
-        fenced.clone(),
+        owner.clone(),
         bridge_dyn.clone(),
         std::sync::Arc::new(RecordingMailCarrier::default()),
         std::sync::Arc::new(UnwiredNotifier),
@@ -150,7 +153,7 @@ async fn the_public_surface_is_the_declared_allowlist_behind_the_fence() {
         "the module never mirrors CORS on open"
     );
 
-    // ── 3. The session view under the RIGHT fence ──────────────────
+    // ── 3. The session view answers for its own capability ─────────
     let (status, headers, body) = call(
         &router,
         "GET",
@@ -170,25 +173,12 @@ async fn the_public_surface_is_the_declared_allowlist_behind_the_fence() {
         "the module never mirrors CORS on the session view"
     );
 
-    // ── 4. The SAME valid token under a WRONG host: uniform 404 ────
-    // The HMAC verifies; the FENCE then reads the session as missing.
-    // One code for every gate-family member — no oracle.
-    let (status, _, body) = call(
-        &router,
-        "GET",
-        &format!("/public/sessions/{capability}"),
-        "other.example",
-        None,
-    )
-    .await;
-    assert_eq!(
-        status,
-        StatusCode::NOT_FOUND,
-        "a cross-site token reads as missing"
-    );
-    assert_eq!(error_code(&body), "livechat_session_not_found");
-
-    // ── 5. A garbage token: the SAME uniform 404 ───────────────────
+    // ── 4. A garbage token: the uniform 404 ────────────────────────
+    // The HMAC verify fails and every gate member answers the SAME
+    // missing-session code — no oracle. (A token that VERIFIES but was
+    // minted on another site reads as missing only under the composing
+    // service's tenancy decorator — row scoping is not the module's
+    // to enforce, ADR-0029.)
     let (status, _, body) = call(
         &router,
         "GET",
@@ -204,7 +194,7 @@ async fn the_public_surface_is_the_declared_allowlist_behind_the_fence() {
         "the malformed-token arm is indistinguishable from the missing-session arm"
     );
 
-    // ── 6. The cursor poll and the visitor message ─────────────────
+    // ── 5. The cursor poll and the visitor message ─────────────────
     let (status, _, body) = call(
         &router,
         "GET",
@@ -236,7 +226,7 @@ async fn the_public_surface_is_the_declared_allowlist_behind_the_fence() {
         Some("hello from the visitor")
     );
 
-    // ── 7. A presented INVALID token at open: TYPED 401, zero rows ─
+    // ── 6. A presented INVALID token at open: TYPED 401, zero rows ─
     let (before,): (i64,) = sqlx::query_as("SELECT count(*) FROM livechat.sessions")
         .fetch_one(&owner)
         .await
@@ -261,48 +251,40 @@ async fn the_public_surface_is_the_declared_allowlist_behind_the_fence() {
         .unwrap_or_else(|e| panic!("session recount: {e}"));
     assert_eq!(before, after, "a failed verify NEVER mints a session");
 
-    // ── 8. The answers arm through the real route ──────────────────
+    // ── 7. The answers arm through the real route ──────────────────
     let admin = AdminConfigRepository::new(owner.clone());
     let chatbot = ChatbotService::new(
         owner.clone(),
         std::sync::Arc::new(RecordingMailCarrier::default()),
     );
-    let (script_id, question_step, answer_id) =
-        backbone_orm::company_scope::with_company_scope(Some(company), async {
-            let script = admin.script_create("boundary script").await.unwrap();
-            let script_id = id_of(&script);
-            admin
-                .step_create(&StepInput {
-                    chatbot_script_id: script_id,
-                    sequence: 1,
-                    step_type: "question_selection".into(),
-                    message: Some("Pick".into()),
-                    expertise_tag_ids: Vec::new(),
-                    answers: vec![AnswerInput {
-                        sequence: 1,
-                        label: "Go".into(),
-                        redirect_url: None,
-                    }],
-                })
-                .await
-                .unwrap();
-            let answers = admin
-                .answer_list(question_step_of(&admin, script_id).await)
-                .await
-                .unwrap();
-            (
-                script_id,
-                question_step_of(&admin, script_id).await,
-                id_of(&answers[0]),
-            )
+    let script = admin.script_create("boundary script").await.unwrap();
+    let script_id = id_of(&script);
+    admin
+        .step_create(&StepInput {
+            chatbot_script_id: script_id,
+            sequence: 1,
+            step_type: "question_selection".into(),
+            message: Some("Pick".into()),
+            expertise_tag_ids: Vec::new(),
+            answers: vec![AnswerInput {
+                sequence: 1,
+                label: "Go".into(),
+                redirect_url: None,
+            }],
         })
-        .await;
-    let bot_session = open_session(&owner, company, channel, "boundary:bot").await;
-    backbone_orm::company_scope::with_company_scope(Some(company), async {
-        chatbot.start_script(bot_session.id, script_id, None).await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("script bind: {e:?}"));
+        .await
+        .unwrap();
+    let question_step = question_step_of(&admin, script_id).await;
+    let answers = admin
+        .answer_list(question_step)
+        .await
+        .unwrap();
+    let answer_id = id_of(&answers[0]);
+    let bot_session = open_session(&owner, channel, "boundary:bot").await;
+    chatbot
+        .start_script(bot_session.id, script_id, None)
+        .await
+        .unwrap_or_else(|e| panic!("script bind: {e:?}"));
     let bot_capability = mint_guest_capability(
         PROBE_SECRET,
         &bot_session.id,
@@ -332,10 +314,10 @@ async fn the_public_surface_is_the_declared_allowlist_behind_the_fence() {
         "the script exhausted on the answered question"
     );
 
-    // ── 9. The rating arm: 201 then the once-wall 409 ──────────────
-    let rate_session = open_session(&owner, company, channel, "boundary:rated").await;
+    // ── 8. The rating arm: 201 then the once-wall 409 ──────────────
+    let rate_session = open_session(&owner, channel, "boundary:rated").await;
     let mut tx = owner.begin().await.unwrap();
-    upsert_agent_ledger_tx(&mut tx, rate_session.id, operator, company)
+    upsert_agent_ledger_tx(&mut tx, rate_session.id, operator)
         .await
         .unwrap();
     sqlx::query("UPDATE livechat.sessions SET operator_user_id = $2 WHERE id = $1")
@@ -379,7 +361,7 @@ async fn the_public_surface_is_the_declared_allowlist_behind_the_fence() {
     );
     assert_eq!(error_code(&body), "livechat_rating_already_submitted");
 
-    // ── 10. The close arm ──────────────────────────────────────────
+    // ── 9. The close arm ──────────────────────────────────────────
     let (status, _, body) = call(
         &router,
         "POST",
@@ -398,7 +380,7 @@ async fn the_public_surface_is_the_declared_allowlist_behind_the_fence() {
         "the view reports closed"
     );
 
-    // ── 11. The invite handoff arm ─────────────────────────────────
+    // ── 10. The invite handoff arm ─────────────────────────────────
     let invitee = Uuid::new_v4();
     bridge.register_visitor(invitee, "boundary:invitee", Some("ID"));
     let requests = WebsiteRequestService::new(
@@ -412,27 +394,18 @@ async fn the_public_surface_is_the_declared_allowlist_behind_the_fence() {
         std::sync::Arc::new(UnwiredNotifier),
         std::sync::Arc::new(RefusingTranscriptMailer),
     );
-    let invite = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        requests
-            .create_request(website, invitee, Some(operator))
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("invite create: {e:?}"));
-    backbone_orm::company_scope::with_company_scope(Some(company), async {
-        operator_sessions
-            .post_operator_message(invite.id, operator, "we saw you browsing")
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("invite message: {e:?}"));
-    backbone_orm::company_scope::with_company_scope(Some(company), async {
-        requests
-            .audit_delivered_if_pending(invite.id, operator)
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("invite delivery: {e:?}"));
+    let invite = requests
+        .create_request(website, invitee, Some(operator))
+        .await
+        .unwrap_or_else(|e| panic!("invite create: {e:?}"));
+    operator_sessions
+        .post_operator_message(invite.id, operator, "we saw you browsing")
+        .await
+        .unwrap_or_else(|e| panic!("invite message: {e:?}"));
+    requests
+        .audit_delivered_if_pending(invite.id, operator)
+        .await
+        .unwrap_or_else(|e| panic!("invite delivery: {e:?}"));
     let (status, _, body) = call(
         &router,
         "GET",
@@ -479,7 +452,7 @@ async fn the_public_surface_is_the_declared_allowlist_behind_the_fence() {
     assert_eq!(status, StatusCode::NOT_FOUND);
     assert_eq!(error_code(&body), "livechat_session_not_found");
 
-    // ── 12. The allowlist is exhaustive: an unknown path 404s ──────
+    // ── 11. The allowlist is exhaustive: an unknown path 404s ──────
     let (status, _, _) = call(&router, "GET", "/public/nonsense", "site.example", None).await;
     assert_eq!(
         status,
@@ -487,10 +460,10 @@ async fn the_public_surface_is_the_declared_allowlist_behind_the_fence() {
         "the surface allows nothing beyond the declared paths"
     );
 
-    // ── 13. An unset secret fails closed at the minting verbs ─────
+    // ── 12. An unset secret fails closed at the minting verbs ─────
     let unconfigured = LivechatPublicState::compose_with_trusted_proxy(
-        fenced.clone(),
-        std::sync::Arc::new(StubWebsiteBridge::new("site.example", website, company)),
+        owner.clone(),
+        std::sync::Arc::new(StubWebsiteBridge::new("site.example", website, Uuid::new_v4())),
         std::sync::Arc::new(RecordingMailCarrier::default()),
         std::sync::Arc::new(UnwiredNotifier),
         std::sync::Arc::new(RefusingTranscriptMailer),
@@ -517,9 +490,9 @@ async fn the_public_surface_is_the_declared_allowlist_behind_the_fence() {
         "livechat_capability_secret_not_configured"
     );
 
-    // ── 14. The open throttle: 6/hour per ip, then the typed 429 ──
+    // ── 13. The open throttle: 6/hour per ip, then the typed 429 ──
     // Hits so far on the open-ip bucket: the open in step 2, the
-    // failed-verify open in step 7 — four more land inside budget.
+    // failed-verify open in step 6 — four more land inside budget.
     for hit in 3..=6u32 {
         let (status, _, body) = call(
             &router,

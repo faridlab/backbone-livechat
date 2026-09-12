@@ -5,18 +5,17 @@
 //! Returns an `EntityValidator<Rating>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
+use backbone_core::{OptionalNotBlank};
 use crate::domain::entity::Rating;
-use backbone_core::OptionalNotBlank;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for Rating entities.
 pub type RatingValidator = EntityValidator<Rating>;
 
 /// Build a validator for Rating with all schema-defined field rules.
 pub fn rating_validator() -> RatingValidator {
-    EntityValidator::new().rule(OptionalNotBlank::new("comment", |e: &Rating| {
-        e.comment.as_deref()
-    }))
+    EntityValidator::new()
+        .rule(OptionalNotBlank::new("comment", |e: &Rating| e.comment.as_deref()))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

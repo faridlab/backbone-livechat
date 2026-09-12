@@ -12,7 +12,6 @@
 --     operator_user_id,
 --     chatbot_script_id,
 --     comment,
---     company_id,
 --     metadata
 -- ) VALUES
 -- (

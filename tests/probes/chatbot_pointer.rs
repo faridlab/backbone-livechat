@@ -36,17 +36,16 @@ fn answer_input(sequence: i32, label: &str) -> AnswerInput {
 async fn the_pointer_state_machine_is_forward_only_and_sanitized() {
     let db = TestDb::new("chatbot").await;
     let pool = db.pool.clone();
-    let company = Uuid::new_v4();
     let website = Uuid::new_v4();
     let operator = Uuid::new_v4();
-    let channel = seed_channel_with_operators(&pool, company, website, &[operator]).await;
+    let channel = seed_channel_with_operators(&pool, website, &[operator]).await;
 
     let admin = AdminConfigRepository::new(pool.clone());
     let carrier = std::sync::Arc::new(super::common::RecordingMailCarrier::default());
     let chatbot = ChatbotService::new(pool.clone(), carrier.clone());
 
     // The script: text -> selection -> email -> free input -> forward.
-    let script = backbone_orm::company_scope::with_company_scope(Some(company), async {
+    let script = {
         let script = admin
             .script_create("pointer script")
             .await
@@ -115,28 +114,25 @@ async fn the_pointer_state_machine_is_forward_only_and_sanitized() {
             id_of(&free),
             id_of(&forward),
         )
-    })
-    .await;
+    };
     let (script_id, text_step, question_step, email_step, free_step, _forward_step) = script;
 
     // The declared answers off the question step.
-    let (answer_yes,) = backbone_orm::company_scope::with_company_scope(Some(company), async {
+    let (answer_yes,) = {
         let answers = admin
             .answer_list(question_step)
             .await
             .unwrap_or_else(|e| panic!("answer list: {e:?}"));
         (id_of(&answers[0]),)
-    })
-    .await;
+    };
 
     // ── LAZY WELCOME: the bind mints ZERO message rows ────────────
-    let session = open_session(&pool, company, channel, "chatbot:visitor").await;
-    let first = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        chatbot.start_script(session.id, script_id, None).await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("start script: {e:?}"))
-    .unwrap_or_else(|| panic!("start script returned no step"));
+    let session = open_session(&pool, channel, "chatbot:visitor").await;
+    let first = chatbot
+        .start_script(session.id, script_id, None)
+        .await
+        .unwrap_or_else(|e| panic!("start script: {e:?}"))
+        .unwrap_or_else(|| panic!("start script returned no step"));
     assert_eq!(first.id, text_step, "the pointer starts at the FIRST step");
     let (minted,): (i64,) =
         sqlx::query_as("SELECT count(*) FROM livechat.chatbot_messages WHERE session_id = $1")
@@ -158,11 +154,10 @@ async fn the_pointer_state_machine_is_forward_only_and_sanitized() {
     assert_eq!(bot_rows, 1, "the bind joins the bot ledger row");
 
     // ── The first interaction materializes the leading text run ──
-    let outcome = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        chatbot.on_visitor_interaction(session.id, None).await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("first interaction: {e:?}"));
+    let outcome = chatbot
+        .on_visitor_interaction(session.id, None)
+        .await
+        .unwrap_or_else(|e| panic!("first interaction: {e:?}"));
     match &outcome {
         EngineOutcome::Waiting { step } => {
             assert_eq!(
@@ -184,56 +179,47 @@ async fn the_pointer_state_machine_is_forward_only_and_sanitized() {
     );
 
     // ── The pointer race guard: a stale step id refuses typed ─────
-    let refused = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        chatbot
-            .answer(
-                session.id,
-                Some(text_step),
-                AnswerPayload::Text { input: "x".into() },
-                None,
-            )
-            .await
-    })
-    .await;
+    let refused = chatbot
+        .answer(
+            session.id,
+            Some(text_step),
+            AnswerPayload::Text { input: "x".into() },
+            None,
+        )
+        .await;
     assert!(
         matches!(refused, Err(LivechatError::StepNotCurrent)),
         "the stale-step race is the typed StepNotCurrent, got {refused:?}"
     );
 
     // ── An undeclared selection answer refuses typed ──────────────
-    let refused = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        chatbot
-            .answer(
-                session.id,
-                Some(question_step),
-                AnswerPayload::Selection {
-                    answer_id: Uuid::new_v4(),
-                },
-                None,
-            )
-            .await
-    })
-    .await;
+    let refused = chatbot
+        .answer(
+            session.id,
+            Some(question_step),
+            AnswerPayload::Selection {
+                answer_id: Uuid::new_v4(),
+            },
+            None,
+        )
+        .await;
     assert!(
         matches!(refused, Err(LivechatError::AnswerInvalid)),
         "an off-menu selection is AnswerInvalid, got {refused:?}"
     );
 
     // ── The declared answer advances the pointer FORWARD ──────────
-    let outcome = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        chatbot
-            .answer(
-                session.id,
-                Some(question_step),
-                AnswerPayload::Selection {
-                    answer_id: answer_yes,
-                },
-                None,
-            )
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("declared answer: {e:?}"));
+    let outcome = chatbot
+        .answer(
+            session.id,
+            Some(question_step),
+            AnswerPayload::Selection {
+                answer_id: answer_yes,
+            },
+            None,
+        )
+        .await
+        .unwrap_or_else(|e| panic!("declared answer: {e:?}"));
     match &outcome {
         EngineOutcome::Waiting { step } => {
             assert_eq!(
@@ -245,37 +231,31 @@ async fn the_pointer_state_machine_is_forward_only_and_sanitized() {
     }
 
     // ── Email normalization + sanitized storage ───────────────────
-    let refused = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        chatbot
-            .answer(
-                session.id,
-                Some(email_step),
-                AnswerPayload::Text {
-                    input: "not-an-email".into(),
-                },
-                None,
-            )
-            .await
-    })
-    .await;
+    let refused = chatbot
+        .answer(
+            session.id,
+            Some(email_step),
+            AnswerPayload::Text {
+                input: "not-an-email".into(),
+            },
+            None,
+        )
+        .await;
     assert!(
         matches!(refused, Err(LivechatError::InputInvalid)),
         "a malformed email is InputInvalid, got {refused:?}"
     );
-    let outcome = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        chatbot
-            .answer(
-                session.id,
-                Some(email_step),
-                AnswerPayload::Text {
-                    input: "  User@Example.COM  ".into(),
-                },
-                None,
-            )
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("good email: {e:?}"));
+    let outcome = chatbot
+        .answer(
+            session.id,
+            Some(email_step),
+            AnswerPayload::Text {
+                input: "  User@Example.COM  ".into(),
+            },
+            None,
+        )
+        .await
+        .unwrap_or_else(|e| panic!("good email: {e:?}"));
     match &outcome {
         EngineOutcome::Waiting { step } => assert_eq!(step.id, free_step),
         other => panic!("the email step must advance to free input, got {other:?}"),
@@ -297,20 +277,17 @@ async fn the_pointer_state_machine_is_forward_only_and_sanitized() {
     );
 
     // ── Free input sanitization: raw HTML never lands ─────────────
-    let outcome = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        chatbot
-            .answer(
-                session.id,
-                Some(free_step),
-                AnswerPayload::Text {
-                    input: "<b>hello</b> <script>alert(1)</script>".into(),
-                },
-                None,
-            )
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("free input: {e:?}"));
+    let outcome = chatbot
+        .answer(
+            session.id,
+            Some(free_step),
+            AnswerPayload::Text {
+                input: "<b>hello</b> <script>alert(1)</script>".into(),
+            },
+            None,
+        )
+        .await
+        .unwrap_or_else(|e| panic!("free input: {e:?}"));
     match &outcome {
         // The forward step auto-fires inside the engine; the operator
         // joins, so the run ENDS with the human owning the session.
@@ -354,87 +331,69 @@ async fn the_pointer_state_machine_is_forward_only_and_sanitized() {
 
     // ── The pointer-delete fence: a pointed-at step refuses delete ─
     // (a fresh session pointed at the question step.)
-    let fence_session = open_session(&pool, company, channel, "chatbot:fence").await;
-    backbone_orm::company_scope::with_company_scope(Some(company), async {
-        chatbot
-            .start_script(fence_session.id, script_id, None)
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("fence bind: {e:?}"));
-    let refused = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        admin.step_delete(text_step).await
-    })
-    .await;
+    let fence_session = open_session(&pool, channel, "chatbot:fence").await;
+    chatbot
+        .start_script(fence_session.id, script_id, None)
+        .await
+        .unwrap_or_else(|e| panic!("fence bind: {e:?}"));
+    let refused = admin.step_delete(text_step).await;
     assert!(
         matches!(&refused, Err(LivechatError::Validation(refusal)) if refusal.contains("pointer")),
         "deleting a step an open pointer references refuses typed, got {refused:?}"
     );
 
     // ── The no-agent forward: bot-only completion closes the run ──
-    let empty_company = Uuid::new_v4();
-    let empty_channel = seed_channel_with_operators(&pool, empty_company, website, &[]).await;
-    let solo = open_session(&pool, empty_company, empty_channel, "chatbot:solo").await;
-    backbone_orm::company_scope::with_company_scope(Some(empty_company), async {
-        chatbot.start_script(solo.id, script_id, None).await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("solo bind: {e:?}"));
+    let empty_channel = seed_channel_with_operators(&pool, website, &[]).await;
+    let solo = open_session(&pool, empty_channel, "chatbot:solo").await;
+    chatbot
+        .start_script(solo.id, script_id, None)
+        .await
+        .unwrap_or_else(|e| panic!("solo bind: {e:?}"));
     // Walk to the forward step; the empty pool writes no_agent and the
     // script EXHAUSTS into the bot-only completion close.
-    let outcome = backbone_orm::company_scope::with_company_scope(Some(empty_company), async {
-        chatbot.on_visitor_interaction(solo.id, None).await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("solo interaction: {e:?}"));
+    let outcome = chatbot
+        .on_visitor_interaction(solo.id, None)
+        .await
+        .unwrap_or_else(|e| panic!("solo interaction: {e:?}"));
     assert!(
         matches!(outcome, EngineOutcome::Waiting { .. }),
         "the solo run reaches the question"
     );
-    let outcome = backbone_orm::company_scope::with_company_scope(Some(empty_company), async {
-        chatbot
-            .answer(
-                solo.id,
-                Some(question_step),
-                AnswerPayload::Selection {
-                    answer_id: answer_yes,
-                },
-                None,
-            )
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("solo selection: {e:?}"));
+    let outcome = chatbot
+        .answer(
+            solo.id,
+            Some(question_step),
+            AnswerPayload::Selection {
+                answer_id: answer_yes,
+            },
+            None,
+        )
+        .await
+        .unwrap_or_else(|e| panic!("solo selection: {e:?}"));
     assert!(matches!(outcome, EngineOutcome::Waiting { .. }));
-    let outcome = backbone_orm::company_scope::with_company_scope(Some(empty_company), async {
-        chatbot
-            .answer(
-                solo.id,
-                Some(email_step),
-                AnswerPayload::Text {
-                    input: "solo@x.y".into(),
-                },
-                None,
-            )
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("solo email: {e:?}"));
+    let outcome = chatbot
+        .answer(
+            solo.id,
+            Some(email_step),
+            AnswerPayload::Text {
+                input: "solo@x.y".into(),
+            },
+            None,
+        )
+        .await
+        .unwrap_or_else(|e| panic!("solo email: {e:?}"));
     assert!(matches!(outcome, EngineOutcome::Waiting { .. }));
-    let outcome = backbone_orm::company_scope::with_company_scope(Some(empty_company), async {
-        chatbot
-            .answer(
-                solo.id,
-                Some(free_step),
-                AnswerPayload::Text {
-                    input: "done".into(),
-                },
-                None,
-            )
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("solo free input: {e:?}"));
+    let outcome = chatbot
+        .answer(
+            solo.id,
+            Some(free_step),
+            AnswerPayload::Text {
+                input: "done".into(),
+            },
+            None,
+        )
+        .await
+        .unwrap_or_else(|e| panic!("solo free input: {e:?}"));
     assert!(
         matches!(outcome, EngineOutcome::Done),
         "the solo run ends at the script's end"
@@ -475,47 +434,44 @@ async fn the_pointer_state_machine_is_forward_only_and_sanitized() {
 async fn the_seven_type_closure_and_forward_only_routing_are_save_time_walls() {
     let db = TestDb::new("chatbotlaws").await;
     let pool = db.pool.clone();
-    let company = Uuid::new_v4();
     let admin = AdminConfigRepository::new(pool.clone());
 
-    let (script_id, first_step, question_step, answer_id) =
-        backbone_orm::company_scope::with_company_scope(Some(company), async {
-            let script = admin
-                .script_create("law script")
-                .await
-                .unwrap_or_else(|e| panic!("script create: {e:?}"));
-            let script_id = id_of(&script);
-            let text = admin
-                .step_create(&StepInput {
-                    chatbot_script_id: script_id,
-                    sequence: 1,
-                    step_type: "text".into(),
-                    message: Some("first".into()),
-                    expertise_tag_ids: Vec::new(),
-                    answers: Vec::new(),
-                })
-                .await
-                .unwrap();
-            let question = admin
-                .step_create(&StepInput {
-                    chatbot_script_id: script_id,
-                    sequence: 2,
-                    step_type: "question_selection".into(),
-                    message: Some("pick".into()),
-                    expertise_tag_ids: Vec::new(),
-                    answers: vec![answer_input(1, "Go")],
-                })
-                .await
-                .unwrap();
-            let answers = admin.answer_list(id_of(&question)).await.unwrap();
-            (
-                script_id,
-                id_of(&text),
-                id_of(&question),
-                id_of(&answers[0]),
-            )
-        })
-        .await;
+    let (script_id, first_step, question_step, answer_id) = {
+        let script = admin
+            .script_create("law script")
+            .await
+            .unwrap_or_else(|e| panic!("script create: {e:?}"));
+        let script_id = id_of(&script);
+        let text = admin
+            .step_create(&StepInput {
+                chatbot_script_id: script_id,
+                sequence: 1,
+                step_type: "text".into(),
+                message: Some("first".into()),
+                expertise_tag_ids: Vec::new(),
+                answers: Vec::new(),
+            })
+            .await
+            .unwrap();
+        let question = admin
+            .step_create(&StepInput {
+                chatbot_script_id: script_id,
+                sequence: 2,
+                step_type: "question_selection".into(),
+                message: Some("pick".into()),
+                expertise_tag_ids: Vec::new(),
+                answers: vec![answer_input(1, "Go")],
+            })
+            .await
+            .unwrap();
+        let answers = admin.answer_list(id_of(&question)).await.unwrap();
+        (
+            script_id,
+            id_of(&text),
+            id_of(&question),
+            id_of(&answers[0]),
+        )
+    };
 
     // EVERY community type is accepted...
     let mut sequence = 10;
@@ -528,133 +484,109 @@ async fn the_seven_type_closure_and_forward_only_routing_are_save_time_walls() {
         "free_input_multi",
     ] {
         sequence += 1;
-        backbone_orm::company_scope::with_company_scope(Some(company), async {
-            admin
-                .step_create(&StepInput {
-                    chatbot_script_id: script_id,
-                    sequence,
-                    step_type: step_type.into(),
-                    message: Some(format!("{step_type} step")),
-                    expertise_tag_ids: Vec::new(),
-                    answers: Vec::new(),
-                })
-                .await
-        })
-        .await
-        .unwrap_or_else(|e| panic!("the community type {step_type} must be accepted: {e:?}"));
+        admin
+            .step_create(&StepInput {
+                chatbot_script_id: script_id,
+                sequence,
+                step_type: step_type.into(),
+                message: Some(format!("{step_type} step")),
+                expertise_tag_ids: Vec::new(),
+                answers: Vec::new(),
+            })
+            .await
+            .unwrap_or_else(|e| panic!("the community type {step_type} must be accepted: {e:?}"));
     }
     // ...and question_selection (already created) completes the seven.
 
     // The upstream create arms are REFUSED by omission.
     for banned in ["create_lead", "create_ticket"] {
-        let refused = backbone_orm::company_scope::with_company_scope(Some(company), async {
-            admin
-                .step_create(&StepInput {
-                    chatbot_script_id: script_id,
-                    sequence: 50,
-                    step_type: banned.into(),
-                    message: None,
-                    expertise_tag_ids: Vec::new(),
-                    answers: Vec::new(),
-                })
-                .await
-        })
-        .await;
+        let refused = admin
+            .step_create(&StepInput {
+                chatbot_script_id: script_id,
+                sequence: 50,
+                step_type: banned.into(),
+                message: None,
+                expertise_tag_ids: Vec::new(),
+                answers: Vec::new(),
+            })
+            .await;
         assert!(
             matches!(&refused, Err(LivechatError::Validation(msg)) if msg.contains("seven")),
             "the banned arm {banned} refuses typed against the closure, got {refused:?}"
         );
     }
     // So does an unknown type outright.
-    let refused = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        admin
-            .step_create(&StepInput {
-                chatbot_script_id: script_id,
-                sequence: 51,
-                step_type: "gibberish".into(),
-                message: None,
-                expertise_tag_ids: Vec::new(),
-                answers: Vec::new(),
-            })
-            .await
-    })
-    .await;
+    let refused = admin
+        .step_create(&StepInput {
+            chatbot_script_id: script_id,
+            sequence: 51,
+            step_type: "gibberish".into(),
+            message: None,
+            expertise_tag_ids: Vec::new(),
+            answers: Vec::new(),
+        })
+        .await;
     assert!(
         matches!(&refused, Err(LivechatError::Validation(msg)) if msg.contains("seven")),
         "an unknown type refuses typed against the closure, got {refused:?}"
     );
 
     // A question step WITHOUT answers refuses at save time.
-    let refused = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        admin
-            .step_create(&StepInput {
-                chatbot_script_id: script_id,
-                sequence: 60,
-                step_type: "question_selection".into(),
-                message: Some("empty".into()),
-                expertise_tag_ids: Vec::new(),
-                answers: Vec::new(),
-            })
-            .await
-    })
-    .await;
+    let refused = admin
+        .step_create(&StepInput {
+            chatbot_script_id: script_id,
+            sequence: 60,
+            step_type: "question_selection".into(),
+            message: Some("empty".into()),
+            expertise_tag_ids: Vec::new(),
+            answers: Vec::new(),
+        })
+        .await;
     assert!(
         matches!(&refused, Err(LivechatError::Validation(msg)) if msg.contains("answer")),
         "a question step born without answers refuses, got {refused:?}"
     );
 
     // A NON-question step refuses inline answers.
-    let refused = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        admin
-            .step_create(&StepInput {
-                chatbot_script_id: script_id,
-                sequence: 61,
-                step_type: "text".into(),
-                message: Some("with answers".into()),
-                expertise_tag_ids: Vec::new(),
-                answers: vec![answer_input(1, "stray")],
-            })
-            .await
-    })
-    .await;
+    let refused = admin
+        .step_create(&StepInput {
+            chatbot_script_id: script_id,
+            sequence: 61,
+            step_type: "text".into(),
+            message: Some("with answers".into()),
+            expertise_tag_ids: Vec::new(),
+            answers: vec![answer_input(1, "stray")],
+        })
+        .await;
     assert!(
         matches!(&refused, Err(LivechatError::Validation(msg)) if msg.contains("answers")),
         "a non-question step refuses answers, got {refused:?}"
     );
 
     // The detached answer verb refuses non-question steps too.
-    let refused = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        admin
-            .answer_create(first_step, &answer_input(1, "stray"))
-            .await
-    })
-    .await;
+    let refused = admin
+        .answer_create(first_step, &answer_input(1, "stray"))
+        .await;
     assert!(
         matches!(&refused, Err(LivechatError::Validation(msg)) if msg.contains("question")),
         "answers attach to question steps only, got {refused:?}"
     );
 
     // ── FORWARD-ONLY routing: a backwards trigger refuses at save ──
-    let refused = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        admin.trigger_create(answer_id, first_step).await
-    })
-    .await;
+    let refused = admin.trigger_create(answer_id, first_step).await;
     assert!(
         matches!(&refused, Err(LivechatError::Validation(msg)) if msg.contains("forward-only")),
         "a backwards trigger refuses typed, got {refused:?}"
     );
     // A cross-script target refuses too (no such step here: a random
     // id is neither later nor same-script).
-    let refused = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        admin.trigger_create(answer_id, Uuid::new_v4()).await
-    })
-    .await;
+    let refused = admin.trigger_create(answer_id, Uuid::new_v4()).await;
     assert!(
         matches!(&refused, Err(LivechatError::Validation(_))),
         "a cross-script trigger refuses typed, got {refused:?}"
     );
     // A FORWARD trigger lands.
-    let forward_target = backbone_orm::company_scope::with_company_scope(Some(company), async {
+    let forward_target = {
         let step = admin
             .step_create(&StepInput {
                 chatbot_script_id: script_id,
@@ -671,8 +603,7 @@ async fn the_seven_type_closure_and_forward_only_routing_are_save_time_walls() {
             .trigger_create(answer_id, target)
             .await
             .map(|_| target)
-    })
-    .await
+    }
     .unwrap_or_else(|e| panic!("a forward trigger is legal: {e:?}"));
     assert_ne!(forward_target, question_step);
     db.dispose().await;

@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::AuditMetadata;
 use super::LivechatAuditEvent;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for LivechatAuditLog
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -12,15 +12,9 @@ use super::LivechatAuditEvent;
 pub struct LivechatAuditLogId(pub Uuid);
 
 impl LivechatAuditLogId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for LivechatAuditLogId {
@@ -37,28 +31,20 @@ impl std::str::FromStr for LivechatAuditLogId {
 }
 
 impl From<Uuid> for LivechatAuditLogId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<LivechatAuditLogId> for Uuid {
-    fn from(id: LivechatAuditLogId) -> Self {
-        id.0
-    }
+    fn from(id: LivechatAuditLogId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for LivechatAuditLogId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for LivechatAuditLogId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -70,7 +56,6 @@ pub struct LivechatAuditLog {
     pub subject_id: Option<Uuid>,
     pub detail: Option<serde_json::Value>,
     pub created_at: DateTime<Utc>,
-    pub company_id: Uuid,
     #[serde(default)]
     #[sqlx(json)]
     pub metadata: AuditMetadata,
@@ -83,7 +68,7 @@ impl LivechatAuditLog {
     }
 
     /// Create a new LivechatAuditLog with required fields
-    pub fn new(event: LivechatAuditEvent, company_id: Uuid) -> Self {
+    pub fn new(event: LivechatAuditEvent) -> Self {
         Self {
             id: Uuid::new_v4(),
             event,
@@ -92,7 +77,6 @@ impl LivechatAuditLog {
             subject_id: None,
             detail: None,
             created_at: Utc::now(),
-            company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -147,6 +131,7 @@ impl LivechatAuditLog {
         self.metadata.deleted_by.as_ref()
     }
 
+
     // ==========================================================
     // Fluent Setters (with_* for optional fields)
     // ==========================================================
@@ -184,34 +169,19 @@ impl LivechatAuditLog {
         for (key, value) in fields {
             match key.as_str() {
                 "event" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.event = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.event = v; }
                 }
                 "actor" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.actor = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.actor = v; }
                 }
                 "subject_type" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.subject_type = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.subject_type = v; }
                 }
                 "subject_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.subject_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.subject_id = v; }
                 }
                 "detail" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.detail = v;
-                    }
-                }
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.company_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.detail = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -268,15 +238,11 @@ impl backbone_orm::EntityRepoMeta for LivechatAuditLog {
         let mut m = std::collections::HashMap::new();
         m.insert("id".to_string(), "uuid".to_string());
         m.insert("subject_id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m.insert("event".to_string(), "livechat_audit_event".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &[]
-    }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
     }
 }
 
@@ -291,7 +257,6 @@ pub struct LivechatAuditLogBuilder {
     subject_type: Option<String>,
     subject_id: Option<Uuid>,
     detail: Option<serde_json::Value>,
-    company_id: Option<Uuid>,
 }
 
 impl LivechatAuditLogBuilder {
@@ -325,20 +290,11 @@ impl LivechatAuditLogBuilder {
         self
     }
 
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Build the LivechatAuditLog entity
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<LivechatAuditLog, String> {
         let event = self.event.ok_or_else(|| "event is required".to_string())?;
-        let company_id = self
-            .company_id
-            .ok_or_else(|| "company_id is required".to_string())?;
 
         Ok(LivechatAuditLog {
             id: Uuid::new_v4(),
@@ -348,7 +304,6 @@ impl LivechatAuditLogBuilder {
             subject_id: self.subject_id,
             detail: self.detail,
             created_at: Utc::now(),
-            company_id,
             metadata: AuditMetadata::default(),
         })
     }

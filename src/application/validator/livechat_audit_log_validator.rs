@@ -5,19 +5,17 @@
 //! Returns an `EntityValidator<LivechatAuditLog>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
+use backbone_core::{OptionalNotBlank};
 use crate::domain::entity::LivechatAuditLog;
-use backbone_core::OptionalNotBlank;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for LivechatAuditLog entities.
 pub type LivechatAuditLogValidator = EntityValidator<LivechatAuditLog>;
 
 /// Build a validator for LivechatAuditLog with all schema-defined field rules.
 pub fn livechat_audit_log_validator() -> LivechatAuditLogValidator {
-    EntityValidator::new().rule(OptionalNotBlank::new(
-        "subject_type",
-        |e: &LivechatAuditLog| e.subject_type.as_deref(),
-    ))
+    EntityValidator::new()
+        .rule(OptionalNotBlank::new("subject_type", |e: &LivechatAuditLog| e.subject_type.as_deref()))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

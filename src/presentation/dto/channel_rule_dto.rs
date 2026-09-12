@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::ChannelRule;
+use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::LivechatChatbotCondition;
 use crate::domain::entity::LivechatRuleAction;
 
@@ -34,10 +34,7 @@ use crate::domain::entity::LivechatRuleAction;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateChannelRuleDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "channel_id")]
     pub channel_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 500)))]
@@ -48,11 +45,7 @@ pub struct CreateChannelRuleDto {
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     #[serde(alias = "auto_popup_timer")]
     pub auto_popup_timer: i32,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "chatbot_script_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "chatbot_script_id")]
     pub chatbot_script_id: Option<Uuid>,
     #[serde(alias = "chatbot_enabled_condition")]
     pub chatbot_enabled_condition: LivechatChatbotCondition,
@@ -60,12 +53,6 @@ pub struct CreateChannelRuleDto {
     pub country_codes: Vec<String>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     pub sequence: i32,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -81,10 +68,7 @@ pub struct CreateChannelRuleDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateChannelRuleDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "channel_id")]
     pub channel_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 500)))]
@@ -95,11 +79,7 @@ pub struct UpdateChannelRuleDto {
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     #[serde(alias = "auto_popup_timer")]
     pub auto_popup_timer: i32,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "chatbot_script_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "chatbot_script_id")]
     pub chatbot_script_id: Option<Uuid>,
     #[serde(alias = "chatbot_enabled_condition")]
     pub chatbot_enabled_condition: LivechatChatbotCondition,
@@ -107,12 +87,6 @@ pub struct UpdateChannelRuleDto {
     pub country_codes: Vec<String>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     pub sequence: i32,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -128,10 +102,7 @@ pub struct UpdateChannelRuleDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchChannelRuleDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "channel_id")]
     pub channel_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 500)))]
@@ -145,36 +116,19 @@ pub struct PatchChannelRuleDto {
     pub auto_popup_timer: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "chatbot_script_id")]
     pub chatbot_script_id: Option<Uuid>,
-    #[serde(
-        skip_serializing_if = "Option::is_none",
-        alias = "chatbot_enabled_condition"
-    )]
+    #[serde(skip_serializing_if = "Option::is_none", alias = "chatbot_enabled_condition")]
     pub chatbot_enabled_condition: Option<LivechatChatbotCondition>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "country_codes")]
     pub country_codes: Option<Vec<String>>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sequence: Option<i32>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
 }
 
 impl PatchChannelRuleDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.channel_id.is_some()
-            || self.regex_url.is_some()
-            || self.action.is_some()
-            || self.auto_popup_timer.is_some()
-            || self.chatbot_script_id.is_some()
-            || self.chatbot_enabled_condition.is_some()
-            || self.country_codes.is_some()
-            || self.sequence.is_some()
-            || self.company_id.is_some()
+        self.channel_id.is_some() || self.regex_url.is_some() || self.action.is_some() || self.auto_popup_timer.is_some() || self.chatbot_script_id.is_some() || self.chatbot_enabled_condition.is_some() || self.country_codes.is_some() || self.sequence.is_some()
     }
 }
 
@@ -190,15 +144,9 @@ impl PatchChannelRuleDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelRuleResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub channel_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub regex_url: String,
@@ -210,11 +158,6 @@ pub struct ChannelRuleResponseDto {
     pub country_codes: Vec<String>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     pub sequence: i32,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
     pub metadata: AuditMetadata,
 }
 
@@ -294,7 +237,6 @@ impl From<ChannelRule> for ChannelRuleResponseDto {
             chatbot_enabled_condition: entity.chatbot_enabled_condition,
             country_codes: entity.country_codes,
             sequence: entity.sequence,
-            company_id: entity.company_id,
             metadata: entity.metadata,
         }
     }
@@ -325,7 +267,6 @@ impl From<CreateChannelRuleDto> for ChannelRule {
             chatbot_enabled_condition: dto.chatbot_enabled_condition,
             country_codes: dto.country_codes,
             sequence: dto.sequence,
-            company_id: dto.company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -343,7 +284,6 @@ impl From<&ChannelRule> for ChannelRuleResponseDto {
             chatbot_enabled_condition: entity.chatbot_enabled_condition.clone(),
             country_codes: entity.country_codes.clone(),
             sequence: entity.sequence.clone(),
-            company_id: entity.company_id.clone(),
             metadata: entity.metadata.clone(),
         }
     }
@@ -365,7 +305,6 @@ impl backbone_core::ApplyUpdateDto<UpdateChannelRuleDto> for ChannelRule {
         self.chatbot_enabled_condition = dto.chatbot_enabled_condition;
         self.country_codes = dto.country_codes;
         self.sequence = dto.sequence;
-        self.company_id = dto.company_id;
         Ok(self)
     }
 }

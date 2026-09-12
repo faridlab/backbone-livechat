@@ -973,17 +973,17 @@ async fn test_session_create(
     let Some(actor) = actor_of(&extensions) else {
         return LivechatError::ActorUnresolved.into_response();
     };
-    // The script must exist under this company before a session is
-    // minted (the binding itself refuses typed when the script is
-    // not routable).
+    // The script must exist in the caller's scope before a session is
+    // minted (the binding itself refuses typed when the script is not
+    // routable).
     match state.config.script_get(script_id).await {
         Ok(Some(_)) => {}
         Ok(None) => return LivechatError::SessionNotFound.into_response(),
         Err(e) => return e.into_response(),
     }
-    // A test session needs a channel: the first active channel of
-    // the company (the test drives the real surface; it never mints
-    // config).
+    // A test session needs a channel: the first active channel in the
+    // caller's scope (the test drives the real surface; it never
+    // mints config).
     let channels = match state.config.channel_list().await {
         Ok(rows) => rows,
         Err(e) => return e.into_response(),
@@ -1108,7 +1108,7 @@ async fn session_take(
 
 /// Mint a CRM lead from the session (the operator's
 /// conversation-becomes-a-lead verb). Every refusal is typed: the
-/// uniform 404 for a missing/cross-company session, 409 when the
+/// uniform 404 for a missing/out-of-scope session, 409 when the
 /// session already carries its one lead, 503 while the CRM port is
 /// uncomposed — and NOTHING is written on any refusal.
 async fn session_mint_lead(

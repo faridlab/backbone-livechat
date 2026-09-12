@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the ChannelMember aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
 use crate::domain::entity::ChannelMember;
@@ -46,13 +46,12 @@ pub struct ChannelMemberPaginatedResult {
 pub struct ChannelMemberFilter {
     pub channel_id: Option<Uuid>,
     pub user_id: Option<Uuid>,
-    pub company_id: Option<Uuid>,
 }
 
 impl ChannelMemberFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.channel_id.is_some() || self.user_id.is_some() || self.company_id.is_some()
+        self.channel_id.is_some() || self.user_id.is_some()
     }
 }
 
@@ -62,6 +61,7 @@ impl ChannelMemberFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait ChannelMemberRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -86,17 +86,10 @@ pub trait ChannelMemberRepository: Send + Sync {
     // =========================================================================
 
     /// List channel_member with pagination
-    async fn list(
-        &self,
-        params: ChannelMemberPaginationParams,
-    ) -> Result<ChannelMemberPaginatedResult>;
+    async fn list(&self, params: ChannelMemberPaginationParams) -> Result<ChannelMemberPaginatedResult>;
 
     /// List channel_member with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: ChannelMemberPaginationParams,
-        filters: ChannelMemberFilter,
-    ) -> Result<ChannelMemberPaginatedResult>;
+    async fn list_with_filters(&self, params: ChannelMemberPaginationParams, filters: ChannelMemberFilter) -> Result<ChannelMemberPaginatedResult>;
 
     /// Count all channel_member entities
     async fn count(&self) -> Result<u64>;
@@ -118,10 +111,7 @@ pub trait ChannelMemberRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<ChannelMember>>;
 
     /// List soft-deleted channel_member entities
-    async fn list_deleted(
-        &self,
-        params: ChannelMemberPaginationParams,
-    ) -> Result<ChannelMemberPaginatedResult>;
+    async fn list_deleted(&self, params: ChannelMemberPaginationParams) -> Result<ChannelMemberPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

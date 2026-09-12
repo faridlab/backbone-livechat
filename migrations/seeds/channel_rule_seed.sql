@@ -14,7 +14,6 @@
 --     chatbot_enabled_condition,
 --     country_codes,
 --     sequence,
---     company_id,
 --     metadata
 -- ) VALUES
 -- (

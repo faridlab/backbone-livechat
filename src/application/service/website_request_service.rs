@@ -26,8 +26,8 @@ use super::livechat_error::LivechatError;
 use super::notifier_port::{LivechatNotice, LivechatNotifier};
 use super::website_bridge::LivechatWebsiteBridge;
 use crate::infrastructure::persistence::{
-    upsert_agent_ledger_tx, OpenSessionInput, SessionCommandRepository, SessionRow,
-    WebsiteRequestRepository,
+    relay_ambient_scope, upsert_agent_ledger_tx, OpenSessionInput, SessionCommandRepository,
+    SessionRow, WebsiteRequestRepository,
 };
 
 pub struct WebsiteRequestService {
@@ -128,8 +128,8 @@ impl WebsiteRequestService {
         // effect).
         if let Some(operator) = actor {
             let mut tx = self.pool.begin().await?;
-            backbone_orm::company_scope::bind_current_company(&mut tx).await?;
-            upsert_agent_ledger_tx(&mut tx, row.id, operator, row.company_id).await?;
+            relay_ambient_scope(&mut tx).await?;
+            upsert_agent_ledger_tx(&mut tx, row.id, operator).await?;
             tx.commit().await?;
         }
 
@@ -246,3 +246,4 @@ impl WebsiteRequestService {
         self.bridge.visitor_by_id(website_id, visitor_id).await
     }
 }
+

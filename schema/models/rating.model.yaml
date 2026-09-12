@@ -48,10 +48,6 @@ models:
         type: datetime
         attributes: ["@required", "@default(now)"]
         description: "When the rating landed."
-      company_id:
-        type: uuid
-        attributes: ["@required", "@exclude_from_foreign_key_check"]
-        description: "Owning company (strict fence — logical corporate ref)."
       metadata:
         type: Metadata
         attributes: ["@audit_metadata"]

@@ -37,10 +37,6 @@ models:
       expertise_tag_ids:
         type: uuid[]?
         description: "On forward steps: the expertise tags the handoff stamps onto the session (LOGICAL refs into expertise_tags; labels freeze at forward)."
-      company_id:
-        type: uuid
-        attributes: ["@required", "@exclude_from_foreign_key_check"]
-        description: "Owning company (strict fence — logical corporate ref)."
       metadata:
         type: Metadata
         attributes: ["@audit_metadata"]

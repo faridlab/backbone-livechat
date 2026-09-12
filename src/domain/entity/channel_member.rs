@@ -1,8 +1,8 @@
-use super::AuditMetadata;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for ChannelMember
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -10,15 +10,9 @@ use uuid::Uuid;
 pub struct ChannelMemberId(pub Uuid);
 
 impl ChannelMemberId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for ChannelMemberId {
@@ -35,28 +29,20 @@ impl std::str::FromStr for ChannelMemberId {
 }
 
 impl From<Uuid> for ChannelMemberId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<ChannelMemberId> for Uuid {
-    fn from(id: ChannelMemberId) -> Self {
-        id.0
-    }
+    fn from(id: ChannelMemberId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for ChannelMemberId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for ChannelMemberId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -64,7 +50,6 @@ pub struct ChannelMember {
     pub id: Uuid,
     pub channel_id: Uuid,
     pub user_id: Uuid,
-    pub company_id: Uuid,
     #[serde(default)]
     #[sqlx(json)]
     pub metadata: AuditMetadata,
@@ -77,12 +62,11 @@ impl ChannelMember {
     }
 
     /// Create a new ChannelMember with required fields
-    pub fn new(channel_id: Uuid, user_id: Uuid, company_id: Uuid) -> Self {
+    pub fn new(channel_id: Uuid, user_id: Uuid) -> Self {
         Self {
             id: Uuid::new_v4(),
             channel_id,
             user_id,
-            company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -137,6 +121,7 @@ impl ChannelMember {
         self.metadata.deleted_by.as_ref()
     }
 
+
     // ==========================================================
     // Partial Update
     // ==========================================================
@@ -146,19 +131,10 @@ impl ChannelMember {
         for (key, value) in fields {
             match key.as_str() {
                 "channel_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.channel_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.channel_id = v; }
                 }
                 "user_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.user_id = v;
-                    }
-                }
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.company_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.user_id = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -216,14 +192,10 @@ impl backbone_orm::EntityRepoMeta for ChannelMember {
         m.insert("id".to_string(), "uuid".to_string());
         m.insert("channel_id".to_string(), "uuid".to_string());
         m.insert("user_id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &[]
-    }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
     }
     fn relations() -> &'static [(&'static str, &'static str, &'static str)] {
         &[("channel", "channels", "channelId")]
@@ -238,7 +210,6 @@ impl backbone_orm::EntityRepoMeta for ChannelMember {
 pub struct ChannelMemberBuilder {
     channel_id: Option<Uuid>,
     user_id: Option<Uuid>,
-    company_id: Option<Uuid>,
 }
 
 impl ChannelMemberBuilder {
@@ -254,31 +225,17 @@ impl ChannelMemberBuilder {
         self
     }
 
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Build the ChannelMember entity
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<ChannelMember, String> {
-        let channel_id = self
-            .channel_id
-            .ok_or_else(|| "channel_id is required".to_string())?;
-        let user_id = self
-            .user_id
-            .ok_or_else(|| "user_id is required".to_string())?;
-        let company_id = self
-            .company_id
-            .ok_or_else(|| "company_id is required".to_string())?;
+        let channel_id = self.channel_id.ok_or_else(|| "channel_id is required".to_string())?;
+        let user_id = self.user_id.ok_or_else(|| "user_id is required".to_string())?;
 
         Ok(ChannelMember {
             id: Uuid::new_v4(),
             channel_id,
             user_id,
-            company_id,
             metadata: AuditMetadata::default(),
         })
     }

@@ -24,7 +24,8 @@ Chatbot: `chatbot_script`, `chatbot_step`, `chatbot_answer`,
 `expertise_tag`. Trace: `livechat_audit_log`.
 
 One hand DDL object is NOT a model: the `livechat.session_report` view
-(security_invoker — the company fence flows through the view).
+(security_invoker — the composing service's tenancy fence flows
+through the view).
 
 **Gate-order note (deliberate, do not "harmonize"):** while
 `LIVECHAT_CAPABILITY_SECRET` is unset, session-open answers the UNIFORM

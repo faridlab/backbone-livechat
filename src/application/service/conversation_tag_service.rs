@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
+use crate::presentation::dto::{CreateConversationTagDto, UpdateConversationTagDto};
 use crate::domain::entity::ConversationTag;
 use crate::infrastructure::persistence::ConversationTagRepository;
-use crate::presentation::dto::{CreateConversationTagDto, UpdateConversationTagDto};
 
 /// Application service for ConversationTag entities.
 ///

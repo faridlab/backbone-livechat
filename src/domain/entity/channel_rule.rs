@@ -3,9 +3,9 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::AuditMetadata;
-use super::LivechatChatbotCondition;
 use super::LivechatRuleAction;
+use super::LivechatChatbotCondition;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for ChannelRule
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -13,15 +13,9 @@ use super::LivechatRuleAction;
 pub struct ChannelRuleId(pub Uuid);
 
 impl ChannelRuleId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for ChannelRuleId {
@@ -38,28 +32,20 @@ impl std::str::FromStr for ChannelRuleId {
 }
 
 impl From<Uuid> for ChannelRuleId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<ChannelRuleId> for Uuid {
-    fn from(id: ChannelRuleId) -> Self {
-        id.0
-    }
+    fn from(id: ChannelRuleId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for ChannelRuleId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for ChannelRuleId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -73,7 +59,6 @@ pub struct ChannelRule {
     pub chatbot_enabled_condition: LivechatChatbotCondition,
     pub country_codes: Vec<String>,
     pub sequence: i32,
-    pub company_id: Uuid,
     #[serde(default)]
     #[sqlx(json)]
     pub metadata: AuditMetadata,
@@ -86,16 +71,7 @@ impl ChannelRule {
     }
 
     /// Create a new ChannelRule with required fields
-    pub fn new(
-        channel_id: Uuid,
-        regex_url: String,
-        action: LivechatRuleAction,
-        auto_popup_timer: i32,
-        chatbot_enabled_condition: LivechatChatbotCondition,
-        country_codes: Vec<String>,
-        sequence: i32,
-        company_id: Uuid,
-    ) -> Self {
+    pub fn new(channel_id: Uuid, regex_url: String, action: LivechatRuleAction, auto_popup_timer: i32, chatbot_enabled_condition: LivechatChatbotCondition, country_codes: Vec<String>, sequence: i32) -> Self {
         Self {
             id: Uuid::new_v4(),
             channel_id,
@@ -106,7 +82,6 @@ impl ChannelRule {
             chatbot_enabled_condition,
             country_codes,
             sequence,
-            company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -161,6 +136,7 @@ impl ChannelRule {
         self.metadata.deleted_by.as_ref()
     }
 
+
     // ==========================================================
     // Fluent Setters (with_* for optional fields)
     // ==========================================================
@@ -180,49 +156,28 @@ impl ChannelRule {
         for (key, value) in fields {
             match key.as_str() {
                 "channel_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.channel_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.channel_id = v; }
                 }
                 "regex_url" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.regex_url = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.regex_url = v; }
                 }
                 "action" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.action = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.action = v; }
                 }
                 "auto_popup_timer" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.auto_popup_timer = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.auto_popup_timer = v; }
                 }
                 "chatbot_script_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.chatbot_script_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.chatbot_script_id = v; }
                 }
                 "chatbot_enabled_condition" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.chatbot_enabled_condition = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.chatbot_enabled_condition = v; }
                 }
                 "country_codes" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.country_codes = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.country_codes = v; }
                 }
                 "sequence" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.sequence = v;
-                    }
-                }
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.company_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.sequence = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -280,25 +235,15 @@ impl backbone_orm::EntityRepoMeta for ChannelRule {
         m.insert("id".to_string(), "uuid".to_string());
         m.insert("channel_id".to_string(), "uuid".to_string());
         m.insert("chatbot_script_id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m.insert("action".to_string(), "livechat_rule_action".to_string());
-        m.insert(
-            "chatbot_enabled_condition".to_string(),
-            "livechat_chatbot_condition".to_string(),
-        );
+        m.insert("chatbot_enabled_condition".to_string(), "livechat_chatbot_condition".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &["regex_url"]
     }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
-    }
     fn relations() -> &'static [(&'static str, &'static str, &'static str)] {
-        &[
-            ("channel", "channels", "channelId"),
-            ("chatbotScript", "chatbot_scripts", "chatbotScriptId"),
-        ]
+        &[("channel", "channels", "channelId"), ("chatbotScript", "chatbot_scripts", "chatbotScriptId")]
     }
 }
 
@@ -316,7 +261,6 @@ pub struct ChannelRuleBuilder {
     chatbot_enabled_condition: Option<LivechatChatbotCondition>,
     country_codes: Option<Vec<String>>,
     sequence: Option<i32>,
-    company_id: Option<Uuid>,
 }
 
 impl ChannelRuleBuilder {
@@ -368,28 +312,13 @@ impl ChannelRuleBuilder {
         self
     }
 
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Build the ChannelRule entity
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<ChannelRule, String> {
-        let channel_id = self
-            .channel_id
-            .ok_or_else(|| "channel_id is required".to_string())?;
-        let regex_url = self
-            .regex_url
-            .ok_or_else(|| "regex_url is required".to_string())?;
-        let country_codes = self
-            .country_codes
-            .ok_or_else(|| "country_codes is required".to_string())?;
-        let company_id = self
-            .company_id
-            .ok_or_else(|| "company_id is required".to_string())?;
+        let channel_id = self.channel_id.ok_or_else(|| "channel_id is required".to_string())?;
+        let regex_url = self.regex_url.ok_or_else(|| "regex_url is required".to_string())?;
+        let country_codes = self.country_codes.ok_or_else(|| "country_codes is required".to_string())?;
 
         Ok(ChannelRule {
             id: Uuid::new_v4(),
@@ -401,7 +330,6 @@ impl ChannelRuleBuilder {
             chatbot_enabled_condition: self.chatbot_enabled_condition.unwrap_or_default(),
             country_codes,
             sequence: self.sequence.unwrap_or(1),
-            company_id,
             metadata: AuditMetadata::default(),
         })
     }

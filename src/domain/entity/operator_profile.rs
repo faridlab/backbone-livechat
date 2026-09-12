@@ -1,8 +1,8 @@
-use super::AuditMetadata;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for OperatorProfile
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -10,15 +10,9 @@ use uuid::Uuid;
 pub struct OperatorProfileId(pub Uuid);
 
 impl OperatorProfileId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for OperatorProfileId {
@@ -35,28 +29,20 @@ impl std::str::FromStr for OperatorProfileId {
 }
 
 impl From<Uuid> for OperatorProfileId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<OperatorProfileId> for Uuid {
-    fn from(id: OperatorProfileId) -> Self {
-        id.0
-    }
+    fn from(id: OperatorProfileId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for OperatorProfileId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for OperatorProfileId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -67,7 +53,6 @@ pub struct OperatorProfile {
     pub languages: Vec<String>,
     pub last_heartbeat_at: Option<DateTime<Utc>>,
     pub last_assigned_at: Option<DateTime<Utc>>,
-    pub company_id: Uuid,
     #[serde(default)]
     #[sqlx(json)]
     pub metadata: AuditMetadata,
@@ -80,7 +65,7 @@ impl OperatorProfile {
     }
 
     /// Create a new OperatorProfile with required fields
-    pub fn new(user_id: Uuid, languages: Vec<String>, company_id: Uuid) -> Self {
+    pub fn new(user_id: Uuid, languages: Vec<String>) -> Self {
         Self {
             id: Uuid::new_v4(),
             user_id,
@@ -88,7 +73,6 @@ impl OperatorProfile {
             languages,
             last_heartbeat_at: None,
             last_assigned_at: None,
-            company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -143,6 +127,7 @@ impl OperatorProfile {
         self.metadata.deleted_by.as_ref()
     }
 
+
     // ==========================================================
     // Fluent Setters (with_* for optional fields)
     // ==========================================================
@@ -174,34 +159,19 @@ impl OperatorProfile {
         for (key, value) in fields {
             match key.as_str() {
                 "user_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.user_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.user_id = v; }
                 }
                 "display_name" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.display_name = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.display_name = v; }
                 }
                 "languages" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.languages = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.languages = v; }
                 }
                 "last_heartbeat_at" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.last_heartbeat_at = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.last_heartbeat_at = v; }
                 }
                 "last_assigned_at" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.last_assigned_at = v;
-                    }
-                }
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.company_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.last_assigned_at = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -258,14 +228,10 @@ impl backbone_orm::EntityRepoMeta for OperatorProfile {
         let mut m = std::collections::HashMap::new();
         m.insert("id".to_string(), "uuid".to_string());
         m.insert("user_id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &[]
-    }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
     }
 }
 
@@ -280,7 +246,6 @@ pub struct OperatorProfileBuilder {
     languages: Option<Vec<String>>,
     last_heartbeat_at: Option<DateTime<Utc>>,
     last_assigned_at: Option<DateTime<Utc>>,
-    company_id: Option<Uuid>,
 }
 
 impl OperatorProfileBuilder {
@@ -314,25 +279,12 @@ impl OperatorProfileBuilder {
         self
     }
 
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Build the OperatorProfile entity
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<OperatorProfile, String> {
-        let user_id = self
-            .user_id
-            .ok_or_else(|| "user_id is required".to_string())?;
-        let languages = self
-            .languages
-            .ok_or_else(|| "languages is required".to_string())?;
-        let company_id = self
-            .company_id
-            .ok_or_else(|| "company_id is required".to_string())?;
+        let user_id = self.user_id.ok_or_else(|| "user_id is required".to_string())?;
+        let languages = self.languages.ok_or_else(|| "languages is required".to_string())?;
 
         Ok(OperatorProfile {
             id: Uuid::new_v4(),
@@ -341,7 +293,6 @@ impl OperatorProfileBuilder {
             languages,
             last_heartbeat_at: self.last_heartbeat_at,
             last_assigned_at: self.last_assigned_at,
-            company_id,
             metadata: AuditMetadata::default(),
         })
     }

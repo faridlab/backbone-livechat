@@ -26,6 +26,9 @@ use super::livechat_error::LivechatError;
 /// operator) — none of it arrives from the client.
 #[derive(Debug, Clone)]
 pub struct LeadFromSession {
+    /// Documented legacy twin, carried for still-fenced consumers;
+    /// sourced from the ambient org scope echo, nil when undecorated
+    /// (ADR-0029).
     pub company_id: Uuid,
     pub session_id: Uuid,
     /// The lead's display name (the verb's own default when the

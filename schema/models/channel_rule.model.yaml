@@ -62,10 +62,6 @@ models:
         type: int
         attributes: ["@required", "@default(1)", "@non_negative"]
         description: "Tie-break order within a pass."
-      company_id:
-        type: uuid
-        attributes: ["@required", "@exclude_from_foreign_key_check"]
-        description: "Owning company (strict fence — logical corporate ref)."
       metadata:
         type: Metadata
         attributes: ["@audit_metadata"]

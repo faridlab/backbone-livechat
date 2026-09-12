@@ -19,11 +19,10 @@ use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use backbone_orm::company_scope;
-
 use crate::application::service::livechat_error::LivechatError;
 
 use super::selection_repository::audit_tx;
+use super::relay_ambient_scope;
 
 /// Table name for Rating entities (the generated CRUD shape).
 pub const RATING_TABLE_NAME: &str = "livechat.ratings";
@@ -69,6 +68,10 @@ pub struct RatingRow {
     pub created_at: DateTime<Utc>,
 }
 
+// The typed multi-row read twins live only in the legacy `company_scope` module. Their
+// connection discipline is what this repository needs — request-dedicated connection when
+// the composing service bound one, plain pool otherwise. The helper's legacy task-local
+// branch is never taken: this module sets no legacy scope of its own (ADR-0029).
 pub struct RatingCommandRepository {
     pool: PgPool,
 }
@@ -98,27 +101,27 @@ impl RatingCommandRepository {
             ));
         }
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
         // The session must exist and be fence-visible; a miss is the
         // uniform 404 family.
-        let company: Option<(Uuid,)> =
-            sqlx::query_as("SELECT company_id FROM livechat.sessions WHERE id = $1")
+        let exists: Option<(i32,)> =
+            sqlx::query_as("SELECT 1 FROM livechat.sessions WHERE id = $1")
                 .bind(session_id)
                 .fetch_optional(&mut *tx)
                 .await?;
-        let Some((company_id,)) = company else {
+        if exists.is_none() {
             tx.rollback().await?;
             return Err(LivechatError::SessionNotFound);
-        };
+        }
         let inserted: Option<RatingRow> = sqlx::query_as::<_, RatingRow>(
             r#"INSERT INTO livechat.ratings
                    (session_id, value, rated_persona, operator_user_id, chatbot_script_id,
-                    comment, company_id)
+                    comment)
                VALUES ($1, $2, $3::livechat_rated_persona,
                        (SELECT s.operator_user_id FROM livechat.sessions s WHERE s.id = $1),
                        (SELECT h.chatbot_script_id FROM livechat.member_histories h
                           WHERE h.session_id = $1 AND h.persona = 'bot' LIMIT 1),
-                       $4, $5)
+                       $4)
                ON CONFLICT (session_id) DO NOTHING
                RETURNING id, session_id, value, rated_persona::text, operator_user_id,
                          chatbot_script_id, comment, created_at"#,
@@ -127,7 +130,6 @@ impl RatingCommandRepository {
         .bind(value)
         .bind(rated_persona)
         .bind(comment)
-        .bind(company_id)
         .fetch_optional(&mut *tx)
         .await?;
         let Some(row) = inserted else {
@@ -187,7 +189,7 @@ async fn audit_and_refuse(
     reason: &str,
 ) -> Result<(), LivechatError> {
     let mut tx = repo.pool.begin().await?;
-    company_scope::bind_current_company(&mut tx).await?;
+    relay_ambient_scope(&mut tx).await?;
     audit_tx(
         &mut tx,
         "rating_refused",

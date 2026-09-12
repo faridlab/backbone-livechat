@@ -26,10 +26,6 @@ models:
         type: uuid
         attributes: ["@required", "@foreign_key(ChatbotStep.chatbot_steps)", "@indexed"]
         description: "The step routed to (its sequence must be > the answering step's — checked at save)."
-      company_id:
-        type: uuid
-        attributes: ["@required", "@exclude_from_foreign_key_check"]
-        description: "Owning company (strict fence — logical corporate ref)."
       metadata:
         type: Metadata
         attributes: ["@audit_metadata"]

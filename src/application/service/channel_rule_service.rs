@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
+use crate::presentation::dto::{CreateChannelRuleDto, UpdateChannelRuleDto};
 use crate::domain::entity::ChannelRule;
 use crate::infrastructure::persistence::ChannelRuleRepository;
-use crate::presentation::dto::{CreateChannelRuleDto, UpdateChannelRuleDto};
 
 /// Application service for ChannelRule entities.
 ///

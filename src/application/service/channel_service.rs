@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
+use crate::presentation::dto::{CreateChannelDto, UpdateChannelDto};
 use crate::domain::entity::Channel;
 use crate::infrastructure::persistence::ChannelRepository;
-use crate::presentation::dto::{CreateChannelDto, UpdateChannelDto};
 
 /// Application service for Channel entities.
 ///
@@ -25,8 +25,12 @@ use crate::presentation::dto::{CreateChannelDto, UpdateChannelDto};
 ///     // add domain-specific dependencies here
 /// }
 /// ```
-pub type ChannelService =
-    GenericCrudService<Channel, CreateChannelDto, UpdateChannelDto, ChannelRepository>;
+pub type ChannelService = GenericCrudService<
+    Channel,
+    CreateChannelDto,
+    UpdateChannelDto,
+    ChannelRepository,
+>;
 
 // <<< CUSTOM
 // END CUSTOM

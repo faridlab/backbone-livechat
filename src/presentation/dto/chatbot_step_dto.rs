@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::ChatbotStep;
+use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::LivechatStepType;
 
 // =============================================================================
@@ -33,10 +33,7 @@ use crate::domain::entity::LivechatStepType;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateChatbotStepDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "chatbot_script_id")]
     pub chatbot_script_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
@@ -48,12 +45,6 @@ pub struct CreateChatbotStepDto {
     pub message: Option<String>,
     #[serde(alias = "expertise_tag_ids")]
     pub expertise_tag_ids: Vec<Uuid>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -69,10 +60,7 @@ pub struct CreateChatbotStepDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateChatbotStepDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "chatbot_script_id")]
     pub chatbot_script_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
@@ -84,12 +72,6 @@ pub struct UpdateChatbotStepDto {
     pub message: Option<String>,
     #[serde(alias = "expertise_tag_ids")]
     pub expertise_tag_ids: Vec<Uuid>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -105,10 +87,7 @@ pub struct UpdateChatbotStepDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchChatbotStepDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "chatbot_script_id")]
     pub chatbot_script_id: Option<Uuid>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
@@ -121,23 +100,12 @@ pub struct PatchChatbotStepDto {
     pub message: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "expertise_tag_ids")]
     pub expertise_tag_ids: Option<Vec<Uuid>>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
 }
 
 impl PatchChatbotStepDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.chatbot_script_id.is_some()
-            || self.sequence.is_some()
-            || self.step_type.is_some()
-            || self.message.is_some()
-            || self.expertise_tag_ids.is_some()
-            || self.company_id.is_some()
+        self.chatbot_script_id.is_some() || self.sequence.is_some() || self.step_type.is_some() || self.message.is_some() || self.expertise_tag_ids.is_some()
     }
 }
 
@@ -153,26 +121,15 @@ impl PatchChatbotStepDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ChatbotStepResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub chatbot_script_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     pub sequence: i32,
     pub step_type: LivechatStepType,
     pub message: Option<String>,
     pub expertise_tag_ids: Vec<Uuid>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
     pub metadata: AuditMetadata,
 }
 
@@ -249,7 +206,6 @@ impl From<ChatbotStep> for ChatbotStepResponseDto {
             step_type: entity.step_type,
             message: entity.message,
             expertise_tag_ids: entity.expertise_tag_ids,
-            company_id: entity.company_id,
             metadata: entity.metadata,
         }
     }
@@ -277,7 +233,6 @@ impl From<CreateChatbotStepDto> for ChatbotStep {
             step_type: dto.step_type,
             message: dto.message,
             expertise_tag_ids: dto.expertise_tag_ids,
-            company_id: dto.company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -292,7 +247,6 @@ impl From<&ChatbotStep> for ChatbotStepResponseDto {
             step_type: entity.step_type.clone(),
             message: entity.message.clone(),
             expertise_tag_ids: entity.expertise_tag_ids.clone(),
-            company_id: entity.company_id.clone(),
             metadata: entity.metadata.clone(),
         }
     }
@@ -311,7 +265,6 @@ impl backbone_core::ApplyUpdateDto<UpdateChatbotStepDto> for ChatbotStep {
         self.step_type = dto.step_type;
         self.message = dto.message;
         self.expertise_tag_ids = dto.expertise_tag_ids;
-        self.company_id = dto.company_id;
         Ok(self)
     }
 }

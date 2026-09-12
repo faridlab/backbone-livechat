@@ -12,9 +12,9 @@ use sqlx::postgres::PgPoolOptions;
 use std::env;
 
 // Import seeders
+use backbone_livechat::seeders::SeedChannelSeeder;
 use backbone_livechat::seeders::SeedChannelMemberSeeder;
 use backbone_livechat::seeders::SeedChannelRuleSeeder;
-use backbone_livechat::seeders::SeedChannelSeeder;
 use backbone_livechat::seeders::SeedChatbotAnswerSeeder;
 use backbone_livechat::seeders::SeedChatbotMessageSeeder;
 use backbone_livechat::seeders::SeedChatbotScriptSeeder;
@@ -35,14 +35,13 @@ use backbone_livechat::seeders::Seeder;
 async fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
     let force = args.iter().any(|a| a == "--force");
-    let filter: Option<&str> = args
-        .iter()
+    let filter: Option<&str> = args.iter()
         .skip(1)
         .find(|a| !a.starts_with("-"))
         .map(|s| s.as_str());
 
-    let database_url =
-        env::var("DATABASE_URL").map_err(|e| anyhow::anyhow!("DATABASE_URL must be set: {e}"))?;
+    let database_url = env::var("DATABASE_URL")
+        .map_err(|e| anyhow::anyhow!("DATABASE_URL must be set: {e}"))?;
 
     println!("Connecting to database...");
 

@@ -11,7 +11,6 @@
 --     carrier_message_id,
 --     selected_answer_id,
 --     visitor_answer,
---     company_id,
 --     metadata
 -- ) VALUES
 -- (

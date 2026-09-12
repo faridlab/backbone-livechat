@@ -18,6 +18,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::application::service::livechat_error::LivechatError;
+use super::relay_ambient_scope;
 
 /// Table name for MemberHistory entities (the generated CRUD shape).
 pub const MEMBER_HISTORY_TABLE_NAME: &str = "livechat.member_histories";
@@ -62,7 +63,7 @@ backbone_core::impl_crud_repository!(
 
 const HISTORY_COLUMNS: &str =
     "id, session_id, persona::text, operator_user_id, visitor_key, chatbot_script_id, \
-     joined_at, left_at, message_count, response_time_secs, expertise_names, company_id";
+     joined_at, left_at, message_count, response_time_secs, expertise_names";
 
 /// One ledger row.
 #[derive(Debug, Clone, sqlx::FromRow)]
@@ -78,9 +79,12 @@ pub struct MemberHistoryRow {
     pub message_count: i32,
     pub response_time_secs: Option<i32>,
     pub expertise_names: Vec<String>,
-    pub company_id: Uuid,
 }
 
+// The typed multi-row read twins live only in the legacy `company_scope` module. Their
+// connection discipline is what this repository needs — request-dedicated connection when
+// the composing service bound one, plain pool otherwise. The helper's legacy task-local
+// branch is never taken: this module sets no legacy scope of its own (ADR-0029).
 pub struct MemberHistoryLedgerRepository {
     pool: PgPool,
 }
@@ -115,21 +119,19 @@ impl MemberHistoryLedgerRepository {
         &self,
         session_id: Uuid,
         chatbot_script_id: Uuid,
-        company_id: Uuid,
     ) -> Result<(), LivechatError> {
         let mut tx = self.pool.begin().await?;
-        backbone_orm::company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
         sqlx::query(
             r#"INSERT INTO livechat.member_histories
-                   (session_id, persona, chatbot_script_id, expertise_names, company_id)
-               VALUES ($1, 'bot', $2, '{}', $3)
+                   (session_id, persona, chatbot_script_id, expertise_names)
+               VALUES ($1, 'bot', $2, '{}')
                ON CONFLICT (session_id, chatbot_script_id)
                WHERE persona = 'bot' AND chatbot_script_id IS NOT NULL
                DO UPDATE SET left_at = NULL, joined_at = now()"#,
         )
         .bind(session_id)
         .bind(chatbot_script_id)
-        .bind(company_id)
         .execute(&mut *tx)
         .await?;
         tx.commit().await?;
@@ -138,7 +140,7 @@ impl MemberHistoryLedgerRepository {
 
     /// The forward handoff's bot unfollow (the bot row's `left_at`).
     pub async fn leave_bot_row(&self, session_id: Uuid) -> Result<(), LivechatError> {
-        backbone_orm::company_scope::execute_scoped(
+        backbone_orm::org_scope::execute_scoped(
             &self.pool,
             sqlx::query(
                 "UPDATE livechat.member_histories SET left_at = now() \

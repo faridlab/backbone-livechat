@@ -5,9 +5,9 @@
 //! Returns an `EntityValidator<ChatbotMessage>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
+use backbone_core::{OptionalNotBlank};
 use crate::domain::entity::ChatbotMessage;
-use backbone_core::OptionalNotBlank;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for ChatbotMessage entities.
 pub type ChatbotMessageValidator = EntityValidator<ChatbotMessage>;
@@ -15,14 +15,8 @@ pub type ChatbotMessageValidator = EntityValidator<ChatbotMessage>;
 /// Build a validator for ChatbotMessage with all schema-defined field rules.
 pub fn chatbot_message_validator() -> ChatbotMessageValidator {
     EntityValidator::new()
-        .rule(OptionalNotBlank::new(
-            "carrier_message_id",
-            |e: &ChatbotMessage| e.carrier_message_id.as_deref(),
-        ))
-        .rule(OptionalNotBlank::new(
-            "visitor_answer",
-            |e: &ChatbotMessage| e.visitor_answer.as_deref(),
-        ))
+        .rule(OptionalNotBlank::new("carrier_message_id", |e: &ChatbotMessage| e.carrier_message_id.as_deref()))
+        .rule(OptionalNotBlank::new("visitor_answer", |e: &ChatbotMessage| e.visitor_answer.as_deref()))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

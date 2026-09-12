@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
+use crate::presentation::dto::{CreateChannelMemberDto, UpdateChannelMemberDto};
 use crate::domain::entity::ChannelMember;
 use crate::infrastructure::persistence::ChannelMemberRepository;
-use crate::presentation::dto::{CreateChannelMemberDto, UpdateChannelMemberDto};
 
 /// Application service for ChannelMember entities.
 ///

@@ -5,8 +5,8 @@
 //! Returns an `EntityValidator<OperatorExpertise>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
 use crate::domain::entity::OperatorExpertise;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for OperatorExpertise entities.
 pub type OperatorExpertiseValidator = EntityValidator<OperatorExpertise>;
@@ -16,7 +16,7 @@ pub fn operator_expertise_validator() -> OperatorExpertiseValidator {
     EntityValidator::new()
     // <<< CUSTOM RULES
     // END CUSTOM RULES
-    // No schema-derived rules — add custom rules above.
+        // No schema-derived rules — add custom rules above.
 }
 
 // <<< CUSTOM

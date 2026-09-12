@@ -18,33 +18,31 @@ use super::common::{open_session, seed_channel_with_operators, StubWebsiteBridge
 async fn sweeps_close_and_expire_without_ever_deleting() {
     let db = TestDb::new("sweep").await;
     let pool = db.pool.clone();
-    let company = Uuid::new_v4();
     let website = Uuid::new_v4();
     let operator = Uuid::new_v4();
-    let channel = seed_channel_with_operators(&pool, company, website, &[operator]).await;
+    let channel = seed_channel_with_operators(&pool, website, &[operator]).await;
 
     // Three open sessions: one fresh, two idled past the horizon.
-    let fresh = open_session(&pool, company, channel, "sweep:fresh").await;
-    let idle_a = open_session(&pool, company, channel, "sweep:idle-a").await;
-    let idle_b = open_session(&pool, company, channel, "sweep:idle-b").await;
+    let fresh = open_session(&pool, channel, "sweep:fresh").await;
+    let idle_a = open_session(&pool, channel, "sweep:idle-a").await;
+    let idle_b = open_session(&pool, channel, "sweep:idle-b").await;
     // Give the idle pair a FAILURE shape the outcome derive must
     // carry per record (idle_a escalated via two agent ledger rows;
     // idle_b plain no_answer).
     sqlx::query(
         r#"INSERT INTO livechat.member_histories
-               (session_id, persona, operator_user_id, expertise_names, company_id)
-           VALUES ($1, 'agent', $2, '{}', $4), ($1, 'agent', $3, '{}', $4)"#,
+               (session_id, persona, operator_user_id, expertise_names)
+           VALUES ($1, 'agent', $2, '{}'), ($1, 'agent', $3, '{}')"#,
     )
     .bind(idle_a.id)
     .bind(operator)
     .bind(Uuid::new_v4())
-    .bind(company)
     .execute(&pool)
     .await
     .unwrap_or_else(|e| panic!("escalation seed: {e}"));
 
     // A pending invite backdated past the invite horizon.
-    let bridge = std::sync::Arc::new(StubWebsiteBridge::new("sweep.example", website, company));
+    let bridge = std::sync::Arc::new(StubWebsiteBridge::new("sweep.example", website, Uuid::new_v4()));
     let visitor_id = Uuid::new_v4();
     bridge.register_visitor(visitor_id, "sweep:invitee", Some("ID"));
     let bridge_dyn: std::sync::Arc<
@@ -55,13 +53,10 @@ async fn sweeps_close_and_expire_without_ever_deleting() {
         bridge_dyn,
         std::sync::Arc::new(UnwiredNotifier),
     );
-    let invite = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        requests
-            .create_request(website, visitor_id, Some(operator))
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("invite create: {e:?}"));
+    let invite = requests
+        .create_request(website, visitor_id, Some(operator))
+        .await
+        .unwrap_or_else(|e| panic!("invite create: {e:?}"));
     assert!(invite.is_pending_request, "the invite is born pending");
 
     let now = Utc::now();
@@ -102,11 +97,10 @@ async fn sweeps_close_and_expire_without_ever_deleting() {
     .await
     .unwrap_or_else(|e| panic!("before counts: {e}"));
 
-    let outcome = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        sweeps.sweep_at(now + Duration::seconds(1)).await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("sweep: {e:?}"));
+    let outcome = sweeps
+        .sweep_at(now + Duration::seconds(1))
+        .await
+        .unwrap_or_else(|e| panic!("sweep: {e:?}"));
 
     // The idle pair closed; the fresh session untouched.
     let mut closed_ids = outcome.idle_closed.clone();
@@ -198,11 +192,10 @@ async fn sweeps_close_and_expire_without_ever_deleting() {
     );
 
     // A second sweep over the same ground is a no-op (idempotent).
-    let outcome = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        sweeps.sweep_at(now + Duration::seconds(2)).await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("second sweep: {e:?}"));
+    let outcome = sweeps
+        .sweep_at(now + Duration::seconds(2))
+        .await
+        .unwrap_or_else(|e| panic!("second sweep: {e:?}"));
     assert!(
         outcome.idle_closed.is_empty(),
         "the second idle pass finds nothing"

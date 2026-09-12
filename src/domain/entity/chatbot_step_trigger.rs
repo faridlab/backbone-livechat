@@ -1,8 +1,8 @@
-use super::AuditMetadata;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for ChatbotStepTrigger
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -10,15 +10,9 @@ use uuid::Uuid;
 pub struct ChatbotStepTriggerId(pub Uuid);
 
 impl ChatbotStepTriggerId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for ChatbotStepTriggerId {
@@ -35,28 +29,20 @@ impl std::str::FromStr for ChatbotStepTriggerId {
 }
 
 impl From<Uuid> for ChatbotStepTriggerId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<ChatbotStepTriggerId> for Uuid {
-    fn from(id: ChatbotStepTriggerId) -> Self {
-        id.0
-    }
+    fn from(id: ChatbotStepTriggerId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for ChatbotStepTriggerId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for ChatbotStepTriggerId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -64,7 +50,6 @@ pub struct ChatbotStepTrigger {
     pub id: Uuid,
     pub answer_id: Uuid,
     pub target_step_id: Uuid,
-    pub company_id: Uuid,
     #[serde(default)]
     #[sqlx(json)]
     pub metadata: AuditMetadata,
@@ -77,12 +62,11 @@ impl ChatbotStepTrigger {
     }
 
     /// Create a new ChatbotStepTrigger with required fields
-    pub fn new(answer_id: Uuid, target_step_id: Uuid, company_id: Uuid) -> Self {
+    pub fn new(answer_id: Uuid, target_step_id: Uuid) -> Self {
         Self {
             id: Uuid::new_v4(),
             answer_id,
             target_step_id,
-            company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -137,6 +121,7 @@ impl ChatbotStepTrigger {
         self.metadata.deleted_by.as_ref()
     }
 
+
     // ==========================================================
     // Partial Update
     // ==========================================================
@@ -146,19 +131,10 @@ impl ChatbotStepTrigger {
         for (key, value) in fields {
             match key.as_str() {
                 "answer_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.answer_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.answer_id = v; }
                 }
                 "target_step_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.target_step_id = v;
-                    }
-                }
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.company_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.target_step_id = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -216,20 +192,13 @@ impl backbone_orm::EntityRepoMeta for ChatbotStepTrigger {
         m.insert("id".to_string(), "uuid".to_string());
         m.insert("answer_id".to_string(), "uuid".to_string());
         m.insert("target_step_id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &[]
     }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
-    }
     fn relations() -> &'static [(&'static str, &'static str, &'static str)] {
-        &[
-            ("answer", "chatbot_answers", "answerId"),
-            ("targetStep", "chatbot_steps", "targetStepId"),
-        ]
+        &[("answer", "chatbot_answers", "answerId"), ("targetStep", "chatbot_steps", "targetStepId")]
     }
 }
 
@@ -241,7 +210,6 @@ impl backbone_orm::EntityRepoMeta for ChatbotStepTrigger {
 pub struct ChatbotStepTriggerBuilder {
     answer_id: Option<Uuid>,
     target_step_id: Option<Uuid>,
-    company_id: Option<Uuid>,
 }
 
 impl ChatbotStepTriggerBuilder {
@@ -257,31 +225,17 @@ impl ChatbotStepTriggerBuilder {
         self
     }
 
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Build the ChatbotStepTrigger entity
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<ChatbotStepTrigger, String> {
-        let answer_id = self
-            .answer_id
-            .ok_or_else(|| "answer_id is required".to_string())?;
-        let target_step_id = self
-            .target_step_id
-            .ok_or_else(|| "target_step_id is required".to_string())?;
-        let company_id = self
-            .company_id
-            .ok_or_else(|| "company_id is required".to_string())?;
+        let answer_id = self.answer_id.ok_or_else(|| "answer_id is required".to_string())?;
+        let target_step_id = self.target_step_id.ok_or_else(|| "target_step_id is required".to_string())?;
 
         Ok(ChatbotStepTrigger {
             id: Uuid::new_v4(),
             answer_id,
             target_step_id,
-            company_id,
             metadata: AuditMetadata::default(),
         })
     }

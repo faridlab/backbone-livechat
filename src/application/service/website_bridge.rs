@@ -8,18 +8,22 @@
 //! no sibling Cargo edge). The refusing default parks loudly so an
 //! uncomposed host is a typed 503, never a silent skip.
 //!
-//! The public surface runs FENCED: the open and availability verbs
-//! resolve the website by Host, take the website's company off the
-//! binding, and bind that company scope around every repository call
-//! — the fence is the fence on every surface, public included.
+//! Row scoping is owned by the composing service's tenancy decorator
+//! — the fence is the fence on every surface, public included
+//! (ADR-0029). The binding's company field mirrors the website
+//! module's global ownership column (which is not stripped); nothing
+//! in this module scopes a statement on it.
 
 use async_trait::async_trait;
 use uuid::Uuid;
 
 use super::livechat_error::LivechatError;
 
-/// A resolved website: its id and the company whose RLS fence owns
-/// every row reachable from the site.
+/// A resolved website: its id, plus the website's owning company —
+/// the documented legacy twin mirroring the website module's global
+/// ownership column (that column is NOT stripped; ADR-0029).
+/// Informational for consumers; the composing service's tenancy
+/// decorator owns row scoping.
 #[derive(Debug, Clone, Copy)]
 pub struct WebsiteBinding {
     pub website_id: Uuid,

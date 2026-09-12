@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,9 +16,9 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
+use crate::domain::entity::MemberHistory;
 use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::LivechatPersona;
-use crate::domain::entity::MemberHistory;
 
 // =============================================================================
 // Create DTO
@@ -33,31 +33,16 @@ use crate::domain::entity::MemberHistory;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateMemberHistoryDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "session_id")]
     pub session_id: Uuid,
     pub persona: LivechatPersona,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "operator_user_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "operator_user_id")]
     pub operator_user_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "visitor_key"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "visitor_key")]
     pub visitor_key: Option<String>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "chatbot_script_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "chatbot_script_id")]
     pub chatbot_script_id: Option<Uuid>,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(alias = "joined_at")]
@@ -67,20 +52,10 @@ pub struct CreateMemberHistoryDto {
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     #[serde(alias = "message_count")]
     pub message_count: i32,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "response_time_secs"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "response_time_secs")]
     pub response_time_secs: Option<i32>,
     #[serde(alias = "expertise_names")]
     pub expertise_names: Vec<String>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -96,31 +71,16 @@ pub struct CreateMemberHistoryDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateMemberHistoryDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "session_id")]
     pub session_id: Uuid,
     pub persona: LivechatPersona,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "operator_user_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "operator_user_id")]
     pub operator_user_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "visitor_key"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "visitor_key")]
     pub visitor_key: Option<String>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "chatbot_script_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "chatbot_script_id")]
     pub chatbot_script_id: Option<Uuid>,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(alias = "joined_at")]
@@ -130,20 +90,10 @@ pub struct UpdateMemberHistoryDto {
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     #[serde(alias = "message_count")]
     pub message_count: i32,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "response_time_secs"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "response_time_secs")]
     pub response_time_secs: Option<i32>,
     #[serde(alias = "expertise_names")]
     pub expertise_names: Vec<String>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -159,10 +109,7 @@ pub struct UpdateMemberHistoryDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchMemberHistoryDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "session_id")]
     pub session_id: Option<Uuid>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -186,28 +133,12 @@ pub struct PatchMemberHistoryDto {
     pub response_time_secs: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "expertise_names")]
     pub expertise_names: Option<Vec<String>>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
 }
 
 impl PatchMemberHistoryDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.session_id.is_some()
-            || self.persona.is_some()
-            || self.operator_user_id.is_some()
-            || self.visitor_key.is_some()
-            || self.chatbot_script_id.is_some()
-            || self.joined_at.is_some()
-            || self.left_at.is_some()
-            || self.message_count.is_some()
-            || self.response_time_secs.is_some()
-            || self.expertise_names.is_some()
-            || self.company_id.is_some()
+        self.session_id.is_some() || self.persona.is_some() || self.operator_user_id.is_some() || self.visitor_key.is_some() || self.chatbot_script_id.is_some() || self.joined_at.is_some() || self.left_at.is_some() || self.message_count.is_some() || self.response_time_secs.is_some() || self.expertise_names.is_some()
     }
 }
 
@@ -223,15 +154,9 @@ impl PatchMemberHistoryDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct MemberHistoryResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub session_id: Uuid,
     pub persona: LivechatPersona,
     pub operator_user_id: Option<Uuid>,
@@ -244,11 +169,6 @@ pub struct MemberHistoryResponseDto {
     pub message_count: i32,
     pub response_time_secs: Option<i32>,
     pub expertise_names: Vec<String>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
     pub metadata: AuditMetadata,
 }
 
@@ -330,7 +250,6 @@ impl From<MemberHistory> for MemberHistoryResponseDto {
             message_count: entity.message_count,
             response_time_secs: entity.response_time_secs,
             expertise_names: entity.expertise_names,
-            company_id: entity.company_id,
             metadata: entity.metadata,
         }
     }
@@ -363,7 +282,6 @@ impl From<CreateMemberHistoryDto> for MemberHistory {
             message_count: dto.message_count,
             response_time_secs: dto.response_time_secs,
             expertise_names: dto.expertise_names,
-            company_id: dto.company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -383,7 +301,6 @@ impl From<&MemberHistory> for MemberHistoryResponseDto {
             message_count: entity.message_count.clone(),
             response_time_secs: entity.response_time_secs.clone(),
             expertise_names: entity.expertise_names.clone(),
-            company_id: entity.company_id.clone(),
             metadata: entity.metadata.clone(),
         }
     }
@@ -407,7 +324,6 @@ impl backbone_core::ApplyUpdateDto<UpdateMemberHistoryDto> for MemberHistory {
         self.message_count = dto.message_count;
         self.response_time_secs = dto.response_time_secs;
         self.expertise_names = dto.expertise_names;
-        self.company_id = dto.company_id;
         Ok(self)
     }
 }

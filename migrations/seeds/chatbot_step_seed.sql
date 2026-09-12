@@ -11,7 +11,6 @@
 --     step_type,
 --     message,
 --     expertise_tag_ids,
---     company_id,
 --     metadata
 -- ) VALUES
 -- (

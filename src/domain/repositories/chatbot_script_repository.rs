@@ -5,9 +5,8 @@
 //! This trait defines the repository contract for the ChatbotScript aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
-use uuid::Uuid;
+use anyhow::Result;
 
 use crate::domain::entity::ChatbotScript;
 
@@ -46,13 +45,12 @@ pub struct ChatbotScriptPaginatedResult {
 pub struct ChatbotScriptFilter {
     pub title: Option<String>,
     pub is_active: Option<bool>,
-    pub company_id: Option<Uuid>,
 }
 
 impl ChatbotScriptFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.title.is_some() || self.is_active.is_some() || self.company_id.is_some()
+        self.title.is_some() || self.is_active.is_some()
     }
 }
 
@@ -62,6 +60,7 @@ impl ChatbotScriptFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait ChatbotScriptRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -86,17 +85,10 @@ pub trait ChatbotScriptRepository: Send + Sync {
     // =========================================================================
 
     /// List chatbot_script with pagination
-    async fn list(
-        &self,
-        params: ChatbotScriptPaginationParams,
-    ) -> Result<ChatbotScriptPaginatedResult>;
+    async fn list(&self, params: ChatbotScriptPaginationParams) -> Result<ChatbotScriptPaginatedResult>;
 
     /// List chatbot_script with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: ChatbotScriptPaginationParams,
-        filters: ChatbotScriptFilter,
-    ) -> Result<ChatbotScriptPaginatedResult>;
+    async fn list_with_filters(&self, params: ChatbotScriptPaginationParams, filters: ChatbotScriptFilter) -> Result<ChatbotScriptPaginatedResult>;
 
     /// Count all chatbot_script entities
     async fn count(&self) -> Result<u64>;
@@ -118,10 +110,7 @@ pub trait ChatbotScriptRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<ChatbotScript>>;
 
     /// List soft-deleted chatbot_script entities
-    async fn list_deleted(
-        &self,
-        params: ChatbotScriptPaginationParams,
-    ) -> Result<ChatbotScriptPaginatedResult>;
+    async fn list_deleted(&self, params: ChatbotScriptPaginationParams) -> Result<ChatbotScriptPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

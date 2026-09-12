@@ -11,7 +11,6 @@
 --     subject_type,
 --     subject_id,
 --     detail,
---     company_id,
 --     metadata
 -- ) VALUES
 -- (

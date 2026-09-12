@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the ChatbotStepTrigger aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
 use crate::domain::entity::ChatbotStepTrigger;
@@ -46,13 +46,12 @@ pub struct ChatbotStepTriggerPaginatedResult {
 pub struct ChatbotStepTriggerFilter {
     pub answer_id: Option<Uuid>,
     pub target_step_id: Option<Uuid>,
-    pub company_id: Option<Uuid>,
 }
 
 impl ChatbotStepTriggerFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.answer_id.is_some() || self.target_step_id.is_some() || self.company_id.is_some()
+        self.answer_id.is_some() || self.target_step_id.is_some()
     }
 }
 
@@ -62,6 +61,7 @@ impl ChatbotStepTriggerFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait ChatbotStepTriggerRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -76,11 +76,7 @@ pub trait ChatbotStepTriggerRepository: Send + Sync {
     async fn find_all(&self) -> Result<Vec<ChatbotStepTrigger>>;
 
     /// Update chatbot_step_trigger by ID
-    async fn update(
-        &self,
-        id: &str,
-        entity: &ChatbotStepTrigger,
-    ) -> Result<Option<ChatbotStepTrigger>>;
+    async fn update(&self, id: &str, entity: &ChatbotStepTrigger) -> Result<Option<ChatbotStepTrigger>>;
 
     /// Delete chatbot_step_trigger by ID
     async fn delete(&self, id: &str) -> Result<bool>;
@@ -90,17 +86,10 @@ pub trait ChatbotStepTriggerRepository: Send + Sync {
     // =========================================================================
 
     /// List chatbot_step_trigger with pagination
-    async fn list(
-        &self,
-        params: ChatbotStepTriggerPaginationParams,
-    ) -> Result<ChatbotStepTriggerPaginatedResult>;
+    async fn list(&self, params: ChatbotStepTriggerPaginationParams) -> Result<ChatbotStepTriggerPaginatedResult>;
 
     /// List chatbot_step_trigger with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: ChatbotStepTriggerPaginationParams,
-        filters: ChatbotStepTriggerFilter,
-    ) -> Result<ChatbotStepTriggerPaginatedResult>;
+    async fn list_with_filters(&self, params: ChatbotStepTriggerPaginationParams, filters: ChatbotStepTriggerFilter) -> Result<ChatbotStepTriggerPaginatedResult>;
 
     /// Count all chatbot_step_trigger entities
     async fn count(&self) -> Result<u64>;
@@ -122,10 +111,7 @@ pub trait ChatbotStepTriggerRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<ChatbotStepTrigger>>;
 
     /// List soft-deleted chatbot_step_trigger entities
-    async fn list_deleted(
-        &self,
-        params: ChatbotStepTriggerPaginationParams,
-    ) -> Result<ChatbotStepTriggerPaginatedResult>;
+    async fn list_deleted(&self, params: ChatbotStepTriggerPaginationParams) -> Result<ChatbotStepTriggerPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

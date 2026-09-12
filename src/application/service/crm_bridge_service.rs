@@ -88,9 +88,10 @@ impl CrmBridgeService {
 
     /// Mint a lead from a session and stamp the link (the operator's
     /// conversation-becomes-a-lead verb). Refusals: the uniform 404
-    /// family for a missing/cross-company session; the typed 409 when
-    /// the session already carries its one lead; the typed 503 when
-    /// the CRM port is uncomposed (nothing is written on any
+    /// family for a missing or out-of-scope session (the composing
+    /// service's tenancy decorator owns scoping; ADR-0029); the typed
+    /// 409 when the session already carries its one lead; the typed
+    /// 503 when the CRM port is uncomposed (nothing is written on any
     /// refusal).
     pub async fn mint_lead_for_session(
         &self,
@@ -117,7 +118,7 @@ impl CrmBridgeService {
             .or_else(|| session.title.clone())
             .unwrap_or_else(|| format!("Livechat session {}", session.id.simple()));
         let request = LeadFromSession {
-            company_id: session.company_id,
+            company_id: legacy_twin(),
             session_id,
             lead_name: lead_name.chars().take(LEAD_NAME_MAX_CHARS).collect(),
             contact_email: input.email.clone().or(harvested.email),
@@ -140,9 +141,11 @@ impl CrmBridgeService {
     }
 
     /// The lead-linked read (the first read-grant rule): the session a
-    /// lead was minted from, readable to the company's gated actors —
-    /// the partial index serves exactly this domain. `None` = no
-    /// session carries this lead (the uniform missing family).
+    /// lead was minted from, readable to gated actors within the
+    /// caller's scope (the composing service's tenancy decorator owns
+    /// scoping; ADR-0029) — the partial index serves exactly this
+    /// domain. `None` = no session carries this lead (the uniform
+    /// missing family).
     pub async fn session_for_lead(
         &self,
         lead_id: Uuid,
@@ -165,4 +168,15 @@ impl CrmBridgeService {
             .join_agent_for_lead(lead_id, user_id, actor)
             .await
     }
+}
+
+/// The legacy tenancy twin the CRM port's request payload still
+/// carries (ADR-0029): under the composing service's org request scope
+/// it is the scope's legacy echo; nil when undecorated. The port field
+/// stays for still-fenced consumers; nothing in this module keys a
+/// statement on it.
+fn legacy_twin() -> Uuid {
+    backbone_orm::org_scope::current_org_scope()
+        .and_then(|s| s.legacy_company_id())
+        .unwrap_or(Uuid::nil())
 }

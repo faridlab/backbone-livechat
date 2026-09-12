@@ -316,9 +316,12 @@ impl LivechatMailCarrier for RecordingMailCarrier {
     }
 }
 
-/// The stub website bridge: a fixed host binding the fence probes
+/// The stub website bridge: a fixed host binding the website probes
 /// resolve, a per-visitor identity registry the invite probes read,
 /// visit-fact recording, and a per-IP key map for returning visitors.
+/// The binding's `company_id` is the website module's legacy ownership
+/// echo — the port field survives the tenancy strip (ADR-0029) because
+/// the website module keeps its global ownership column.
 pub struct StubWebsiteBridge {
     pub host: String,
     pub website_id: Uuid,
@@ -477,23 +480,23 @@ pub fn visitor_key(seed: &str) -> String {
     format!("probe-digest:{seed}")
 }
 
-/// Seed one company's livechat surface: a channel (bound to the
-/// stub website), N operator profiles with live heartbeats, and
-/// channel memberships. Returns (channel_id, operator ids).
+/// Seed a livechat surface: a channel (bound to the stub website),
+/// N operator profiles with live heartbeats, and channel memberships.
+/// The module is tenant-agnostic (ADR-0029): row scoping is installed
+/// by the composing service's tenancy decorator, so the seeds carry no
+/// tenancy column. Returns (channel_id, operator ids).
 pub async fn seed_channel_with_operators(
     pool: &sqlx::PgPool,
-    company: Uuid,
     website_id: Uuid,
     operators: &[Uuid],
 ) -> Uuid {
     let channel: (Uuid,) = sqlx::query_as(
         r#"INSERT INTO livechat.channels
-               (name, website_id, max_sessions_mode, max_sessions, company_id)
-           VALUES ('probe channel', $1, 'unlimited', 1, $2)
+               (name, website_id, max_sessions_mode, max_sessions)
+           VALUES ('probe channel', $1, 'unlimited', 1)
            RETURNING id"#,
     )
     .bind(website_id)
-    .bind(company)
     .fetch_one(pool)
     .await
     .unwrap_or_else(|e| panic!("seed channel failed: {e}"));
@@ -501,22 +504,20 @@ pub async fn seed_channel_with_operators(
     for op in operators {
         sqlx::query(
             r#"INSERT INTO livechat.operator_profiles
-                   (user_id, display_name, languages, last_heartbeat_at, company_id)
-               VALUES ($1, $2, ARRAY['en'], now(), $3)"#,
+                   (user_id, display_name, languages, last_heartbeat_at)
+               VALUES ($1, $2, ARRAY['en'], now())"#,
         )
         .bind(op)
         .bind(format!("operator-{}", op.simple()))
-        .bind(company)
         .execute(pool)
         .await
         .unwrap_or_else(|e| panic!("seed operator profile failed: {e}"));
         sqlx::query(
-            r#"INSERT INTO livechat.channel_members (channel_id, user_id, company_id)
-               VALUES ($1, $2, $3)"#,
+            r#"INSERT INTO livechat.channel_members (channel_id, user_id)
+               VALUES ($1, $2)"#,
         )
         .bind(channel_id)
         .bind(op)
-        .bind(company)
         .execute(pool)
         .await
         .unwrap_or_else(|e| panic!("seed channel member failed: {e}"));
@@ -524,11 +525,12 @@ pub async fn seed_channel_with_operators(
     channel_id
 }
 
-/// Open a session through the REAL repository under the company
-/// fence (the probe path for every session-minting probe).
+/// Open a session through the REAL repository on the plain probe pool
+/// (the probe path for every session-minting probe). The module sets
+/// no tenancy scope of its own — row isolation belongs to the
+/// composing service's tenancy decorator (ADR-0029).
 pub async fn open_session(
     pool: &sqlx::PgPool,
-    company: Uuid,
     channel_id: Uuid,
     key: &str,
 ) -> backbone_livechat::infrastructure::persistence::SessionRow {
@@ -545,11 +547,9 @@ pub async fn open_session(
         is_pending_request: false,
         is_test: false,
     };
-    backbone_orm::company_scope::with_company_scope(Some(company), async {
-        repo.open_session(&input, None).await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("probe open_session failed: {e:?}"))
+    repo.open_session(&input, None)
+        .await
+        .unwrap_or_else(|e| panic!("probe open_session failed: {e:?}"))
 }
 
 /// The refusing port bundle (composition arms that must park loudly).
@@ -583,9 +583,11 @@ fn fenced_role_for(db_name: &str) -> String {
 }
 
 /// Mint (or recreate) the fenced probe role and connect a pool to
-/// `db_name` AS THAT ROLE. Every fence claim is then held by a role
-/// with no bypass: unscoped reads see ZERO rows, unscoped writes hit
-/// the WITH CHECK wall.
+/// `db_name` AS THAT ROLE. The module ships the half-fence (ADR-0029):
+/// RLS ENABLE + FORCE with zero policies, so a role that cannot bypass
+/// RLS is default-denied — every read sees ZERO rows and every write
+/// is refused — until the composing service's decorator installs the
+/// org-scoped policies.
 pub async fn fenced_role_pool(admin: &PgPool, db_name: &str) -> PgPool {
     let role = fenced_role_for(db_name);
     // Order note: this drops the ROLE before any stale probe DBs are

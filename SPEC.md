@@ -10,6 +10,13 @@
 > `LC-1..22` census (minus unpopulated `LC-18`), the `LC-R1..R15` rule layer, and the
 > `WLC-2..12` bridge namespace. This spec disposes every ID; the disposition register is
 > §18.
+>
+> **Tenancy note (ADR-0029, post-port):** the module no longer carries `company_id`. Every
+> `company_id` / company-fence mention below documents the port's ORIGINAL shape as built;
+> the shipped tables carry no scoping column, and the row fence + the org-scoped uniques
+> (operator profile per unit, the case-insensitive tag/script namespaces) are installed by
+> the composing service's tenancy decorator. The website bridge's binding still mirrors the
+> website module's global ownership column — that link is a domain fact, not a fence.
 
 ## 0. Acceptance bar
 

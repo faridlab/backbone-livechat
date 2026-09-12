@@ -3,28 +3,34 @@
 //! message chokepoint (its four duties, transactionally), close, and
 //! the per-record outcome recompute entry points.
 //!
-//! RLS LAW: every transactional method binds the company scope
-//! immediately after `begin()`; direct-pool reads go through the
-//! `company_scope` `*_scoped` helpers.
+//! RLS LAW: every statement rides the tenant-agnostic org_scope /
+//! company_scope `*_scoped` helpers — the request-dedicated connection
+//! when the composing service bound one, the plain pool otherwise
+//! (ADR-0029: the fence itself is the composer's decorator, not the
+//! module's).
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use backbone_orm::company_scope;
+// The typed multi-row read twins live only in the legacy `company_scope` module. Their
+// connection discipline is what this repository needs — request-dedicated connection when
+// the composing service bound one, plain pool otherwise. The helper's legacy task-local
+// branch is never taken: this module sets no legacy scope of its own (ADR-0029).
+use backbone_orm::org_scope;
 
 use crate::application::service::livechat_error::LivechatError;
 use crate::application::service::mail_port::MessageAuthor;
 
 use super::selection_repository::{audit_tx, recompute_outcome_tx};
+use super::relay_ambient_scope;
 
 /// The session columns every read projects (one list, one order).
 pub(crate) const SESSION_COLUMNS: &str = "id, channel_id, title, status::text, failure::text, \
      outcome::text, close_reason::text, closed_at, operator_user_id, chatbot_current_step_id, \
      expertise_names, website_visitor_id, visitor_country_code, visitor_timezone, \
      is_pending_request, crm_lead_id, visitor_language, message_count, first_response_at, \
-     last_interest_at, last_visitor_message_at, last_operator_message_at, is_test, error_detail, \
-     company_id";
+     last_interest_at, last_visitor_message_at, last_operator_message_at, is_test, error_detail";
 
 /// A session row (enum columns projected as text).
 #[derive(Debug, Clone, serde::Serialize, sqlx::FromRow)]
@@ -55,7 +61,6 @@ pub struct SessionRow {
     pub last_operator_message_at: Option<DateTime<Utc>>,
     pub is_test: bool,
     pub error_detail: Option<String>,
-    pub company_id: Uuid,
 }
 
 /// The open verb's input.
@@ -137,22 +142,16 @@ impl SessionCommandRepository {
         actor: Option<Uuid>,
     ) -> Result<SessionRow, LivechatError> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
-        // The company the fence bound: the public routes bind the
-        // resolved website's company before calling in; the admin and
-        // test verbs carry the request scope. An unbound scope is a
-        // typed refusal — no row is minted (fail-closed).
-        let company = company_scope::current_company()
-            .ok_or_else(|| LivechatError::Database("no company scope bound at open".into()))?;
+        relay_ambient_scope(&mut tx).await?;
         let id = Uuid::new_v4();
         let row = sqlx::query_as::<_, SessionRow>(&format!(
             r#"INSERT INTO livechat.sessions
                    (id, channel_id, title, status, failure, expertise_names,
                     website_visitor_id, visitor_country_code, visitor_timezone,
-                    is_pending_request, visitor_language, is_test, company_id)
+                    is_pending_request, visitor_language, is_test)
                VALUES ($1, $2, $3, 'waiting',
                        (CASE WHEN $4::uuid IS NULL THEN 'no_answer' ELSE 'no_failure' END)::livechat_failure,
-                       '{{}}', $5, $6, $7, $8, $9, $10, $11)
+                       '{{}}', $5, $6, $7, $8, $9, $10)
                RETURNING {SESSION_COLUMNS}"#
         ))
         .bind(id)
@@ -165,20 +164,18 @@ impl SessionCommandRepository {
         .bind(input.is_pending_request)
         .bind(&input.visitor_language)
         .bind(input.is_test)
-        .bind(company)
         .fetch_one(&mut *tx)
         .await?;
         sqlx::query(
             r#"INSERT INTO livechat.member_histories
-                   (session_id, persona, visitor_key, expertise_names, company_id)
-               VALUES ($1, 'visitor', $2, '{}', $3)
+                   (session_id, persona, visitor_key, expertise_names)
+               VALUES ($1, 'visitor', $2, '{}')
                ON CONFLICT (session_id, visitor_key)
                WHERE persona = 'visitor' AND visitor_key IS NOT NULL
                DO UPDATE SET left_at = NULL, joined_at = now()"#,
         )
         .bind(row.id)
         .bind(&input.visitor_key)
-        .bind(company)
         .execute(&mut *tx)
         .await?;
         audit_tx(
@@ -202,8 +199,9 @@ impl SessionCommandRepository {
         Ok(row)
     }
 
-    /// One row by id, company-fenced (a cross-company id reads as
-    /// missing — the uniform 404 family).
+    /// One row by id, scoped by the composing service's fence (a row
+    /// outside the caller's scope reads as missing — the uniform 404
+    /// family).
     pub async fn find(&self, session_id: Uuid) -> Result<Option<SessionRow>, LivechatError> {
         let row = backbone_orm::company_scope::fetch_optional_scoped(
             &self.pool,
@@ -259,7 +257,7 @@ impl SessionCommandRepository {
         command: &PostMessageCommand,
     ) -> Result<MessageDeltas, LivechatError> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
 
         let deltas = apply_message_tx(&mut tx, command).await?;
         recompute_outcome_tx(&mut tx, command.session_id).await?;
@@ -278,7 +276,7 @@ impl SessionCommandRepository {
         actor: Option<Uuid>,
     ) -> Result<CloseOutcome, LivechatError> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
         let updated: Option<SessionRow> = sqlx::query_as::<_, SessionRow>(&format!(
             r#"UPDATE livechat.sessions
                   SET closed_at = now(), close_reason = $2::livechat_close_reason, status = NULL
@@ -329,7 +327,7 @@ impl SessionCommandRepository {
         actor: Option<Uuid>,
     ) -> Result<SessionRow, LivechatError> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
         let won: Option<SessionRow> = sqlx::query_as::<_, SessionRow>(&format!(
             r#"UPDATE livechat.sessions
                   SET operator_user_id = $2, status = 'in_progress'
@@ -353,13 +351,12 @@ impl SessionCommandRepository {
             tx.commit().await?;
             return Err(LivechatError::OperatorBusy);
         };
-        upsert_agent_ledger_tx(&mut tx, session_id, operator_user_id, row.company_id).await?;
+        upsert_agent_ledger_tx(&mut tx, session_id, operator_user_id).await?;
         sqlx::query(
             "UPDATE livechat.operator_profiles SET last_assigned_at = now() \
-             WHERE user_id = $1 AND company_id = $2",
+             WHERE user_id = $1",
         )
         .bind(operator_user_id)
-        .bind(row.company_id)
         .execute(&mut *tx)
         .await?;
         recompute_outcome_tx(&mut tx, session_id).await?;
@@ -391,7 +388,7 @@ impl SessionCommandRepository {
         actor: Option<Uuid>,
     ) -> Result<SessionRow, LivechatError> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
         let row: SessionRow = sqlx::query_as::<_, SessionRow>(&format!(
             r#"UPDATE livechat.sessions
                   SET status = CASE
@@ -438,7 +435,7 @@ impl SessionCommandRepository {
         actor: Option<Uuid>,
     ) -> Result<SessionRow, LivechatError> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
         let reopened: Option<SessionRow> = sqlx::query_as::<_, SessionRow>(&format!(
             r#"UPDATE livechat.sessions
                   SET closed_at = NULL, close_reason = NULL, status = 'waiting',
@@ -489,7 +486,7 @@ impl SessionCommandRepository {
         actor: Option<Uuid>,
     ) -> Result<(), LivechatError> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
         sqlx::query("UPDATE livechat.sessions SET error_detail = $2 WHERE id = $1")
             .bind(session_id)
             .bind(detail)
@@ -510,7 +507,7 @@ impl SessionCommandRepository {
 
     /// Clear the parking lot (the retried step landed).
     pub async fn clear_error_detail(&self, session_id: Uuid) -> Result<(), LivechatError> {
-        backbone_orm::company_scope::execute_scoped(
+        org_scope::execute_scoped(
             &self.pool,
             sqlx::query("UPDATE livechat.sessions SET error_detail = NULL WHERE id = $1")
                 .bind(session_id),
@@ -521,7 +518,7 @@ impl SessionCommandRepository {
 
     /// Stamp a heartbeat on the operator's presence row.
     pub async fn heartbeat(&self, user_id: Uuid) -> Result<(), LivechatError> {
-        let n = backbone_orm::company_scope::execute_scoped(
+        let n = org_scope::execute_scoped(
             &self.pool,
             sqlx::query(
                 "UPDATE livechat.operator_profiles SET last_heartbeat_at = now() \
@@ -560,7 +557,7 @@ impl SessionCommandRepository {
     /// selection write): `no_agent` + the per-record recompute.
     pub async fn mark_no_agent(&self, session_id: Uuid) -> Result<(), LivechatError> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
         sqlx::query(
             "UPDATE livechat.sessions SET failure = 'no_agent' \
              WHERE id = $1 AND closed_at IS NULL",
@@ -574,21 +571,21 @@ impl SessionCommandRepository {
     }
 
     /// Replace the session's conversation tags (`tag_ids` must name
-    /// the company's own non-deleted tags — a miss is the typed 422).
+    /// the caller's own non-deleted tags — a miss is the typed 422).
     /// The tag rows ARE the record; the audit-event vocabulary carries
     /// no tagging arm, so none is minted here.
     pub async fn set_tags(&self, session_id: Uuid, tag_ids: &[Uuid]) -> Result<(), LivechatError> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
-        let session: Option<(Uuid,)> =
-            sqlx::query_as("SELECT company_id FROM livechat.sessions WHERE id = $1")
+        relay_ambient_scope(&mut tx).await?;
+        let exists: Option<(i32,)> =
+            sqlx::query_as("SELECT 1 FROM livechat.sessions WHERE id = $1")
                 .bind(session_id)
                 .fetch_optional(&mut *tx)
                 .await?;
-        let Some((company_id,)) = session else {
+        if exists.is_none() {
             tx.rollback().await?;
             return Err(LivechatError::SessionNotFound);
-        };
+        }
         let known: i64 = sqlx::query_scalar(
             "SELECT count(*) FROM livechat.conversation_tags \
              WHERE id = ANY($1::uuid[]) AND metadata ->> 'deleted_at' IS NULL",
@@ -599,7 +596,7 @@ impl SessionCommandRepository {
         if known != tag_ids.len() as i64 {
             tx.rollback().await?;
             return Err(LivechatError::Validation(
-                "one or more tag ids are unknown in this company".into(),
+                "one or more tag ids are unknown in the caller's scope".into(),
             ));
         }
         sqlx::query("DELETE FROM livechat.session_tags WHERE session_id = $1")
@@ -608,13 +605,12 @@ impl SessionCommandRepository {
             .await?;
         if !tag_ids.is_empty() {
             sqlx::query(
-                r#"INSERT INTO livechat.session_tags (session_id, tag_id, company_id)
-                   SELECT $1, t.id, $2
+                r#"INSERT INTO livechat.session_tags (session_id, tag_id)
+                   SELECT $1, t.id
                      FROM livechat.conversation_tags t
-                    WHERE t.id = ANY($3::uuid[])"#,
+                    WHERE t.id = ANY($2::uuid[])"#,
             )
             .bind(session_id)
-            .bind(company_id)
             .bind(tag_ids)
             .execute(&mut *tx)
             .await?;
@@ -722,13 +718,7 @@ pub async fn apply_message_tx(
             }
         }
         MessageAuthor::Operator(operator_user_id) => {
-            let company = sqlx::query_scalar::<_, Uuid>(
-                "SELECT company_id FROM livechat.sessions WHERE id = $1",
-            )
-            .bind(command.session_id)
-            .fetch_one(&mut *tx)
-            .await?;
-            upsert_agent_ledger_tx(tx, command.session_id, *operator_user_id, company).await?;
+            upsert_agent_ledger_tx(tx, command.session_id, *operator_user_id).await?;
             // The once-only first response seconds (join → first
             // response), written only while NULL.
             sqlx::query(
@@ -759,23 +749,17 @@ pub async fn apply_message_tx(
 
     // The chatbot execution-log append, when present.
     if let Some(append) = &command.chatbot {
-        let company =
-            sqlx::query_scalar::<_, Uuid>("SELECT company_id FROM livechat.sessions WHERE id = $1")
-                .bind(command.session_id)
-                .fetch_one(&mut *tx)
-                .await?;
         sqlx::query(
             r#"INSERT INTO livechat.chatbot_messages
                    (session_id, step_id, carrier_message_id, selected_answer_id,
-                    visitor_answer, company_id)
-               VALUES ($1, $2, $3, $4, $5, $6)"#,
+                    visitor_answer)
+               VALUES ($1, $2, $3, $4, $5)"#,
         )
         .bind(command.session_id)
         .bind(append.step_id)
         .bind(&command.carrier_message_id)
         .bind(append.selected_answer_id)
         .bind(&append.visitor_answer)
-        .bind(company)
         .execute(&mut *tx)
         .await?;
     }
@@ -787,11 +771,10 @@ pub async fn upsert_agent_ledger_tx(
     tx: &mut sqlx::PgConnection,
     session_id: Uuid,
     operator_user_id: Uuid,
-    company_id: Uuid,
 ) -> Result<(), LivechatError> {
     sqlx::query(
         r#"INSERT INTO livechat.member_histories
-               (session_id, persona, operator_user_id, expertise_names, company_id)
+               (session_id, persona, operator_user_id, expertise_names)
            VALUES ($1, 'agent', $2,
                    COALESCE((SELECT ARRAY(SELECT t.name
                                             FROM livechat.operator_expertise oe
@@ -799,15 +782,13 @@ pub async fn upsert_agent_ledger_tx(
                                               ON t.id = oe.expertise_tag_id
                                            WHERE oe.operator_profile_id = p.id)
                       FROM livechat.operator_profiles p
-                      WHERE p.user_id = $2 AND p.company_id = $3), '{}'),
-                   $3)
+                      WHERE p.user_id = $2), '{}'))
            ON CONFLICT (session_id, operator_user_id)
            WHERE persona = 'agent' AND operator_user_id IS NOT NULL
            DO UPDATE SET left_at = NULL, joined_at = now()"#,
     )
     .bind(session_id)
     .bind(operator_user_id)
-    .bind(company_id)
     .execute(&mut *tx)
     .await?;
     Ok(())

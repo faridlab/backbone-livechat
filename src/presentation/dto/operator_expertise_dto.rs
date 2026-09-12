@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::OperatorExpertise;
+use crate::domain::entity::AuditMetadata;
 
 // =============================================================================
 // Create DTO
@@ -32,24 +32,12 @@ use crate::domain::entity::OperatorExpertise;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateOperatorExpertiseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "operator_profile_id")]
     pub operator_profile_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "expertise_tag_id")]
     pub expertise_tag_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -65,24 +53,12 @@ pub struct CreateOperatorExpertiseDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateOperatorExpertiseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "operator_profile_id")]
     pub operator_profile_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "expertise_tag_id")]
     pub expertise_tag_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -98,32 +74,18 @@ pub struct UpdateOperatorExpertiseDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchOperatorExpertiseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "operator_profile_id")]
     pub operator_profile_id: Option<Uuid>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "expertise_tag_id")]
     pub expertise_tag_id: Option<Uuid>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
 }
 
 impl PatchOperatorExpertiseDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.operator_profile_id.is_some()
-            || self.expertise_tag_id.is_some()
-            || self.company_id.is_some()
+        self.operator_profile_id.is_some() || self.expertise_tag_id.is_some()
     }
 }
 
@@ -139,26 +101,12 @@ impl PatchOperatorExpertiseDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct OperatorExpertiseResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub operator_profile_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub expertise_tag_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
     pub metadata: AuditMetadata,
 }
 
@@ -192,12 +140,7 @@ pub struct OperatorExpertiseListResponseDto {
 
 impl OperatorExpertiseListResponseDto {
     /// Create a new list response from items and pagination info
-    pub fn new(
-        items: Vec<OperatorExpertiseResponseDto>,
-        total: u64,
-        page: u32,
-        per_page: u32,
-    ) -> Self {
+    pub fn new(items: Vec<OperatorExpertiseResponseDto>, total: u64, page: u32, per_page: u32) -> Self {
         let total_pages = if per_page > 0 {
             ((total as f64) / (per_page as f64)).ceil() as u32
         } else {
@@ -223,7 +166,6 @@ pub struct OperatorExpertiseSummaryDto {
     pub id: Uuid,
     pub operator_profile_id: Uuid,
     pub expertise_tag_id: Uuid,
-    pub company_id: Uuid,
     pub created_at: Option<DateTime<Utc>>,
 }
 
@@ -237,7 +179,6 @@ impl From<OperatorExpertise> for OperatorExpertiseResponseDto {
             id: entity.id,
             operator_profile_id: entity.operator_profile_id,
             expertise_tag_id: entity.expertise_tag_id,
-            company_id: entity.company_id,
             metadata: entity.metadata,
         }
     }
@@ -250,7 +191,6 @@ impl From<OperatorExpertise> for OperatorExpertiseSummaryDto {
             id: entity.id,
             operator_profile_id: entity.operator_profile_id,
             expertise_tag_id: entity.expertise_tag_id,
-            company_id: entity.company_id,
             created_at,
         }
     }
@@ -262,7 +202,6 @@ impl From<CreateOperatorExpertiseDto> for OperatorExpertise {
             id: Uuid::new_v4(),
             operator_profile_id: dto.operator_profile_id,
             expertise_tag_id: dto.expertise_tag_id,
-            company_id: dto.company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -274,7 +213,6 @@ impl From<&OperatorExpertise> for OperatorExpertiseResponseDto {
             id: entity.id.clone(),
             operator_profile_id: entity.operator_profile_id.clone(),
             expertise_tag_id: entity.expertise_tag_id.clone(),
-            company_id: entity.company_id.clone(),
             metadata: entity.metadata.clone(),
         }
     }
@@ -287,13 +225,9 @@ impl backbone_core::FromCreateDto<CreateOperatorExpertiseDto> for OperatorExpert
 }
 
 impl backbone_core::ApplyUpdateDto<UpdateOperatorExpertiseDto> for OperatorExpertise {
-    fn apply_update(
-        mut self,
-        dto: UpdateOperatorExpertiseDto,
-    ) -> backbone_core::ServiceResult<Self> {
+    fn apply_update(mut self, dto: UpdateOperatorExpertiseDto) -> backbone_core::ServiceResult<Self> {
         self.operator_profile_id = dto.operator_profile_id;
         self.expertise_tag_id = dto.expertise_tag_id;
-        self.company_id = dto.company_id;
         Ok(self)
     }
 }

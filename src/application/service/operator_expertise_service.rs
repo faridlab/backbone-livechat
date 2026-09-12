@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
+use crate::presentation::dto::{CreateOperatorExpertiseDto, UpdateOperatorExpertiseDto};
 use crate::domain::entity::OperatorExpertise;
 use crate::infrastructure::persistence::OperatorExpertiseRepository;
-use crate::presentation::dto::{CreateOperatorExpertiseDto, UpdateOperatorExpertiseDto};
 
 /// Application service for OperatorExpertise entities.
 ///

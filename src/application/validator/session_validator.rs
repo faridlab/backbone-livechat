@@ -5,9 +5,9 @@
 //! Returns an `EntityValidator<Session>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
-use crate::domain::entity::Session;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
 use backbone_core::{NonNegative, OptionalNotBlank};
+use crate::domain::entity::Session;
 
 /// Validator type alias for Session entities.
 pub type SessionValidator = EntityValidator<Session>;
@@ -15,25 +15,12 @@ pub type SessionValidator = EntityValidator<Session>;
 /// Build a validator for Session with all schema-defined field rules.
 pub fn session_validator() -> SessionValidator {
     EntityValidator::new()
-        .rule(OptionalNotBlank::new("title", |e: &Session| {
-            e.title.as_deref()
-        }))
-        .rule(OptionalNotBlank::new(
-            "visitor_country_code",
-            |e: &Session| e.visitor_country_code.as_deref(),
-        ))
-        .rule(OptionalNotBlank::new("visitor_timezone", |e: &Session| {
-            e.visitor_timezone.as_deref()
-        }))
-        .rule(OptionalNotBlank::new("visitor_language", |e: &Session| {
-            e.visitor_language.as_deref()
-        }))
-        .rule(NonNegative::new("message_count", |e: &Session| {
-            e.message_count as i64
-        }))
-        .rule(OptionalNotBlank::new("error_detail", |e: &Session| {
-            e.error_detail.as_deref()
-        }))
+        .rule(OptionalNotBlank::new("title", |e: &Session| e.title.as_deref()))
+        .rule(OptionalNotBlank::new("visitor_country_code", |e: &Session| e.visitor_country_code.as_deref()))
+        .rule(OptionalNotBlank::new("visitor_timezone", |e: &Session| e.visitor_timezone.as_deref()))
+        .rule(OptionalNotBlank::new("visitor_language", |e: &Session| e.visitor_language.as_deref()))
+        .rule(NonNegative::new("message_count", |e: &Session| e.message_count as i64))
+        .rule(OptionalNotBlank::new("error_detail", |e: &Session| e.error_detail.as_deref()))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

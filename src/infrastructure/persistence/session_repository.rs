@@ -23,9 +23,7 @@ pub struct SessionRepository(
 
 impl std::ops::Deref for SessionRepository {
     type Target = backbone_orm::GenericCrudRepository<Session, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl SessionRepository {

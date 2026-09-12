@@ -23,9 +23,7 @@ pub struct ChannelMemberRepository(
 
 impl std::ops::Deref for ChannelMemberRepository {
     type Target = backbone_orm::GenericCrudRepository<ChannelMember, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl ChannelMemberRepository {

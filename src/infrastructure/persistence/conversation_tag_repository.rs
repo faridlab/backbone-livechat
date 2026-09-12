@@ -23,9 +23,7 @@ pub struct ConversationTagRepository(
 
 impl std::ops::Deref for ConversationTagRepository {
     type Target = backbone_orm::GenericCrudRepository<ConversationTag, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl ConversationTagRepository {

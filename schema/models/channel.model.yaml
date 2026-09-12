@@ -61,10 +61,6 @@ models:
         type: bool
         attributes: ["@required", "@default(true)"]
         description: "Inactive channels answer no availability and route no sessions."
-      company_id:
-        type: uuid
-        attributes: ["@required", "@exclude_from_foreign_key_check", "@indexed"]
-        description: "Owning company (strict fence — logical corporate ref, never a cross-schema FK)."
       metadata:
         type: Metadata
         attributes: ["@audit_metadata"]

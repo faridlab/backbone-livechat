@@ -1,8 +1,8 @@
-use super::AuditMetadata;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for ConversationTag
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -10,15 +10,9 @@ use uuid::Uuid;
 pub struct ConversationTagId(pub Uuid);
 
 impl ConversationTagId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for ConversationTagId {
@@ -35,35 +29,26 @@ impl std::str::FromStr for ConversationTagId {
 }
 
 impl From<Uuid> for ConversationTagId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<ConversationTagId> for Uuid {
-    fn from(id: ConversationTagId) -> Self {
-        id.0
-    }
+    fn from(id: ConversationTagId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for ConversationTagId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for ConversationTagId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct ConversationTag {
     pub id: Uuid,
     pub name: String,
-    pub company_id: Uuid,
     #[serde(default)]
     #[sqlx(json)]
     pub metadata: AuditMetadata,
@@ -76,11 +61,10 @@ impl ConversationTag {
     }
 
     /// Create a new ConversationTag with required fields
-    pub fn new(name: String, company_id: Uuid) -> Self {
+    pub fn new(name: String) -> Self {
         Self {
             id: Uuid::new_v4(),
             name,
-            company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -135,6 +119,7 @@ impl ConversationTag {
         self.metadata.deleted_by.as_ref()
     }
 
+
     // ==========================================================
     // Partial Update
     // ==========================================================
@@ -144,14 +129,7 @@ impl ConversationTag {
         for (key, value) in fields {
             match key.as_str() {
                 "name" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.name = v;
-                    }
-                }
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.company_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.name = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -207,14 +185,10 @@ impl backbone_orm::EntityRepoMeta for ConversationTag {
     fn column_types() -> std::collections::HashMap<String, String> {
         let mut m = std::collections::HashMap::new();
         m.insert("id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &["name"]
-    }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
     }
 }
 
@@ -225,7 +199,6 @@ impl backbone_orm::EntityRepoMeta for ConversationTag {
 #[derive(Debug, Clone, Default)]
 pub struct ConversationTagBuilder {
     name: Option<String>,
-    company_id: Option<Uuid>,
 }
 
 impl ConversationTagBuilder {
@@ -235,25 +208,15 @@ impl ConversationTagBuilder {
         self
     }
 
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Build the ConversationTag entity
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<ConversationTag, String> {
         let name = self.name.ok_or_else(|| "name is required".to_string())?;
-        let company_id = self
-            .company_id
-            .ok_or_else(|| "company_id is required".to_string())?;
 
         Ok(ConversationTag {
             id: Uuid::new_v4(),
             name,
-            company_id,
             metadata: AuditMetadata::default(),
         })
     }

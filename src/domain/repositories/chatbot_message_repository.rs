@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the ChatbotMessage aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
 use crate::domain::entity::ChatbotMessage;
@@ -49,18 +49,12 @@ pub struct ChatbotMessageFilter {
     pub carrier_message_id: Option<String>,
     pub selected_answer_id: Option<Uuid>,
     pub visitor_answer: Option<String>,
-    pub company_id: Option<Uuid>,
 }
 
 impl ChatbotMessageFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.session_id.is_some()
-            || self.step_id.is_some()
-            || self.carrier_message_id.is_some()
-            || self.selected_answer_id.is_some()
-            || self.visitor_answer.is_some()
-            || self.company_id.is_some()
+        self.session_id.is_some() || self.step_id.is_some() || self.carrier_message_id.is_some() || self.selected_answer_id.is_some() || self.visitor_answer.is_some()
     }
 }
 
@@ -70,6 +64,7 @@ impl ChatbotMessageFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait ChatbotMessageRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -94,17 +89,10 @@ pub trait ChatbotMessageRepository: Send + Sync {
     // =========================================================================
 
     /// List chatbot_message with pagination
-    async fn list(
-        &self,
-        params: ChatbotMessagePaginationParams,
-    ) -> Result<ChatbotMessagePaginatedResult>;
+    async fn list(&self, params: ChatbotMessagePaginationParams) -> Result<ChatbotMessagePaginatedResult>;
 
     /// List chatbot_message with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: ChatbotMessagePaginationParams,
-        filters: ChatbotMessageFilter,
-    ) -> Result<ChatbotMessagePaginatedResult>;
+    async fn list_with_filters(&self, params: ChatbotMessagePaginationParams, filters: ChatbotMessageFilter) -> Result<ChatbotMessagePaginatedResult>;
 
     /// Count all chatbot_message entities
     async fn count(&self) -> Result<u64>;
@@ -126,10 +114,7 @@ pub trait ChatbotMessageRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<ChatbotMessage>>;
 
     /// List soft-deleted chatbot_message entities
-    async fn list_deleted(
-        &self,
-        params: ChatbotMessagePaginationParams,
-    ) -> Result<ChatbotMessagePaginatedResult>;
+    async fn list_deleted(&self, params: ChatbotMessagePaginationParams) -> Result<ChatbotMessagePaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

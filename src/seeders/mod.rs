@@ -9,9 +9,9 @@ use anyhow::Result;
 use async_trait::async_trait;
 use sqlx::PgPool;
 
+mod channel_seeder;
 mod channel_member_seeder;
 mod channel_rule_seeder;
-mod channel_seeder;
 mod chatbot_answer_seeder;
 mod chatbot_message_seeder;
 mod chatbot_script_seeder;
@@ -27,9 +27,9 @@ mod rating_seeder;
 mod session_seeder;
 mod session_tag_seeder;
 
+pub use channel_seeder::SeedChannelSeeder;
 pub use channel_member_seeder::SeedChannelMemberSeeder;
 pub use channel_rule_seeder::SeedChannelRuleSeeder;
-pub use channel_seeder::SeedChannelSeeder;
 pub use chatbot_answer_seeder::SeedChatbotAnswerSeeder;
 pub use chatbot_message_seeder::SeedChatbotMessageSeeder;
 pub use chatbot_script_seeder::SeedChatbotScriptSeeder;

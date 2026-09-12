@@ -175,6 +175,16 @@ user_owned:
   - "migrations/20260906120000_crm_lead_link.up.sql"
   - "migrations/20260906120000_crm_lead_link.down.sql"
 
+  # Hand-written tenancy strip (ADR-0029): drops every company-fence artifact from the
+  # livechat tables — the company-leading uniques (their org-scoped re-declarations live
+  # in the composing service's tenancy decorator), the company isolation policies, and
+  # the company_id columns — behind a decorator-first ordering guard, with the
+  # session_report view rebuilt without its company projection (a view column cannot be
+  # dropped via CREATE OR REPLACE). RLS enable/force flags stay armed with zero policies:
+  # the decorator's half-fence.
+  - "migrations/20260912120000_strip_tenancy.up.sql"
+  - "migrations/20260912120000_strip_tenancy.down.sql"
+
   # Hand-authored module documentation (operator + spec).
   - "README.md"
   - "SPEC.md"

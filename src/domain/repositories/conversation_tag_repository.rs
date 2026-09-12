@@ -5,9 +5,8 @@
 //! This trait defines the repository contract for the ConversationTag aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
-use uuid::Uuid;
+use anyhow::Result;
 
 use crate::domain::entity::ConversationTag;
 
@@ -45,13 +44,12 @@ pub struct ConversationTagPaginatedResult {
 #[derive(Debug, Clone, Default)]
 pub struct ConversationTagFilter {
     pub name: Option<String>,
-    pub company_id: Option<Uuid>,
 }
 
 impl ConversationTagFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.name.is_some() || self.company_id.is_some()
+        self.name.is_some()
     }
 }
 
@@ -61,6 +59,7 @@ impl ConversationTagFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait ConversationTagRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -85,17 +84,10 @@ pub trait ConversationTagRepository: Send + Sync {
     // =========================================================================
 
     /// List conversation_tag with pagination
-    async fn list(
-        &self,
-        params: ConversationTagPaginationParams,
-    ) -> Result<ConversationTagPaginatedResult>;
+    async fn list(&self, params: ConversationTagPaginationParams) -> Result<ConversationTagPaginatedResult>;
 
     /// List conversation_tag with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: ConversationTagPaginationParams,
-        filters: ConversationTagFilter,
-    ) -> Result<ConversationTagPaginatedResult>;
+    async fn list_with_filters(&self, params: ConversationTagPaginationParams, filters: ConversationTagFilter) -> Result<ConversationTagPaginatedResult>;
 
     /// Count all conversation_tag entities
     async fn count(&self) -> Result<u64>;
@@ -117,10 +109,7 @@ pub trait ConversationTagRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<ConversationTag>>;
 
     /// List soft-deleted conversation_tag entities
-    async fn list_deleted(
-        &self,
-        params: ConversationTagPaginationParams,
-    ) -> Result<ConversationTagPaginatedResult>;
+    async fn list_deleted(&self, params: ConversationTagPaginationParams) -> Result<ConversationTagPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

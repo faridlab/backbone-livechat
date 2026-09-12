@@ -6280,7 +6280,6 @@ components:
         - max_sessions
         - block_assignment_during_call
         - is_active
-        - company_id
         - metadata
       properties:
         id:
@@ -6314,9 +6313,6 @@ components:
           format: uri
         is_active:
           type: boolean
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -6341,7 +6337,6 @@ components:
         - max_sessions
         - block_assignment_during_call
         - is_active
-        - company_id
         - metadata
       properties:
         name:
@@ -6372,9 +6367,6 @@ components:
           format: uri
         is_active:
           type: boolean
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -6386,7 +6378,6 @@ components:
         - max_sessions
         - block_assignment_during_call
         - is_active
-        - company_id
         - metadata
       properties:
         name:
@@ -6417,9 +6408,6 @@ components:
           format: uri
         is_active:
           type: boolean
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -6454,9 +6442,6 @@ components:
           format: uri
         is_active:
           type: boolean
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -6476,7 +6461,6 @@ components:
         - id
         - channel_id
         - user_id
-        - company_id
         - metadata
       properties:
         id:
@@ -6486,9 +6470,6 @@ components:
           type: string
           format: uuid
         user_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         metadata:
@@ -6512,16 +6493,12 @@ components:
       required:
         - channel_id
         - user_id
-        - company_id
         - metadata
       properties:
         channel_id:
           type: string
           format: uuid
         user_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         metadata:
@@ -6532,16 +6509,12 @@ components:
       required:
         - channel_id
         - user_id
-        - company_id
         - metadata
       properties:
         channel_id:
           type: string
           format: uuid
         user_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         metadata:
@@ -6554,9 +6527,6 @@ components:
           type: string
           format: uuid
         user_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         metadata:
@@ -6583,7 +6553,6 @@ components:
         - chatbot_enabled_condition
         - country_codes
         - sequence
-        - company_id
         - metadata
       properties:
         id:
@@ -6611,9 +6580,6 @@ components:
         sequence:
           type: integer
           format: int32
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -6640,7 +6606,6 @@ components:
         - chatbot_enabled_condition
         - country_codes
         - sequence
-        - company_id
         - metadata
       properties:
         channel_id:
@@ -6665,9 +6630,6 @@ components:
         sequence:
           type: integer
           format: int32
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -6681,7 +6643,6 @@ components:
         - chatbot_enabled_condition
         - country_codes
         - sequence
-        - company_id
         - metadata
       properties:
         channel_id:
@@ -6706,9 +6667,6 @@ components:
         sequence:
           type: integer
           format: int32
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -6737,9 +6695,6 @@ components:
         sequence:
           type: integer
           format: int32
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -6760,7 +6715,6 @@ components:
         - question_step_id
         - sequence
         - label
-        - company_id
         - metadata
       properties:
         id:
@@ -6779,9 +6733,6 @@ components:
           nullable: true
           type: string
           format: uri
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -6804,7 +6755,6 @@ components:
         - question_step_id
         - sequence
         - label
-        - company_id
         - metadata
       properties:
         question_step_id:
@@ -6820,9 +6770,6 @@ components:
           nullable: true
           type: string
           format: uri
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -6832,7 +6779,6 @@ components:
         - question_step_id
         - sequence
         - label
-        - company_id
         - metadata
       properties:
         question_step_id:
@@ -6848,9 +6794,6 @@ components:
           nullable: true
           type: string
           format: uri
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -6870,9 +6813,6 @@ components:
           nullable: true
           type: string
           format: uri
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -6892,7 +6832,6 @@ components:
         - id
         - session_id
         - created_at
-        - company_id
         - metadata
       properties:
         id:
@@ -6920,9 +6859,6 @@ components:
         created_at:
           type: string
           format: date-time
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -6943,7 +6879,6 @@ components:
       type: object
       required:
         - session_id
-        - company_id
         - metadata
       properties:
         session_id:
@@ -6965,9 +6900,6 @@ components:
           nullable: true
           type: string
           maxLength: 2000
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -6975,7 +6907,6 @@ components:
       type: object
       required:
         - session_id
-        - company_id
         - metadata
       properties:
         session_id:
@@ -6997,9 +6928,6 @@ components:
           nullable: true
           type: string
           maxLength: 2000
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7025,9 +6953,6 @@ components:
           nullable: true
           type: string
           maxLength: 2000
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7047,7 +6972,6 @@ components:
         - id
         - title
         - is_active
-        - company_id
         - metadata
       properties:
         id:
@@ -7058,9 +6982,6 @@ components:
           maxLength: 200
         is_active:
           type: boolean
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7082,7 +7003,6 @@ components:
       required:
         - title
         - is_active
-        - company_id
         - metadata
       properties:
         title:
@@ -7090,9 +7010,6 @@ components:
           maxLength: 200
         is_active:
           type: boolean
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7101,7 +7018,6 @@ components:
       required:
         - title
         - is_active
-        - company_id
         - metadata
       properties:
         title:
@@ -7109,9 +7025,6 @@ components:
           maxLength: 200
         is_active:
           type: boolean
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7123,9 +7036,6 @@ components:
           maxLength: 200
         is_active:
           type: boolean
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7147,7 +7057,6 @@ components:
         - sequence
         - step_type
         - expertise_tag_ids
-        - company_id
         - metadata
       properties:
         id:
@@ -7167,9 +7076,6 @@ components:
           maxLength: 5000
         expertise_tag_ids:
           type: array
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7193,7 +7099,6 @@ components:
         - sequence
         - step_type
         - expertise_tag_ids
-        - company_id
         - metadata
       properties:
         chatbot_script_id:
@@ -7210,9 +7115,6 @@ components:
           maxLength: 5000
         expertise_tag_ids:
           type: array
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7223,7 +7125,6 @@ components:
         - sequence
         - step_type
         - expertise_tag_ids
-        - company_id
         - metadata
       properties:
         chatbot_script_id:
@@ -7240,9 +7141,6 @@ components:
           maxLength: 5000
         expertise_tag_ids:
           type: array
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7263,9 +7161,6 @@ components:
           maxLength: 5000
         expertise_tag_ids:
           type: array
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7285,7 +7180,6 @@ components:
         - id
         - answer_id
         - target_step_id
-        - company_id
         - metadata
       properties:
         id:
@@ -7295,9 +7189,6 @@ components:
           type: string
           format: uuid
         target_step_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         metadata:
@@ -7321,16 +7212,12 @@ components:
       required:
         - answer_id
         - target_step_id
-        - company_id
         - metadata
       properties:
         answer_id:
           type: string
           format: uuid
         target_step_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         metadata:
@@ -7341,16 +7228,12 @@ components:
       required:
         - answer_id
         - target_step_id
-        - company_id
         - metadata
       properties:
         answer_id:
           type: string
           format: uuid
         target_step_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         metadata:
@@ -7363,9 +7246,6 @@ components:
           type: string
           format: uuid
         target_step_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         metadata:
@@ -7386,7 +7266,6 @@ components:
       required:
         - id
         - name
-        - company_id
         - metadata
       properties:
         id:
@@ -7395,9 +7274,6 @@ components:
         name:
           type: string
           maxLength: 120
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7418,15 +7294,11 @@ components:
       type: object
       required:
         - name
-        - company_id
         - metadata
       properties:
         name:
           type: string
           maxLength: 120
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7434,15 +7306,11 @@ components:
       type: object
       required:
         - name
-        - company_id
         - metadata
       properties:
         name:
           type: string
           maxLength: 120
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7452,9 +7320,6 @@ components:
         name:
           type: string
           maxLength: 120
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7473,7 +7338,6 @@ components:
       required:
         - id
         - name
-        - company_id
         - metadata
       properties:
         id:
@@ -7482,9 +7346,6 @@ components:
         name:
           type: string
           maxLength: 120
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7505,15 +7366,11 @@ components:
       type: object
       required:
         - name
-        - company_id
         - metadata
       properties:
         name:
           type: string
           maxLength: 120
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7521,15 +7378,11 @@ components:
       type: object
       required:
         - name
-        - company_id
         - metadata
       properties:
         name:
           type: string
           maxLength: 120
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7539,9 +7392,6 @@ components:
         name:
           type: string
           maxLength: 120
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7561,7 +7411,6 @@ components:
         - id
         - event
         - created_at
-        - company_id
         - metadata
       properties:
         id:
@@ -7587,9 +7436,6 @@ components:
         created_at:
           type: string
           format: date-time
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7610,7 +7456,6 @@ components:
       type: object
       required:
         - event
-        - company_id
         - metadata
       properties:
         event:
@@ -7630,9 +7475,6 @@ components:
         detail:
           nullable: true
           type: object
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7640,7 +7482,6 @@ components:
       type: object
       required:
         - event
-        - company_id
         - metadata
       properties:
         event:
@@ -7660,9 +7501,6 @@ components:
         detail:
           nullable: true
           type: object
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7686,9 +7524,6 @@ components:
         detail:
           nullable: true
           type: object
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7711,7 +7546,6 @@ components:
         - joined_at
         - message_count
         - expertise_names
-        - company_id
         - metadata
       properties:
         id:
@@ -7750,9 +7584,6 @@ components:
           format: int32
         expertise_names:
           type: array
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7777,7 +7608,6 @@ components:
         - joined_at
         - message_count
         - expertise_names
-        - company_id
         - metadata
       properties:
         session_id:
@@ -7813,9 +7643,6 @@ components:
           format: int32
         expertise_names:
           type: array
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7827,7 +7654,6 @@ components:
         - joined_at
         - message_count
         - expertise_names
-        - company_id
         - metadata
       properties:
         session_id:
@@ -7863,9 +7689,6 @@ components:
           format: int32
         expertise_names:
           type: array
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7905,9 +7728,6 @@ components:
           format: int32
         expertise_names:
           type: array
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -7927,7 +7747,6 @@ components:
         - id
         - operator_profile_id
         - expertise_tag_id
-        - company_id
         - metadata
       properties:
         id:
@@ -7937,9 +7756,6 @@ components:
           type: string
           format: uuid
         expertise_tag_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         metadata:
@@ -7963,16 +7779,12 @@ components:
       required:
         - operator_profile_id
         - expertise_tag_id
-        - company_id
         - metadata
       properties:
         operator_profile_id:
           type: string
           format: uuid
         expertise_tag_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         metadata:
@@ -7983,16 +7795,12 @@ components:
       required:
         - operator_profile_id
         - expertise_tag_id
-        - company_id
         - metadata
       properties:
         operator_profile_id:
           type: string
           format: uuid
         expertise_tag_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         metadata:
@@ -8005,9 +7813,6 @@ components:
           type: string
           format: uuid
         expertise_tag_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         metadata:
@@ -8029,7 +7834,6 @@ components:
         - id
         - user_id
         - languages
-        - company_id
         - metadata
       properties:
         id:
@@ -8052,9 +7856,6 @@ components:
           nullable: true
           type: string
           format: date-time
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -8076,7 +7877,6 @@ components:
       required:
         - user_id
         - languages
-        - company_id
         - metadata
       properties:
         user_id:
@@ -8096,9 +7896,6 @@ components:
           nullable: true
           type: string
           format: date-time
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -8107,7 +7904,6 @@ components:
       required:
         - user_id
         - languages
-        - company_id
         - metadata
       properties:
         user_id:
@@ -8127,9 +7923,6 @@ components:
           nullable: true
           type: string
           format: date-time
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -8153,9 +7946,6 @@ components:
           nullable: true
           type: string
           format: date-time
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -8177,7 +7967,6 @@ components:
         - value
         - rated_persona
         - created_at
-        - company_id
         - metadata
       properties:
         id:
@@ -8206,9 +7995,6 @@ components:
         created_at:
           type: string
           format: date-time
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -8231,7 +8017,6 @@ components:
         - session_id
         - value
         - rated_persona
-        - company_id
         - metadata
       properties:
         session_id:
@@ -8254,9 +8039,6 @@ components:
           nullable: true
           type: string
           maxLength: 2000
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -8266,7 +8048,6 @@ components:
         - session_id
         - value
         - rated_persona
-        - company_id
         - metadata
       properties:
         session_id:
@@ -8289,9 +8070,6 @@ components:
           nullable: true
           type: string
           maxLength: 2000
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -8318,9 +8096,6 @@ components:
           nullable: true
           type: string
           maxLength: 2000
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -8345,7 +8120,6 @@ components:
         - message_count
         - last_interest_at
         - is_test
-        - company_id
         - metadata
       properties:
         id:
@@ -8397,6 +8171,10 @@ components:
           maxLength: 60
         is_pending_request:
           type: boolean
+        crm_lead_id:
+          nullable: true
+          type: string
+          format: uuid
         visitor_language:
           nullable: true
           type: string
@@ -8425,9 +8203,6 @@ components:
           nullable: true
           type: string
           maxLength: 500
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -8454,7 +8229,6 @@ components:
         - message_count
         - last_interest_at
         - is_test
-        - company_id
         - metadata
       properties:
         channel_id:
@@ -8503,6 +8277,10 @@ components:
           maxLength: 60
         is_pending_request:
           type: boolean
+        crm_lead_id:
+          nullable: true
+          type: string
+          format: uuid
         visitor_language:
           nullable: true
           type: string
@@ -8531,9 +8309,6 @@ components:
           nullable: true
           type: string
           maxLength: 500
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -8547,7 +8322,6 @@ components:
         - message_count
         - last_interest_at
         - is_test
-        - company_id
         - metadata
       properties:
         channel_id:
@@ -8596,6 +8370,10 @@ components:
           maxLength: 60
         is_pending_request:
           type: boolean
+        crm_lead_id:
+          nullable: true
+          type: string
+          format: uuid
         visitor_language:
           nullable: true
           type: string
@@ -8624,9 +8402,6 @@ components:
           nullable: true
           type: string
           maxLength: 500
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -8679,6 +8454,10 @@ components:
           maxLength: 60
         is_pending_request:
           type: boolean
+        crm_lead_id:
+          nullable: true
+          type: string
+          format: uuid
         visitor_language:
           nullable: true
           type: string
@@ -8707,9 +8486,6 @@ components:
           nullable: true
           type: string
           maxLength: 500
-        company_id:
-          type: string
-          format: uuid
         metadata:
           type: object
 
@@ -8729,7 +8505,6 @@ components:
         - id
         - session_id
         - tag_id
-        - company_id
         - metadata
       properties:
         id:
@@ -8739,9 +8514,6 @@ components:
           type: string
           format: uuid
         tag_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         metadata:
@@ -8765,16 +8537,12 @@ components:
       required:
         - session_id
         - tag_id
-        - company_id
         - metadata
       properties:
         session_id:
           type: string
           format: uuid
         tag_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         metadata:
@@ -8785,16 +8553,12 @@ components:
       required:
         - session_id
         - tag_id
-        - company_id
         - metadata
       properties:
         session_id:
           type: string
           format: uuid
         tag_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         metadata:
@@ -8807,9 +8571,6 @@ components:
           type: string
           format: uuid
         tag_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         metadata:

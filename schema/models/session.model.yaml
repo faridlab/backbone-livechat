@@ -118,10 +118,6 @@ models:
         type: string?
         attributes: ["@max(500)"]
         description: "The loud parking lot: a typed carrier refusal that parked (chatbot steps, transcript cleanup) — audit row + this column is the durable trace; never a silent skip."
-      company_id:
-        type: uuid
-        attributes: ["@required", "@exclude_from_foreign_key_check", "@indexed"]
-        description: "Owning company (strict fence — logical corporate ref)."
       metadata:
         type: Metadata
         attributes: ["@audit_metadata"]

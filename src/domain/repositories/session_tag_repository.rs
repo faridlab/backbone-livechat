@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the SessionTag aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
 use crate::domain::entity::SessionTag;
@@ -46,13 +46,12 @@ pub struct SessionTagPaginatedResult {
 pub struct SessionTagFilter {
     pub session_id: Option<Uuid>,
     pub tag_id: Option<Uuid>,
-    pub company_id: Option<Uuid>,
 }
 
 impl SessionTagFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.session_id.is_some() || self.tag_id.is_some() || self.company_id.is_some()
+        self.session_id.is_some() || self.tag_id.is_some()
     }
 }
 
@@ -62,6 +61,7 @@ impl SessionTagFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait SessionTagRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -89,11 +89,7 @@ pub trait SessionTagRepository: Send + Sync {
     async fn list(&self, params: SessionTagPaginationParams) -> Result<SessionTagPaginatedResult>;
 
     /// List session_tag with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: SessionTagPaginationParams,
-        filters: SessionTagFilter,
-    ) -> Result<SessionTagPaginatedResult>;
+    async fn list_with_filters(&self, params: SessionTagPaginationParams, filters: SessionTagFilter) -> Result<SessionTagPaginatedResult>;
 
     /// Count all session_tag entities
     async fn count(&self) -> Result<u64>;
@@ -115,10 +111,7 @@ pub trait SessionTagRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<SessionTag>>;
 
     /// List soft-deleted session_tag entities
-    async fn list_deleted(
-        &self,
-        params: SessionTagPaginationParams,
-    ) -> Result<SessionTagPaginatedResult>;
+    async fn list_deleted(&self, params: SessionTagPaginationParams) -> Result<SessionTagPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

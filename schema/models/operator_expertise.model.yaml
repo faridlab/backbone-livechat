@@ -20,10 +20,6 @@ models:
         type: uuid
         attributes: ["@required", "@foreign_key(ExpertiseTag.expertise_tags)", "@indexed"]
         description: "The bound expertise tag."
-      company_id:
-        type: uuid
-        attributes: ["@required", "@exclude_from_foreign_key_check"]
-        description: "Owning company (strict fence — logical corporate ref)."
       metadata:
         type: Metadata
         attributes: ["@audit_metadata"]

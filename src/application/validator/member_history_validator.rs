@@ -5,9 +5,9 @@
 //! Returns an `EntityValidator<MemberHistory>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
-use crate::domain::entity::MemberHistory;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
 use backbone_core::{NonNegative, OptionalNotBlank};
+use crate::domain::entity::MemberHistory;
 
 /// Validator type alias for MemberHistory entities.
 pub type MemberHistoryValidator = EntityValidator<MemberHistory>;
@@ -15,12 +15,8 @@ pub type MemberHistoryValidator = EntityValidator<MemberHistory>;
 /// Build a validator for MemberHistory with all schema-defined field rules.
 pub fn member_history_validator() -> MemberHistoryValidator {
     EntityValidator::new()
-        .rule(OptionalNotBlank::new("visitor_key", |e: &MemberHistory| {
-            e.visitor_key.as_deref()
-        }))
-        .rule(NonNegative::new("message_count", |e: &MemberHistory| {
-            e.message_count as i64
-        }))
+        .rule(OptionalNotBlank::new("visitor_key", |e: &MemberHistory| e.visitor_key.as_deref()))
+        .rule(NonNegative::new("message_count", |e: &MemberHistory| e.message_count as i64))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

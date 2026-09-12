@@ -106,18 +106,19 @@ impl ChatbotService {
                 "chatbot script is not routable (inactive, deleted, or empty)".into(),
             ));
         }
-        let session = self
-            .sessions
-            .find(session_id)
-            .await?
-            .ok_or(LivechatError::SessionNotFound)?;
+        // The existence guard (the uniform 404 family); row scoping
+        // is the composing service's fence, not a module predicate
+        // (ADR-0029).
+        if self.sessions.find(session_id).await?.is_none() {
+            return Err(LivechatError::SessionNotFound);
+        }
         let first = self
             .chatbot
             .first_step(script_id)
             .await?
             .ok_or_else(|| LivechatError::Validation("chatbot script has no steps".into()))?;
         self.members
-            .upsert_bot_row(session_id, script_id, session.company_id)
+            .upsert_bot_row(session_id, script_id)
             .await?;
         self.chatbot.set_pointer(session_id, Some(first.id)).await?;
         self.chatbot

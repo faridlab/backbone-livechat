@@ -23,34 +23,31 @@ fn constraint_of(err: &sqlx::Error) -> String {
 async fn partial_uniques_and_trichotomy_are_db_walls() {
     let db = TestDb::new("ledger").await;
     let pool = db.pool.clone();
-    let company = Uuid::new_v4();
     let website = Uuid::new_v4();
     let op_a = Uuid::new_v4();
     let op_b = Uuid::new_v4();
-    let channel = seed_channel_with_operators(&pool, company, website, &[op_a, op_b]).await;
-    let session = open_session(&pool, company, channel, "ledger:visitor").await;
+    let channel = seed_channel_with_operators(&pool, website, &[op_a, op_b]).await;
+    let session = open_session(&pool, channel, "ledger:visitor").await;
 
     // The FIRST agent row is legal; a SECOND for the SAME operator on
     // the SAME session violates the agent partial unique BY NAME.
     sqlx::query(
         r#"INSERT INTO livechat.member_histories
-               (session_id, persona, operator_user_id, expertise_names, company_id)
-           VALUES ($1, 'agent', $2, '{}', $3)"#,
+               (session_id, persona, operator_user_id, expertise_names)
+           VALUES ($1, 'agent', $2, '{}')"#,
     )
     .bind(session.id)
     .bind(op_a)
-    .bind(company)
     .execute(&pool)
     .await
     .unwrap_or_else(|e| panic!("the first agent row is legal: {e}"));
     let err = sqlx::query(
         r#"INSERT INTO livechat.member_histories
-               (session_id, persona, operator_user_id, joined_at, left_at, expertise_names, company_id)
-           VALUES ($1, 'agent', $2, now(), now(), '{}', $3)"#,
+               (session_id, persona, operator_user_id, joined_at, left_at, expertise_names)
+           VALUES ($1, 'agent', $2, now(), now(), '{}')"#,
     )
     .bind(session.id)
     .bind(op_a)
-    .bind(company)
     .execute(&pool)
     .await
     .err()
@@ -65,12 +62,11 @@ async fn partial_uniques_and_trichotomy_are_db_walls() {
     // escalation shape — one row per operator).
     sqlx::query(
         r#"INSERT INTO livechat.member_histories
-               (session_id, persona, operator_user_id, expertise_names, company_id)
-           VALUES ($1, 'agent', $2, '{}', $3)"#,
+               (session_id, persona, operator_user_id, expertise_names)
+           VALUES ($1, 'agent', $2, '{}')"#,
     )
     .bind(session.id)
     .bind(op_b)
-    .bind(company)
     .execute(&pool)
     .await
     .unwrap_or_else(|e| panic!("a second distinct agent row is legal: {e}"));
@@ -79,12 +75,11 @@ async fn partial_uniques_and_trichotomy_are_db_walls() {
     // visitor partial unique (the open already bound the visitor).
     let err = sqlx::query(
         r#"INSERT INTO livechat.member_histories
-               (session_id, persona, visitor_key, expertise_names, company_id)
-           VALUES ($1, 'visitor', $2, '{}', $3)"#,
+               (session_id, persona, visitor_key, expertise_names)
+           VALUES ($1, 'visitor', $2, '{}')"#,
     )
     .bind(session.id)
     .bind("ledger:visitor")
-    .bind(company)
     .execute(&pool)
     .await
     .err()
@@ -100,23 +95,21 @@ async fn partial_uniques_and_trichotomy_are_db_walls() {
     let script = Uuid::new_v4();
     sqlx::query(
         r#"INSERT INTO livechat.member_histories
-               (session_id, persona, chatbot_script_id, expertise_names, company_id)
-           VALUES ($1, 'bot', $2, '{}', $3)"#,
+               (session_id, persona, chatbot_script_id, expertise_names)
+           VALUES ($1, 'bot', $2, '{}')"#,
     )
     .bind(session.id)
     .bind(script)
-    .bind(company)
     .execute(&pool)
     .await
     .unwrap_or_else(|e| panic!("the first bot row is legal: {e}"));
     let err = sqlx::query(
         r#"INSERT INTO livechat.member_histories
-               (session_id, persona, chatbot_script_id, expertise_names, company_id)
-           VALUES ($1, 'bot', $2, '{}', $3)"#,
+               (session_id, persona, chatbot_script_id, expertise_names)
+           VALUES ($1, 'bot', $2, '{}')"#,
     )
     .bind(session.id)
     .bind(script)
-    .bind(company)
     .execute(&pool)
     .await
     .err()
@@ -132,11 +125,10 @@ async fn partial_uniques_and_trichotomy_are_db_walls() {
     // An agent row with NO operator id.
     let err = sqlx::query(
         r#"INSERT INTO livechat.member_histories
-               (session_id, persona, operator_user_id, expertise_names, company_id)
-           VALUES ($1, 'agent', NULL, '{}', $2)"#,
+               (session_id, persona, operator_user_id, expertise_names)
+           VALUES ($1, 'agent', NULL, '{}')"#,
     )
     .bind(session.id)
-    .bind(company)
     .execute(&pool)
     .await
     .err()
@@ -149,13 +141,12 @@ async fn partial_uniques_and_trichotomy_are_db_walls() {
     // A visitor row carrying an operator id.
     let err = sqlx::query(
         r#"INSERT INTO livechat.member_histories
-               (session_id, persona, visitor_key, operator_user_id, expertise_names, company_id)
-           VALUES ($1, 'visitor', $2, $3, '{}', $4)"#,
+               (session_id, persona, visitor_key, operator_user_id, expertise_names)
+           VALUES ($1, 'visitor', $2, $3, '{}')"#,
     )
     .bind(session.id)
     .bind("ledger:other-visitor")
     .bind(op_a)
-    .bind(company)
     .execute(&pool)
     .await
     .err()
@@ -168,13 +159,12 @@ async fn partial_uniques_and_trichotomy_are_db_walls() {
     // A bot row carrying a visitor key.
     let err = sqlx::query(
         r#"INSERT INTO livechat.member_histories
-               (session_id, persona, chatbot_script_id, visitor_key, expertise_names, company_id)
-           VALUES ($1, 'bot', $2, $3, '{}', $4)"#,
+               (session_id, persona, chatbot_script_id, visitor_key, expertise_names)
+           VALUES ($1, 'bot', $2, $3, '{}')"#,
     )
     .bind(session.id)
     .bind(Uuid::new_v4())
     .bind("ledger:stray-key")
-    .bind(company)
     .execute(&pool)
     .await
     .err()
@@ -187,13 +177,12 @@ async fn partial_uniques_and_trichotomy_are_db_walls() {
     // An agent row carrying BOTH operator and visitor key.
     let err = sqlx::query(
         r#"INSERT INTO livechat.member_histories
-               (session_id, persona, operator_user_id, visitor_key, expertise_names, company_id)
-           VALUES ($1, 'agent', $2, $3, '{}', $4)"#,
+               (session_id, persona, operator_user_id, visitor_key, expertise_names)
+           VALUES ($1, 'agent', $2, $3, '{}')"#,
     )
     .bind(session.id)
     .bind(Uuid::new_v4())
     .bind("ledger:cross-key")
-    .bind(company)
     .execute(&pool)
     .await
     .err()
@@ -205,12 +194,12 @@ async fn partial_uniques_and_trichotomy_are_db_walls() {
     );
 
     // ── The rejoin law: the upsert RE-POINTS, never duplicates ────
-    let rejoined = open_session(&pool, company, channel, "ledger:rejoin").await;
+    let rejoined = open_session(&pool, channel, "ledger:rejoin").await;
     let mut tx = pool.begin().await.unwrap_or_else(|e| panic!("tx: {e}"));
-    upsert_agent_ledger_tx(&mut tx, rejoined.id, op_a, company)
+    upsert_agent_ledger_tx(&mut tx, rejoined.id, op_a)
         .await
         .unwrap_or_else(|e| panic!("first ledger upsert: {e:?}"));
-    upsert_agent_ledger_tx(&mut tx, rejoined.id, op_a, company)
+    upsert_agent_ledger_tx(&mut tx, rejoined.id, op_a)
         .await
         .unwrap_or_else(|e| panic!("the rejoin upsert must re-point, not duplicate: {e:?}"));
     tx.commit().await.unwrap_or_else(|e| panic!("commit: {e}"));

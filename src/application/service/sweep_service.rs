@@ -2,8 +2,9 @@
 //! `metaphor.codegen.yaml`): GC lives HERE and in the host's jobs
 //! loop — never on a read path.
 //!
-//! Two declared passes, both per-company on the host jobs
-//! loop (`with_company_scope` off the active-company enumeration):
+//! Two declared passes, both run under the ambient org scope the
+//! composing service's tenancy decorator installs for the acting
+//! unit — the module itself scopes nothing (ADR-0029):
 //! - the IDLE-CLOSE sweep: open sessions with `last_interest_at`
 //!   older than `LIVECHAT_IDLE_CLOSE_HOURS` (default 24) close with
 //!   reason `expired`, audited;
@@ -56,7 +57,8 @@ impl SweepService {
     }
 
     /// Run both passes as of `now` (the host jobs loop's entry
-    /// point; the caller wraps each company in `with_company_scope`).
+    /// point; the composing service's jobs loop binds the ambient org
+    /// scope per acting unit — ADR-0029).
     pub async fn sweep_at(&self, now: DateTime<Utc>) -> Result<SweepOutcome, LivechatError> {
         self.sweeps
             .sweep(

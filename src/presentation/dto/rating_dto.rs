@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,9 +16,9 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
+use crate::domain::entity::Rating;
 use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::LivechatRatedPersona;
-use crate::domain::entity::Rating;
 
 // =============================================================================
 // Create DTO
@@ -33,37 +33,20 @@ use crate::domain::entity::Rating;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateRatingDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "session_id")]
     pub session_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     pub value: i32,
     #[serde(alias = "rated_persona")]
     pub rated_persona: LivechatRatedPersona,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "operator_user_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "operator_user_id")]
     pub operator_user_id: Option<Uuid>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "chatbot_script_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "chatbot_script_id")]
     pub chatbot_script_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 2000)))]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -79,37 +62,20 @@ pub struct CreateRatingDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateRatingDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "session_id")]
     pub session_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     pub value: i32,
     #[serde(alias = "rated_persona")]
     pub rated_persona: LivechatRatedPersona,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "operator_user_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "operator_user_id")]
     pub operator_user_id: Option<Uuid>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "chatbot_script_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "chatbot_script_id")]
     pub chatbot_script_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 2000)))]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -125,10 +91,7 @@ pub struct UpdateRatingDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchRatingDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "session_id")]
     pub session_id: Option<Uuid>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
@@ -143,24 +106,12 @@ pub struct PatchRatingDto {
     #[cfg_attr(feature = "validation", validate(length(max = 2000)))]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
 }
 
 impl PatchRatingDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.session_id.is_some()
-            || self.value.is_some()
-            || self.rated_persona.is_some()
-            || self.operator_user_id.is_some()
-            || self.chatbot_script_id.is_some()
-            || self.comment.is_some()
-            || self.company_id.is_some()
+        self.session_id.is_some() || self.value.is_some() || self.rated_persona.is_some() || self.operator_user_id.is_some() || self.chatbot_script_id.is_some() || self.comment.is_some()
     }
 }
 
@@ -176,15 +127,9 @@ impl PatchRatingDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct RatingResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub session_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     pub value: i32,
@@ -194,11 +139,6 @@ pub struct RatingResponseDto {
     pub comment: Option<String>,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     pub created_at: DateTime<Utc>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
     pub metadata: AuditMetadata,
 }
 
@@ -277,7 +217,6 @@ impl From<Rating> for RatingResponseDto {
             chatbot_script_id: entity.chatbot_script_id,
             comment: entity.comment,
             created_at: entity.created_at,
-            company_id: entity.company_id,
             metadata: entity.metadata,
         }
     }
@@ -306,7 +245,6 @@ impl From<CreateRatingDto> for Rating {
             chatbot_script_id: dto.chatbot_script_id,
             comment: dto.comment,
             created_at: Utc::now(),
-            company_id: dto.company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -323,7 +261,6 @@ impl From<&Rating> for RatingResponseDto {
             chatbot_script_id: entity.chatbot_script_id.clone(),
             comment: entity.comment.clone(),
             created_at: entity.created_at.clone(),
-            company_id: entity.company_id.clone(),
             metadata: entity.metadata.clone(),
         }
     }
@@ -343,7 +280,6 @@ impl backbone_core::ApplyUpdateDto<UpdateRatingDto> for Rating {
         self.operator_user_id = dto.operator_user_id;
         self.chatbot_script_id = dto.chatbot_script_id;
         self.comment = dto.comment;
-        self.company_id = dto.company_id;
         Ok(self)
     }
 }

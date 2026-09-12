@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
+use crate::presentation::dto::{CreateSessionTagDto, UpdateSessionTagDto};
 use crate::domain::entity::SessionTag;
 use crate::infrastructure::persistence::SessionTagRepository;
-use crate::presentation::dto::{CreateSessionTagDto, UpdateSessionTagDto};
 
 /// Application service for SessionTag entities.
 ///
@@ -25,8 +25,12 @@ use crate::presentation::dto::{CreateSessionTagDto, UpdateSessionTagDto};
 ///     // add domain-specific dependencies here
 /// }
 /// ```
-pub type SessionTagService =
-    GenericCrudService<SessionTag, CreateSessionTagDto, UpdateSessionTagDto, SessionTagRepository>;
+pub type SessionTagService = GenericCrudService<
+    SessionTag,
+    CreateSessionTagDto,
+    UpdateSessionTagDto,
+    SessionTagRepository,
+>;
 
 // <<< CUSTOM
 // END CUSTOM

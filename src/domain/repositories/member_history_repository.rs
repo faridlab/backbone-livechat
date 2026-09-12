@@ -5,11 +5,11 @@
 //! This trait defines the repository contract for the MemberHistory aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
-use crate::domain::entity::{LivechatPersona, MemberHistory};
+use crate::domain::entity::{MemberHistory, LivechatPersona};
 
 /// Pagination parameters for list queries
 #[derive(Debug, Clone, Default)]
@@ -49,18 +49,12 @@ pub struct MemberHistoryFilter {
     pub operator_user_id: Option<Uuid>,
     pub visitor_key: Option<String>,
     pub chatbot_script_id: Option<Uuid>,
-    pub company_id: Option<Uuid>,
 }
 
 impl MemberHistoryFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.session_id.is_some()
-            || self.persona.is_some()
-            || self.operator_user_id.is_some()
-            || self.visitor_key.is_some()
-            || self.chatbot_script_id.is_some()
-            || self.company_id.is_some()
+        self.session_id.is_some() || self.persona.is_some() || self.operator_user_id.is_some() || self.visitor_key.is_some() || self.chatbot_script_id.is_some()
     }
 }
 
@@ -70,6 +64,7 @@ impl MemberHistoryFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait MemberHistoryRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -94,17 +89,10 @@ pub trait MemberHistoryRepository: Send + Sync {
     // =========================================================================
 
     /// List member_history with pagination
-    async fn list(
-        &self,
-        params: MemberHistoryPaginationParams,
-    ) -> Result<MemberHistoryPaginatedResult>;
+    async fn list(&self, params: MemberHistoryPaginationParams) -> Result<MemberHistoryPaginatedResult>;
 
     /// List member_history with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: MemberHistoryPaginationParams,
-        filters: MemberHistoryFilter,
-    ) -> Result<MemberHistoryPaginatedResult>;
+    async fn list_with_filters(&self, params: MemberHistoryPaginationParams, filters: MemberHistoryFilter) -> Result<MemberHistoryPaginatedResult>;
 
     /// Count all member_history entities
     async fn count(&self) -> Result<u64>;
@@ -126,10 +114,7 @@ pub trait MemberHistoryRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<MemberHistory>>;
 
     /// List soft-deleted member_history entities
-    async fn list_deleted(
-        &self,
-        params: MemberHistoryPaginationParams,
-    ) -> Result<MemberHistoryPaginatedResult>;
+    async fn list_deleted(&self, params: MemberHistoryPaginationParams) -> Result<MemberHistoryPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

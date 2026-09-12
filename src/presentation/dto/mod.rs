@@ -25,72 +25,140 @@ pub mod session_tag_dto;
 
 // Re-exports
 pub use channel_dto::{
-    ChannelListResponseDto, ChannelResponseDto, ChannelSummaryDto, CreateChannelDto,
-    PatchChannelDto, UpdateChannelDto,
+    CreateChannelDto,
+    UpdateChannelDto,
+    PatchChannelDto,
+    ChannelResponseDto,
+    ChannelListResponseDto,
+    ChannelSummaryDto,
 };
 pub use channel_member_dto::{
-    ChannelMemberListResponseDto, ChannelMemberResponseDto, ChannelMemberSummaryDto,
-    CreateChannelMemberDto, PatchChannelMemberDto, UpdateChannelMemberDto,
+    CreateChannelMemberDto,
+    UpdateChannelMemberDto,
+    PatchChannelMemberDto,
+    ChannelMemberResponseDto,
+    ChannelMemberListResponseDto,
+    ChannelMemberSummaryDto,
 };
 pub use channel_rule_dto::{
-    ChannelRuleListResponseDto, ChannelRuleResponseDto, ChannelRuleSummaryDto,
-    CreateChannelRuleDto, PatchChannelRuleDto, UpdateChannelRuleDto,
+    CreateChannelRuleDto,
+    UpdateChannelRuleDto,
+    PatchChannelRuleDto,
+    ChannelRuleResponseDto,
+    ChannelRuleListResponseDto,
+    ChannelRuleSummaryDto,
 };
 pub use chatbot_answer_dto::{
-    ChatbotAnswerListResponseDto, ChatbotAnswerResponseDto, ChatbotAnswerSummaryDto,
-    CreateChatbotAnswerDto, PatchChatbotAnswerDto, UpdateChatbotAnswerDto,
+    CreateChatbotAnswerDto,
+    UpdateChatbotAnswerDto,
+    PatchChatbotAnswerDto,
+    ChatbotAnswerResponseDto,
+    ChatbotAnswerListResponseDto,
+    ChatbotAnswerSummaryDto,
 };
 pub use chatbot_message_dto::{
-    ChatbotMessageListResponseDto, ChatbotMessageResponseDto, ChatbotMessageSummaryDto,
-    CreateChatbotMessageDto, PatchChatbotMessageDto, UpdateChatbotMessageDto,
+    CreateChatbotMessageDto,
+    UpdateChatbotMessageDto,
+    PatchChatbotMessageDto,
+    ChatbotMessageResponseDto,
+    ChatbotMessageListResponseDto,
+    ChatbotMessageSummaryDto,
 };
 pub use chatbot_script_dto::{
-    ChatbotScriptListResponseDto, ChatbotScriptResponseDto, ChatbotScriptSummaryDto,
-    CreateChatbotScriptDto, PatchChatbotScriptDto, UpdateChatbotScriptDto,
+    CreateChatbotScriptDto,
+    UpdateChatbotScriptDto,
+    PatchChatbotScriptDto,
+    ChatbotScriptResponseDto,
+    ChatbotScriptListResponseDto,
+    ChatbotScriptSummaryDto,
 };
 pub use chatbot_step_dto::{
-    ChatbotStepListResponseDto, ChatbotStepResponseDto, ChatbotStepSummaryDto,
-    CreateChatbotStepDto, PatchChatbotStepDto, UpdateChatbotStepDto,
+    CreateChatbotStepDto,
+    UpdateChatbotStepDto,
+    PatchChatbotStepDto,
+    ChatbotStepResponseDto,
+    ChatbotStepListResponseDto,
+    ChatbotStepSummaryDto,
 };
 pub use chatbot_step_trigger_dto::{
-    ChatbotStepTriggerListResponseDto, ChatbotStepTriggerResponseDto, ChatbotStepTriggerSummaryDto,
-    CreateChatbotStepTriggerDto, PatchChatbotStepTriggerDto, UpdateChatbotStepTriggerDto,
+    CreateChatbotStepTriggerDto,
+    UpdateChatbotStepTriggerDto,
+    PatchChatbotStepTriggerDto,
+    ChatbotStepTriggerResponseDto,
+    ChatbotStepTriggerListResponseDto,
+    ChatbotStepTriggerSummaryDto,
 };
 pub use conversation_tag_dto::{
-    ConversationTagListResponseDto, ConversationTagResponseDto, ConversationTagSummaryDto,
-    CreateConversationTagDto, PatchConversationTagDto, UpdateConversationTagDto,
+    CreateConversationTagDto,
+    UpdateConversationTagDto,
+    PatchConversationTagDto,
+    ConversationTagResponseDto,
+    ConversationTagListResponseDto,
+    ConversationTagSummaryDto,
 };
 pub use expertise_tag_dto::{
-    CreateExpertiseTagDto, ExpertiseTagListResponseDto, ExpertiseTagResponseDto,
-    ExpertiseTagSummaryDto, PatchExpertiseTagDto, UpdateExpertiseTagDto,
+    CreateExpertiseTagDto,
+    UpdateExpertiseTagDto,
+    PatchExpertiseTagDto,
+    ExpertiseTagResponseDto,
+    ExpertiseTagListResponseDto,
+    ExpertiseTagSummaryDto,
 };
 pub use livechat_audit_log_dto::{
-    CreateLivechatAuditLogDto, LivechatAuditLogListResponseDto, LivechatAuditLogResponseDto,
-    LivechatAuditLogSummaryDto, PatchLivechatAuditLogDto, UpdateLivechatAuditLogDto,
+    CreateLivechatAuditLogDto,
+    UpdateLivechatAuditLogDto,
+    PatchLivechatAuditLogDto,
+    LivechatAuditLogResponseDto,
+    LivechatAuditLogListResponseDto,
+    LivechatAuditLogSummaryDto,
 };
 pub use member_history_dto::{
-    CreateMemberHistoryDto, MemberHistoryListResponseDto, MemberHistoryResponseDto,
-    MemberHistorySummaryDto, PatchMemberHistoryDto, UpdateMemberHistoryDto,
+    CreateMemberHistoryDto,
+    UpdateMemberHistoryDto,
+    PatchMemberHistoryDto,
+    MemberHistoryResponseDto,
+    MemberHistoryListResponseDto,
+    MemberHistorySummaryDto,
 };
 pub use operator_expertise_dto::{
-    CreateOperatorExpertiseDto, OperatorExpertiseListResponseDto, OperatorExpertiseResponseDto,
-    OperatorExpertiseSummaryDto, PatchOperatorExpertiseDto, UpdateOperatorExpertiseDto,
+    CreateOperatorExpertiseDto,
+    UpdateOperatorExpertiseDto,
+    PatchOperatorExpertiseDto,
+    OperatorExpertiseResponseDto,
+    OperatorExpertiseListResponseDto,
+    OperatorExpertiseSummaryDto,
 };
 pub use operator_profile_dto::{
-    CreateOperatorProfileDto, OperatorProfileListResponseDto, OperatorProfileResponseDto,
-    OperatorProfileSummaryDto, PatchOperatorProfileDto, UpdateOperatorProfileDto,
+    CreateOperatorProfileDto,
+    UpdateOperatorProfileDto,
+    PatchOperatorProfileDto,
+    OperatorProfileResponseDto,
+    OperatorProfileListResponseDto,
+    OperatorProfileSummaryDto,
 };
 pub use rating_dto::{
-    CreateRatingDto, PatchRatingDto, RatingListResponseDto, RatingResponseDto, RatingSummaryDto,
+    CreateRatingDto,
     UpdateRatingDto,
+    PatchRatingDto,
+    RatingResponseDto,
+    RatingListResponseDto,
+    RatingSummaryDto,
 };
 pub use session_dto::{
-    CreateSessionDto, PatchSessionDto, SessionListResponseDto, SessionResponseDto,
-    SessionSummaryDto, UpdateSessionDto,
+    CreateSessionDto,
+    UpdateSessionDto,
+    PatchSessionDto,
+    SessionResponseDto,
+    SessionListResponseDto,
+    SessionSummaryDto,
 };
 pub use session_tag_dto::{
-    CreateSessionTagDto, PatchSessionTagDto, SessionTagListResponseDto, SessionTagResponseDto,
-    SessionTagSummaryDto, UpdateSessionTagDto,
+    CreateSessionTagDto,
+    UpdateSessionTagDto,
+    PatchSessionTagDto,
+    SessionTagResponseDto,
+    SessionTagListResponseDto,
+    SessionTagSummaryDto,
 };
 
 // Common pagination types
@@ -116,12 +184,8 @@ pub struct PaginationParams {
     pub sort_order: Option<String>,
 }
 
-fn default_page() -> u32 {
-    1
-}
-fn default_per_page() -> u32 {
-    20
-}
+fn default_page() -> u32 { 1 }
+fn default_per_page() -> u32 { 20 }
 
 /// API response wrapper
 #[derive(Debug, Clone, Serialize)]
@@ -146,11 +210,7 @@ pub struct ApiError {
 
 impl<T> ApiResponse<T> {
     pub fn ok(data: T) -> Self {
-        Self {
-            success: true,
-            data: Some(data),
-            error: None,
-        }
+        Self { success: true, data: Some(data), error: None }
     }
 
     pub fn err(code: impl Into<String>, message: impl Into<String>) -> Self {

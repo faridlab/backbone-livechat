@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the ChatbotStep aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
 use crate::domain::entity::{ChatbotStep, LivechatStepType};
@@ -47,16 +47,12 @@ pub struct ChatbotStepFilter {
     pub chatbot_script_id: Option<Uuid>,
     pub step_type: Option<LivechatStepType>,
     pub message: Option<String>,
-    pub company_id: Option<Uuid>,
 }
 
 impl ChatbotStepFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.chatbot_script_id.is_some()
-            || self.step_type.is_some()
-            || self.message.is_some()
-            || self.company_id.is_some()
+        self.chatbot_script_id.is_some() || self.step_type.is_some() || self.message.is_some()
     }
 }
 
@@ -66,6 +62,7 @@ impl ChatbotStepFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait ChatbotStepRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -90,15 +87,10 @@ pub trait ChatbotStepRepository: Send + Sync {
     // =========================================================================
 
     /// List chatbot_step with pagination
-    async fn list(&self, params: ChatbotStepPaginationParams)
-        -> Result<ChatbotStepPaginatedResult>;
+    async fn list(&self, params: ChatbotStepPaginationParams) -> Result<ChatbotStepPaginatedResult>;
 
     /// List chatbot_step with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: ChatbotStepPaginationParams,
-        filters: ChatbotStepFilter,
-    ) -> Result<ChatbotStepPaginatedResult>;
+    async fn list_with_filters(&self, params: ChatbotStepPaginationParams, filters: ChatbotStepFilter) -> Result<ChatbotStepPaginatedResult>;
 
     /// Count all chatbot_step entities
     async fn count(&self) -> Result<u64>;
@@ -120,10 +112,7 @@ pub trait ChatbotStepRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<ChatbotStep>>;
 
     /// List soft-deleted chatbot_step entities
-    async fn list_deleted(
-        &self,
-        params: ChatbotStepPaginationParams,
-    ) -> Result<ChatbotStepPaginatedResult>;
+    async fn list_deleted(&self, params: ChatbotStepPaginationParams) -> Result<ChatbotStepPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

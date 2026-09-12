@@ -11,18 +11,18 @@
 //! in the module — the 1-hour message-less unlink is refused; rows
 //! survive with audited endings.
 //!
-//! The sweep runs per-company on the host jobs loop
-//! (`with_company_scope`), so the fence holds on the jobs path too.
+//! The sweep runs on the host jobs loop; row scoping there is owned
+//! by the composing service's tenancy decorator, not by this module
+//! (ADR-0029).
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use backbone_orm::company_scope;
-
 use crate::application::service::livechat_error::LivechatError;
 
 use super::selection_repository::recompute_outcomes_batch_tx;
+use super::relay_ambient_scope;
 
 /// The bounded-batch size.
 pub const SWEEP_BATCH: i64 = 200;
@@ -51,7 +51,7 @@ impl SweepRepository {
     /// audited `session_closed`.
     pub async fn idle_close(&self, idle_cutoff: DateTime<Utc>) -> Result<Vec<Uuid>, LivechatError> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
         let closed: Vec<(Uuid,)> = sqlx::query_as(
             r#"UPDATE livechat.sessions s
                   SET closed_at = now(), close_reason = 'expired', status = NULL
@@ -87,7 +87,7 @@ impl SweepRepository {
         invite_cutoff: DateTime<Utc>,
     ) -> Result<Vec<Uuid>, LivechatError> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
         let expired: Vec<(Uuid,)> = sqlx::query_as(
             r#"UPDATE livechat.sessions s
                   SET is_pending_request = FALSE, closed_at = now(),
@@ -146,9 +146,8 @@ async fn bulk_audit(
 ) -> Result<(), LivechatError> {
     sqlx::query(
         r#"INSERT INTO livechat.livechat_audit_log
-               (event, actor, subject_type, subject_id, detail, company_id)
-           SELECT $1::livechat_audit_event, NULL, $2, i, $3,
-                  NULLIF(current_setting('app.company_id', true), '')::uuid
+               (event, actor, subject_type, subject_id, detail)
+           SELECT $1::livechat_audit_event, NULL, $2, i, $3
              FROM unnest($4::uuid[]) AS i"#,
     )
     .bind(kind)

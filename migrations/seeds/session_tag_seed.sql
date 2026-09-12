@@ -8,7 +8,6 @@
 --     id,
 --     session_id,
 --     tag_id,
---     company_id,
 --     metadata
 -- ) VALUES
 -- (

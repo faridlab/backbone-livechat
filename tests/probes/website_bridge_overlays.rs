@@ -35,12 +35,18 @@ use super::common::{
 async fn the_invite_lifecycle_is_fenced_visible_and_visitor_wins() {
     let db = TestDb::new("bridge").await;
     let pool = db.pool.clone();
-    let company = Uuid::new_v4();
     let website = Uuid::new_v4();
     let operator = Uuid::new_v4();
-    let channel = seed_channel_with_operators(&pool, company, website, &[operator]).await;
+    let channel = seed_channel_with_operators(&pool, website, &[operator]).await;
 
-    let bridge = std::sync::Arc::new(StubWebsiteBridge::new("bridge.example", website, company));
+    // The website binding's `company_id` is the website module's legacy
+    // ownership echo (ADR-0029) — the stub feeds it, the module never
+    // reads it.
+    let bridge = std::sync::Arc::new(StubWebsiteBridge::new(
+        "bridge.example",
+        website,
+        Uuid::new_v4(),
+    ));
     let bridge_dyn: std::sync::Arc<
         dyn backbone_livechat::application::service::website_bridge::LivechatWebsiteBridge,
     > = bridge.clone();
@@ -64,13 +70,10 @@ async fn the_invite_lifecycle_is_fenced_visible_and_visitor_wins() {
     bridge.register_visitor(visitor_id, invitee_key, Some("ID"));
 
     // ── CREATE: the pending invite with the visitor's own geo ─────
-    let invite = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        requests
-            .create_request(website, visitor_id, Some(operator))
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("invite create: {e:?}"));
+    let invite = requests
+        .create_request(website, visitor_id, Some(operator))
+        .await
+        .unwrap_or_else(|e| panic!("invite create: {e:?}"));
     assert!(invite.is_pending_request, "the invite is a pending session");
     assert_eq!(
         invite.visitor_country_code.as_deref(),
@@ -79,13 +82,10 @@ async fn the_invite_lifecycle_is_fenced_visible_and_visitor_wins() {
     );
     assert_eq!(invite.website_visitor_id, Some(visitor_id));
     // Idempotent per visitor: a repeat create returns the SAME row.
-    let again = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        requests
-            .create_request(website, visitor_id, Some(operator))
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("repeat invite create: {e:?}"));
+    let again = requests
+        .create_request(website, visitor_id, Some(operator))
+        .await
+        .unwrap_or_else(|e| panic!("repeat invite create: {e:?}"));
     assert_eq!(
         again.id, invite.id,
         "the invite create is idempotent per visitor"
@@ -115,13 +115,10 @@ async fn the_invite_lifecycle_is_fenced_visible_and_visitor_wins() {
     for (seed, country) in [("geo-my", "MY"), ("geo-jp", "JP")] {
         let visitor = Uuid::new_v4();
         bridge.register_visitor(visitor, &visitor_key(seed), Some(country));
-        let row = backbone_orm::company_scope::with_company_scope(Some(company), async {
-            requests
-                .create_request(website, visitor, Some(operator))
-                .await
-        })
-        .await
-        .unwrap_or_else(|e| panic!("invite create ({seed}): {e:?}"));
+        let row = requests
+            .create_request(website, visitor, Some(operator))
+            .await
+            .unwrap_or_else(|e| panic!("invite create ({seed}): {e:?}"));
         assert_eq!(
             row.visitor_country_code.as_deref(),
             Some(country),
@@ -147,28 +144,19 @@ async fn the_invite_lifecycle_is_fenced_visible_and_visitor_wins() {
     );
 
     // The operator's first message DELIVERS it: the gate opens once.
-    backbone_orm::company_scope::with_company_scope(Some(company), async {
-        sessions
-            .post_operator_message(invite.id, operator, "hello from the operator")
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("operator message: {e:?}"));
-    let delivered = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        requests
-            .audit_delivered_if_pending(invite.id, operator)
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("delivery audit: {e:?}"));
+    sessions
+        .post_operator_message(invite.id, operator, "hello from the operator")
+        .await
+        .unwrap_or_else(|e| panic!("operator message: {e:?}"));
+    let delivered = requests
+        .audit_delivered_if_pending(invite.id, operator)
+        .await
+        .unwrap_or_else(|e| panic!("delivery audit: {e:?}"));
     assert!(delivered, "the first message opened the gate");
-    let delivered_again = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        requests
-            .audit_delivered_if_pending(invite.id, operator)
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("repeat delivery audit: {e:?}"));
+    let delivered_again = requests
+        .audit_delivered_if_pending(invite.id, operator)
+        .await
+        .unwrap_or_else(|e| panic!("repeat delivery audit: {e:?}"));
     assert!(!delivered_again, "the gate opens ONCE");
     let (delivered_audits,): (i64,) = sqlx::query_as(
         r#"SELECT count(*) FROM livechat.livechat_audit_log
@@ -193,11 +181,10 @@ async fn the_invite_lifecycle_is_fenced_visible_and_visitor_wins() {
     assert!(!pending.accept_capability.is_empty());
 
     // ── ACCEPT: the visitor handshake clears the pending flag ─────
-    let accepted = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        requests.accept(invite.id, invitee_key, None).await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("accept: {e:?}"));
+    let accepted = requests
+        .accept(invite.id, invitee_key, None)
+        .await
+        .unwrap_or_else(|e| panic!("accept: {e:?}"));
     assert!(
         !accepted.is_pending_request,
         "accept cleared the pending flag"
@@ -229,22 +216,16 @@ async fn the_invite_lifecycle_is_fenced_visible_and_visitor_wins() {
     let visitor_b = Uuid::new_v4();
     let key_b = "bridge:second";
     bridge.register_visitor(visitor_b, key_b, None);
-    let pending_b = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        requests
-            .create_request(website, visitor_b, Some(operator))
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("second invite: {e:?}"));
+    let pending_b = requests
+        .create_request(website, visitor_b, Some(operator))
+        .await
+        .unwrap_or_else(|e| panic!("second invite: {e:?}"));
     // The visitor opens their own session on the channel (the open
     // verb's hook, driven directly here).
-    let cancelled = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        requests
-            .cancel_pending_for_visitor(channel, key_b, None)
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("visitor-wins cancel: {e:?}"))
+    let cancelled = requests
+        .cancel_pending_for_visitor(channel, key_b, None)
+        .await
+        .unwrap_or_else(|e| panic!("visitor-wins cancel: {e:?}"))
     .unwrap_or_else(|| panic!("the visitor's open cancels their pending invite"));
     assert_eq!(cancelled.id, pending_b.id);
     let (b_closed, b_pending, b_reason, cancelled_audits): (bool, bool, Option<String>, i64) =
@@ -279,20 +260,14 @@ async fn the_invite_lifecycle_is_fenced_visible_and_visitor_wins() {
     let to_key = "bridge:merged-survivor";
     bridge.register_visitor(from_visitor, "bridge:doomed-key", None);
     bridge.register_visitor(to_visitor, to_key, None);
-    let doomed = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        requests
-            .create_request(website, from_visitor, Some(operator))
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("merge invite: {e:?}"));
-    let moved = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        requests
-            .relink_website_visitor(from_visitor, to_visitor, to_key, None)
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("relink: {e:?}"));
+    let doomed = requests
+        .create_request(website, from_visitor, Some(operator))
+        .await
+        .unwrap_or_else(|e| panic!("merge invite: {e:?}"));
+    let moved = requests
+        .relink_website_visitor(from_visitor, to_visitor, to_key, None)
+        .await
+        .unwrap_or_else(|e| panic!("relink: {e:?}"));
     assert!(
         moved >= 1,
         "the relink moved at least the doomed visitor's session"
@@ -372,10 +347,9 @@ fn error_code(body: &serde_json::Value) -> &str {
 async fn uncomposed_bridge_wizard_binding_and_the_visit_heartbeat() {
     let db = TestDb::new("bridge2").await;
     let pool = db.pool.clone();
-    let company = Uuid::new_v4();
     let website = Uuid::new_v4();
     let operator = Uuid::new_v4();
-    seed_channel_with_operators(&pool, company, website, &[operator]).await;
+    seed_channel_with_operators(&pool, website, &[operator]).await;
 
     // ── The refusing bridge: the public verbs PARK, never degrade ──
     let (refusing_bridge, refusing_carrier, notifier, transcript) = super::common::refusing_ports();
@@ -425,26 +399,23 @@ async fn uncomposed_bridge_wizard_binding_and_the_visit_heartbeat() {
     // operator action).
     let admin = livechat_admin_routes(LivechatAdminState::with_bridge(
         pool.clone(),
-        std::sync::Arc::new(StubWebsiteBridge::new("bridge2.example", website, company)),
+        std::sync::Arc::new(StubWebsiteBridge::new("bridge2.example", website, Uuid::new_v4())),
         std::sync::Arc::new(RecordingMailCarrier::default()),
         std::sync::Arc::new(UnwiredNotifier),
         std::sync::Arc::new(RefusingTranscriptMailer),
     ));
     for name in ["wizard channel one", "wizard channel two"] {
         // The admin tree is mounted behind the host's company_auth —
-        // the ambient company scope is part of that contract; the
-        // probe supplies it exactly as the host does.
-        let (status, _, body) = backbone_orm::company_scope::with_company_scope(
-            Some(company),
-            call(
-                &admin,
-                "POST",
-                "/admin/channels/from-website",
-                "",
-                Some(&format!(
-                    r#"{{"website_id": "{website}", "name": "{name}"}}"#
-                )),
-            ),
+        // row scoping on it is the composing service's tenancy
+        // decorator's law (ADR-0029), nothing the probe supplies.
+        let (status, _, body) = call(
+            &admin,
+            "POST",
+            "/admin/channels/from-website",
+            "",
+            Some(&format!(
+                r#"{{"website_id": "{website}", "name": "{name}"}}"#
+            )),
         )
         .await;
         assert_eq!(
@@ -478,7 +449,11 @@ async fn uncomposed_bridge_wizard_binding_and_the_visit_heartbeat() {
     assert!(bound_channels >= 3, "the seeded channel plus the wizard's");
 
     // ── The visit heartbeat piggyback (chat activity IS the beat) ──
-    let bridge = std::sync::Arc::new(StubWebsiteBridge::new("bridge2.example", website, company));
+    let bridge = std::sync::Arc::new(StubWebsiteBridge::new(
+        "bridge2.example",
+        website,
+        Uuid::new_v4(),
+    ));
     let bridge_dyn: std::sync::Arc<
         dyn backbone_livechat::application::service::website_bridge::LivechatWebsiteBridge,
     > = bridge.clone();

@@ -4,9 +4,11 @@
 //! partial-index-served lookup), the chatbot contact harvest, the
 //! first-wins link stamp, and the lead-granted agent join.
 //!
-//! RLS LAW: every transactional method binds the company scope
-//! immediately after `begin()`; direct-pool reads go through the
-//! `company_scope` `*_scoped` helpers. The link column's ONLY writer
+//! RLS LAW: every statement rides the tenant-agnostic org_scope /
+//! company_scope `*_scoped` helpers — the request-dedicated connection
+//! when the composing service bound one, the plain pool otherwise
+//! (ADR-0029: the fence itself is the composer's decorator, not the
+//! module's). The link column's ONLY writer
 //! is [`Self::link_lead`] — a conditional UPDATE whose `crm_lead_id
 //! IS NULL` arm is the anti-fabrication wall (a concurrent or replayed
 //! mint loses by row atomicity and surfaces as the typed 409, audited
@@ -15,12 +17,17 @@
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use backbone_orm::company_scope;
+// The typed multi-row read twins live only in the legacy `company_scope` module. Their
+// connection discipline is what this repository needs — request-dedicated connection when
+// the composing service bound one, plain pool otherwise. The helper's legacy task-local
+// branch is never taken: this module sets no legacy scope of its own (ADR-0029).
+use backbone_orm::company_scope::{fetch_one_scoped, fetch_optional_scoped};
 
 use crate::application::service::livechat_error::LivechatError;
 
 use super::selection_repository::{audit_tx, recompute_outcome_tx};
 use super::session_command_repository::{SessionRow, SESSION_COLUMNS};
+use super::relay_ambient_scope;
 
 /// The chatbot-collected contact facts of one session (the earliest
 /// answered email/phone step — NULL arms when the script never asked
@@ -44,13 +51,14 @@ impl CrmBridgeRepository {
     /// lookup). Served by the `session_crm_lead_uq` partial index —
     /// the donor's `has_crm_lead` partial-index translation: only
     /// linked rows exist in the index, exactly the read-grant domain.
-    /// Company-fenced (a cross-company lead id reads as missing — the
-    /// uniform 404 family).
+    /// Scoped by the composing service's tenancy decorator (ADR-0029):
+    /// a lead id outside the caller's row scope reads as missing — the
+    /// uniform 404 family.
     pub async fn find_by_lead_id(
         &self,
         lead_id: Uuid,
     ) -> Result<Option<SessionRow>, LivechatError> {
-        let row = company_scope::fetch_optional_scoped(
+        let row = fetch_optional_scoped(
             &self.pool,
             sqlx::query_as::<_, SessionRow>(&format!(
                 "SELECT {SESSION_COLUMNS} FROM livechat.sessions WHERE crm_lead_id = $1"
@@ -64,12 +72,13 @@ impl CrmBridgeRepository {
     /// The session's chatbot-collected contact facts: the EARLIEST
     /// answered `question_email` / `question_phone` steps (sanitized
     /// answers, stored verbatim by the pointer machine). Two
-    /// first-match subqueries, one round trip, company-fenced.
+    /// first-match subqueries, one round trip, scoped by the
+    /// composing service's tenancy decorator.
     pub async fn harvest_contact(
         &self,
         session_id: Uuid,
     ) -> Result<HarvestedContact, LivechatError> {
-        let row = company_scope::fetch_one_scoped(
+        let row = fetch_one_scoped(
             &self.pool,
             sqlx::query_as::<_, HarvestedContact>(
                 r#"SELECT
@@ -104,7 +113,7 @@ impl CrmBridgeRepository {
         actor: Option<Uuid>,
     ) -> Result<SessionRow, LivechatError> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
         let updated = sqlx::query_as::<_, SessionRow>(&format!(
             r#"UPDATE livechat.sessions SET crm_lead_id = $2
                 WHERE id = $1 AND crm_lead_id IS NULL
@@ -177,7 +186,7 @@ impl CrmBridgeRepository {
         actor: Option<Uuid>,
     ) -> Result<SessionRow, LivechatError> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
         let row = match sqlx::query_as::<_, SessionRow>(&format!(
             "SELECT {SESSION_COLUMNS} FROM livechat.sessions WHERE crm_lead_id = $1"
         ))
@@ -207,7 +216,7 @@ impl CrmBridgeRepository {
                     .into(),
             ));
         }
-        super::upsert_agent_ledger_tx(&mut tx, row.id, user_id, row.company_id).await?;
+        super::upsert_agent_ledger_tx(&mut tx, row.id, user_id).await?;
         recompute_outcome_tx(&mut tx, row.id).await?;
         audit_tx(
             &mut tx,

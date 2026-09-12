@@ -5,16 +5,17 @@
 //! Returns an `EntityValidator<ExpertiseTag>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
+use backbone_core::{RequiredString};
 use crate::domain::entity::ExpertiseTag;
-use backbone_core::RequiredString;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for ExpertiseTag entities.
 pub type ExpertiseTagValidator = EntityValidator<ExpertiseTag>;
 
 /// Build a validator for ExpertiseTag with all schema-defined field rules.
 pub fn expertise_tag_validator() -> ExpertiseTagValidator {
-    EntityValidator::new().rule(RequiredString::new("name", |e: &ExpertiseTag| &e.name))
+    EntityValidator::new()
+        .rule(RequiredString::new("name", |e: &ExpertiseTag| &e.name))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

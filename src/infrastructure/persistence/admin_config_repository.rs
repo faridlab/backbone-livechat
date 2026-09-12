@@ -10,8 +10,11 @@
 //! (the hardening migration) are the wall; these verbs translate
 //! their violations into the typed wire errors.
 //!
-//! RLS LAW: every statement runs through the `company_scope`
-//! `*_scoped` helpers (the host's company_auth request scope).
+//! RLS LAW: every statement rides the tenant-agnostic org_scope /
+//! company_scope `*_scoped` helpers — the request-dedicated connection
+//! when the composing service bound one, the plain pool otherwise
+//! (ADR-0029: the fence itself is the composer's decorator, not the
+//! module's).
 
 use serde_json::Value;
 use sqlx::PgPool;
@@ -19,7 +22,13 @@ use uuid::Uuid;
 
 use crate::application::service::livechat_error::LivechatError;
 
-use backbone_orm::company_scope::{execute_scoped, fetch_all_scoped, fetch_optional_scoped};
+// The typed multi-row read twins live only in the legacy `company_scope` module. Their
+// connection discipline is what this repository needs — request-dedicated connection when
+// the composing service bound one, plain pool otherwise. The helper's legacy task-local
+// branch is never taken: this module sets no legacy scope of its own (ADR-0029).
+use backbone_orm::company_scope::{fetch_all_scoped, fetch_optional_scoped};
+use backbone_orm::org_scope::execute_scoped;
+use super::relay_ambient_scope;
 
 /// The seven community step types (the CLOSED set — the create_lead /
 /// create_ticket arms of upstream are refused by omission).
@@ -152,9 +161,8 @@ impl AdminConfigRepository {
                 r#"INSERT INTO livechat.channels
                        (name, website_id, button_text, welcome_message,
                         max_sessions_mode, max_sessions, block_assignment_during_call,
-                        review_link, is_active, company_id)
-                   VALUES ($1, $2, $3, $4, $5::livechat_max_sessions_mode, $6, $7, $8, $9,
-                           NULLIF(current_setting('app.company_id', true), '')::uuid)
+                        review_link, is_active)
+                   VALUES ($1, $2, $3, $4, $5::livechat_max_sessions_mode, $6, $7, $8, $9)
                    RETURNING to_jsonb(channels)"#,
             )
             .bind(name.trim())
@@ -240,7 +248,6 @@ impl AdminConfigRepository {
         let sql = format!(
             r#"UPDATE livechat.channels SET {} WHERE id = ${}
                   AND metadata->>'deleted_at' IS NULL
-                  AND company_id = NULLIF(current_setting('app.company_id', true), '')::uuid
                RETURNING to_jsonb(channels)"#,
             sets.join(", "),
             sets.len() + 1,
@@ -305,9 +312,12 @@ impl AdminConfigRepository {
         execute_scoped(
             &self.pool,
             sqlx::query(
-                r#"INSERT INTO livechat.operator_profiles (user_id, languages, company_id)
-                   VALUES ($1, '{}', NULLIF(current_setting('app.company_id', true), '')::uuid)
-                   ON CONFLICT (company_id, user_id) DO NOTHING"#,
+                // No conflict target: the per-unit unique (org_unit_id, user_id) is
+                // decorator-declared, so the module cannot name it. Untargeted DO NOTHING
+                // catches it (and every module-owned unique) exactly as the targeted shape did.
+                r#"INSERT INTO livechat.operator_profiles (user_id, languages)
+                   VALUES ($1, '{}')
+                   ON CONFLICT DO NOTHING"#,
             )
             .bind(user_id),
         )
@@ -315,8 +325,8 @@ impl AdminConfigRepository {
         let row = fetch_optional_scoped(
             &self.pool,
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
-                r#"INSERT INTO livechat.channel_members (channel_id, user_id, company_id)
-                   VALUES ($1, $2, NULLIF(current_setting('app.company_id', true), '')::uuid)
+                r#"INSERT INTO livechat.channel_members (channel_id, user_id)
+                   VALUES ($1, $2)
                    ON CONFLICT (channel_id, user_id) DO UPDATE
                        SET metadata = jsonb_set(channel_members.metadata, '{deleted_at}', 'null'::jsonb)
                    RETURNING to_jsonb(channel_members)"#,
@@ -382,23 +392,42 @@ impl AdminConfigRepository {
         display_name: Option<&str>,
         languages: &[String],
     ) -> Result<JsonRow, LivechatError> {
+        // Upsert without a conflict target: the per-unit unique (org_unit_id, user_id) is
+        // decorator-declared (ADR-0029), so the module cannot name it in ON CONFLICT. The
+        // untargeted DO NOTHING insert returns no row when it fired; the follow-up UPDATE
+        // by user_id — fenced to the caller's scope by the composer's decorator — lands
+        // the write on the existing profile. Same outcome as the targeted DO UPDATE,
+        // including under concurrency (the loser of the insert race takes the UPDATE).
         let row = fetch_optional_scoped(
             &self.pool,
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
-                r#"INSERT INTO livechat.operator_profiles
-                       (user_id, display_name, languages, company_id)
-                   VALUES ($1, $2, $3, NULLIF(current_setting('app.company_id', true), '')::uuid)
-                   ON CONFLICT (company_id, user_id) DO UPDATE
-                       SET display_name = EXCLUDED.display_name,
-                           languages = EXCLUDED.languages
+                r#"INSERT INTO livechat.operator_profiles (user_id, display_name, languages)
+                   VALUES ($1, $2, $3)
+                   ON CONFLICT DO NOTHING
                    RETURNING to_jsonb(operator_profiles)"#,
             )
             .bind(user_id)
             .bind(display_name)
             .bind(languages),
         )
-        .await?
-        .map(|(j,)| j.0);
+        .await?;
+        let row = match row {
+            Some((j,)) => Some(j.0),
+            None => fetch_optional_scoped(
+                &self.pool,
+                sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
+                    r#"UPDATE livechat.operator_profiles
+                          SET display_name = $2, languages = $3
+                        WHERE user_id = $1 AND metadata->>'deleted_at' IS NULL
+                        RETURNING to_jsonb(operator_profiles)"#,
+                )
+                .bind(user_id)
+                .bind(display_name)
+                .bind(languages),
+            )
+            .await?
+            .map(|(j,)| j.0),
+        };
         row.ok_or_else(|| LivechatError::Database("profile write returned no row".into()))
     }
 
@@ -428,8 +457,8 @@ impl AdminConfigRepository {
         let row = match fetch_optional_scoped(
             &self.pool,
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(&format!(
-                r#"INSERT INTO {table} AS t (name, company_id)
-                   VALUES ($1, NULLIF(current_setting('app.company_id', true), '')::uuid)
+                r#"INSERT INTO {table} AS t (name)
+                   VALUES ($1)
                    RETURNING to_jsonb(t)"#
             ))
             .bind(name.trim()),
@@ -547,10 +576,9 @@ impl AdminConfigRepository {
                 r#"INSERT INTO livechat.channel_rules
                        (channel_id, regex_url, action, auto_popup_timer,
                         chatbot_script_id, chatbot_enabled_condition,
-                        country_codes, sequence, company_id)
+                        country_codes, sequence)
                    VALUES ($1, $2, $3::livechat_rule_action, $4, $5,
-                           $6::livechat_chatbot_condition, $7, $8,
-                           NULLIF(current_setting('app.company_id', true), '')::uuid)
+                           $6::livechat_chatbot_condition, $7, $8)
                    RETURNING to_jsonb(channel_rules)"#,
             )
             .bind(input.channel_id)
@@ -650,8 +678,8 @@ impl AdminConfigRepository {
         let row = match fetch_optional_scoped(
             &self.pool,
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
-                r#"INSERT INTO livechat.chatbot_scripts (title, company_id)
-                   VALUES ($1, NULLIF(current_setting('app.company_id', true), '')::uuid)
+                r#"INSERT INTO livechat.chatbot_scripts (title)
+                   VALUES ($1)
                    RETURNING to_jsonb(chatbot_scripts)"#,
             )
             .bind(title.trim()),
@@ -662,7 +690,7 @@ impl AdminConfigRepository {
             Err(e) => {
                 return Err(map_unique(
                     e,
-                    "uq_chatbot_scripts_company_lower_title",
+                    "uq_chatbot_scripts_org_unit_id_lower_title",
                     LivechatError::TagNameConflict {
                         name: title.trim().to_string(),
                     },
@@ -704,7 +732,7 @@ impl AdminConfigRepository {
             Err(e) => {
                 return Err(map_unique(
                     e,
-                    "uq_chatbot_scripts_company_lower_title",
+                    "uq_chatbot_scripts_org_unit_id_lower_title",
                     LivechatError::TagNameConflict {
                         name: title.unwrap_or_default().to_string(),
                     },
@@ -768,14 +796,13 @@ impl AdminConfigRepository {
     pub async fn step_create(&self, input: &StepInput) -> Result<JsonRow, LivechatError> {
         validate_step(input)?;
         let mut tx = self.pool.begin().await?;
-        backbone_orm::company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
         let step_id = Uuid::new_v4();
         let row: Value = sqlx::query_scalar::<_, Value>(
             r#"INSERT INTO livechat.chatbot_steps
                    (id, chatbot_script_id, sequence, step_type, message,
-                    expertise_tag_ids, company_id)
-               VALUES ($1, $2, $3, $4::livechat_step_type, $5, $6,
-                       NULLIF(current_setting('app.company_id', true), '')::uuid)
+                    expertise_tag_ids)
+               VALUES ($1, $2, $3, $4::livechat_step_type, $5, $6)
                RETURNING to_jsonb(chatbot_steps)"#,
         )
         .bind(step_id)
@@ -790,8 +817,8 @@ impl AdminConfigRepository {
         for a in &input.answers {
             sqlx::query(
                 r#"INSERT INTO livechat.chatbot_answers
-                       (question_step_id, sequence, label, redirect_url, company_id)
-                   VALUES ($1, $2, $3, $4, NULLIF(current_setting('app.company_id', true), '')::uuid)"#,
+                       (question_step_id, sequence, label, redirect_url)
+                   VALUES ($1, $2, $3, $4)"#,
             )
             .bind(step_id)
             .bind(a.sequence)
@@ -823,7 +850,7 @@ impl AdminConfigRepository {
             ));
         }
         let mut tx = self.pool.begin().await?;
-        backbone_orm::company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
         sqlx::query(
             r#"UPDATE livechat.chatbot_steps
                   SET metadata = jsonb_set(metadata, '{deleted_at}', to_jsonb(now()))
@@ -883,8 +910,8 @@ impl AdminConfigRepository {
             &self.pool,
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"INSERT INTO livechat.chatbot_answers
-                       (question_step_id, sequence, label, redirect_url, company_id)
-                   SELECT $1, $2, $3, $4, NULLIF(current_setting('app.company_id', true), '')::uuid
+                       (question_step_id, sequence, label, redirect_url)
+                   SELECT $1, $2, $3, $4
                     WHERE EXISTS (SELECT 1 FROM livechat.chatbot_steps s
                                    WHERE s.id = $1 AND s.step_type = 'question_selection')
                    RETURNING to_jsonb(chatbot_answers)"#,
@@ -969,8 +996,8 @@ impl AdminConfigRepository {
             &self.pool,
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"INSERT INTO livechat.chatbot_step_triggers
-                       (answer_id, target_step_id, company_id)
-                   VALUES ($1, $2, NULLIF(current_setting('app.company_id', true), '')::uuid)
+                       (answer_id, target_step_id)
+                   VALUES ($1, $2)
                    RETURNING to_jsonb(chatbot_step_triggers)"#,
             )
             .bind(answer_id)

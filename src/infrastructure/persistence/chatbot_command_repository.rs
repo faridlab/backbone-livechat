@@ -25,7 +25,7 @@ use uuid::Uuid;
 use crate::application::service::livechat_error::LivechatError;
 
 const STEP_COLUMNS: &str =
-    "id, chatbot_script_id, sequence, step_type::text, message, expertise_tag_ids, company_id";
+    "id, chatbot_script_id, sequence, step_type::text, message, expertise_tag_ids";
 
 /// One step of the static graph.
 #[derive(Debug, Clone, sqlx::FromRow)]
@@ -36,7 +36,6 @@ pub struct StepRow {
     pub step_type: String,
     pub message: Option<String>,
     pub expertise_tag_ids: Vec<Uuid>,
-    pub company_id: Uuid,
 }
 
 /// One answer of a question step.
@@ -184,7 +183,7 @@ impl ChatbotCommandRepository {
         session_id: Uuid,
         step_id: Option<Uuid>,
     ) -> Result<(), LivechatError> {
-        backbone_orm::company_scope::execute_scoped(
+        backbone_orm::org_scope::execute_scoped(
             &self.pool,
             sqlx::query("UPDATE livechat.sessions SET chatbot_current_step_id = $2 WHERE id = $1")
                 .bind(session_id)
@@ -239,7 +238,7 @@ impl ChatbotCommandRepository {
         session_id: Uuid,
         expertise: &[String],
     ) -> Result<(), LivechatError> {
-        backbone_orm::company_scope::execute_scoped(
+        backbone_orm::org_scope::execute_scoped(
             &self.pool,
             sqlx::query("UPDATE livechat.sessions SET expertise_names = $2::text[] WHERE id = $1")
                 .bind(session_id)

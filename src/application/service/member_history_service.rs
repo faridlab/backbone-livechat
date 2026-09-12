@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
+use crate::presentation::dto::{CreateMemberHistoryDto, UpdateMemberHistoryDto};
 use crate::domain::entity::MemberHistory;
 use crate::infrastructure::persistence::MemberHistoryRepository;
-use crate::presentation::dto::{CreateMemberHistoryDto, UpdateMemberHistoryDto};
 
 /// Application service for MemberHistory entities.
 ///

@@ -1,8 +1,8 @@
-use super::AuditMetadata;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for OperatorExpertise
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -10,15 +10,9 @@ use uuid::Uuid;
 pub struct OperatorExpertiseId(pub Uuid);
 
 impl OperatorExpertiseId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for OperatorExpertiseId {
@@ -35,28 +29,20 @@ impl std::str::FromStr for OperatorExpertiseId {
 }
 
 impl From<Uuid> for OperatorExpertiseId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<OperatorExpertiseId> for Uuid {
-    fn from(id: OperatorExpertiseId) -> Self {
-        id.0
-    }
+    fn from(id: OperatorExpertiseId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for OperatorExpertiseId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for OperatorExpertiseId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -64,7 +50,6 @@ pub struct OperatorExpertise {
     pub id: Uuid,
     pub operator_profile_id: Uuid,
     pub expertise_tag_id: Uuid,
-    pub company_id: Uuid,
     #[serde(default)]
     #[sqlx(json)]
     pub metadata: AuditMetadata,
@@ -77,12 +62,11 @@ impl OperatorExpertise {
     }
 
     /// Create a new OperatorExpertise with required fields
-    pub fn new(operator_profile_id: Uuid, expertise_tag_id: Uuid, company_id: Uuid) -> Self {
+    pub fn new(operator_profile_id: Uuid, expertise_tag_id: Uuid) -> Self {
         Self {
             id: Uuid::new_v4(),
             operator_profile_id,
             expertise_tag_id,
-            company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -137,6 +121,7 @@ impl OperatorExpertise {
         self.metadata.deleted_by.as_ref()
     }
 
+
     // ==========================================================
     // Partial Update
     // ==========================================================
@@ -146,19 +131,10 @@ impl OperatorExpertise {
         for (key, value) in fields {
             match key.as_str() {
                 "operator_profile_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.operator_profile_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.operator_profile_id = v; }
                 }
                 "expertise_tag_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.expertise_tag_id = v;
-                    }
-                }
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.company_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.expertise_tag_id = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -216,20 +192,13 @@ impl backbone_orm::EntityRepoMeta for OperatorExpertise {
         m.insert("id".to_string(), "uuid".to_string());
         m.insert("operator_profile_id".to_string(), "uuid".to_string());
         m.insert("expertise_tag_id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &[]
     }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
-    }
     fn relations() -> &'static [(&'static str, &'static str, &'static str)] {
-        &[
-            ("operatorProfile", "operator_profiles", "operatorProfileId"),
-            ("expertiseTag", "expertise_tags", "expertiseTagId"),
-        ]
+        &[("operatorProfile", "operator_profiles", "operatorProfileId"), ("expertiseTag", "expertise_tags", "expertiseTagId")]
     }
 }
 
@@ -241,7 +210,6 @@ impl backbone_orm::EntityRepoMeta for OperatorExpertise {
 pub struct OperatorExpertiseBuilder {
     operator_profile_id: Option<Uuid>,
     expertise_tag_id: Option<Uuid>,
-    company_id: Option<Uuid>,
 }
 
 impl OperatorExpertiseBuilder {
@@ -257,31 +225,17 @@ impl OperatorExpertiseBuilder {
         self
     }
 
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Build the OperatorExpertise entity
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<OperatorExpertise, String> {
-        let operator_profile_id = self
-            .operator_profile_id
-            .ok_or_else(|| "operator_profile_id is required".to_string())?;
-        let expertise_tag_id = self
-            .expertise_tag_id
-            .ok_or_else(|| "expertise_tag_id is required".to_string())?;
-        let company_id = self
-            .company_id
-            .ok_or_else(|| "company_id is required".to_string())?;
+        let operator_profile_id = self.operator_profile_id.ok_or_else(|| "operator_profile_id is required".to_string())?;
+        let expertise_tag_id = self.expertise_tag_id.ok_or_else(|| "expertise_tag_id is required".to_string())?;
 
         Ok(OperatorExpertise {
             id: Uuid::new_v4(),
             operator_profile_id,
             expertise_tag_id,
-            company_id,
             metadata: AuditMetadata::default(),
         })
     }

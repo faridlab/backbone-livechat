@@ -27,10 +27,6 @@ models:
       redirect_url:
         type: url?
         description: "External redirect on this answer — validated at the verb; choosing it ends the script."
-      company_id:
-        type: uuid
-        attributes: ["@required", "@exclude_from_foreign_key_check"]
-        description: "Owning company (strict fence — logical corporate ref)."
       metadata:
         type: Metadata
         attributes: ["@audit_metadata"]

@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the OperatorExpertise aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
 use crate::domain::entity::OperatorExpertise;
@@ -46,15 +46,12 @@ pub struct OperatorExpertisePaginatedResult {
 pub struct OperatorExpertiseFilter {
     pub operator_profile_id: Option<Uuid>,
     pub expertise_tag_id: Option<Uuid>,
-    pub company_id: Option<Uuid>,
 }
 
 impl OperatorExpertiseFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.operator_profile_id.is_some()
-            || self.expertise_tag_id.is_some()
-            || self.company_id.is_some()
+        self.operator_profile_id.is_some() || self.expertise_tag_id.is_some()
     }
 }
 
@@ -64,6 +61,7 @@ impl OperatorExpertiseFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait OperatorExpertiseRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -78,11 +76,7 @@ pub trait OperatorExpertiseRepository: Send + Sync {
     async fn find_all(&self) -> Result<Vec<OperatorExpertise>>;
 
     /// Update operator_expertise by ID
-    async fn update(
-        &self,
-        id: &str,
-        entity: &OperatorExpertise,
-    ) -> Result<Option<OperatorExpertise>>;
+    async fn update(&self, id: &str, entity: &OperatorExpertise) -> Result<Option<OperatorExpertise>>;
 
     /// Delete operator_expertise by ID
     async fn delete(&self, id: &str) -> Result<bool>;
@@ -92,17 +86,10 @@ pub trait OperatorExpertiseRepository: Send + Sync {
     // =========================================================================
 
     /// List operator_expertise with pagination
-    async fn list(
-        &self,
-        params: OperatorExpertisePaginationParams,
-    ) -> Result<OperatorExpertisePaginatedResult>;
+    async fn list(&self, params: OperatorExpertisePaginationParams) -> Result<OperatorExpertisePaginatedResult>;
 
     /// List operator_expertise with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: OperatorExpertisePaginationParams,
-        filters: OperatorExpertiseFilter,
-    ) -> Result<OperatorExpertisePaginatedResult>;
+    async fn list_with_filters(&self, params: OperatorExpertisePaginationParams, filters: OperatorExpertiseFilter) -> Result<OperatorExpertisePaginatedResult>;
 
     /// Count all operator_expertise entities
     async fn count(&self) -> Result<u64>;
@@ -124,10 +111,7 @@ pub trait OperatorExpertiseRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<OperatorExpertise>>;
 
     /// List soft-deleted operator_expertise entities
-    async fn list_deleted(
-        &self,
-        params: OperatorExpertisePaginationParams,
-    ) -> Result<OperatorExpertisePaginatedResult>;
+    async fn list_deleted(&self, params: OperatorExpertisePaginationParams) -> Result<OperatorExpertisePaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

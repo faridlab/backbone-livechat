@@ -10,7 +10,6 @@
 --     sequence,
 --     label,
 --     redirect_url,
---     company_id,
 --     metadata
 -- ) VALUES
 -- (

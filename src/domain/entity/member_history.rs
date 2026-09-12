@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::AuditMetadata;
 use super::LivechatPersona;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for MemberHistory
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -12,15 +12,9 @@ use super::LivechatPersona;
 pub struct MemberHistoryId(pub Uuid);
 
 impl MemberHistoryId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for MemberHistoryId {
@@ -37,28 +31,20 @@ impl std::str::FromStr for MemberHistoryId {
 }
 
 impl From<Uuid> for MemberHistoryId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<MemberHistoryId> for Uuid {
-    fn from(id: MemberHistoryId) -> Self {
-        id.0
-    }
+    fn from(id: MemberHistoryId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for MemberHistoryId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for MemberHistoryId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -74,7 +60,6 @@ pub struct MemberHistory {
     pub message_count: i32,
     pub response_time_secs: Option<i32>,
     pub expertise_names: Vec<String>,
-    pub company_id: Uuid,
     #[serde(default)]
     #[sqlx(json)]
     pub metadata: AuditMetadata,
@@ -87,14 +72,7 @@ impl MemberHistory {
     }
 
     /// Create a new MemberHistory with required fields
-    pub fn new(
-        session_id: Uuid,
-        persona: LivechatPersona,
-        joined_at: DateTime<Utc>,
-        message_count: i32,
-        expertise_names: Vec<String>,
-        company_id: Uuid,
-    ) -> Self {
+    pub fn new(session_id: Uuid, persona: LivechatPersona, joined_at: DateTime<Utc>, message_count: i32, expertise_names: Vec<String>) -> Self {
         Self {
             id: Uuid::new_v4(),
             session_id,
@@ -107,7 +85,6 @@ impl MemberHistory {
             message_count,
             response_time_secs: None,
             expertise_names,
-            company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -162,6 +139,7 @@ impl MemberHistory {
         self.metadata.deleted_by.as_ref()
     }
 
+
     // ==========================================================
     // Fluent Setters (with_* for optional fields)
     // ==========================================================
@@ -205,59 +183,34 @@ impl MemberHistory {
         for (key, value) in fields {
             match key.as_str() {
                 "session_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.session_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.session_id = v; }
                 }
                 "persona" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.persona = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.persona = v; }
                 }
                 "operator_user_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.operator_user_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.operator_user_id = v; }
                 }
                 "visitor_key" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.visitor_key = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.visitor_key = v; }
                 }
                 "chatbot_script_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.chatbot_script_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.chatbot_script_id = v; }
                 }
                 "joined_at" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.joined_at = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.joined_at = v; }
                 }
                 "left_at" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.left_at = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.left_at = v; }
                 }
                 "message_count" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.message_count = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.message_count = v; }
                 }
                 "response_time_secs" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.response_time_secs = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.response_time_secs = v; }
                 }
                 "expertise_names" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.expertise_names = v;
-                    }
-                }
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.company_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.expertise_names = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -316,15 +269,11 @@ impl backbone_orm::EntityRepoMeta for MemberHistory {
         m.insert("session_id".to_string(), "uuid".to_string());
         m.insert("operator_user_id".to_string(), "uuid".to_string());
         m.insert("chatbot_script_id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m.insert("persona".to_string(), "livechat_persona".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &[]
-    }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
     }
     fn relations() -> &'static [(&'static str, &'static str, &'static str)] {
         &[("session", "sessions", "sessionId")]
@@ -347,7 +296,6 @@ pub struct MemberHistoryBuilder {
     message_count: Option<i32>,
     response_time_secs: Option<i32>,
     expertise_names: Option<Vec<String>>,
-    company_id: Option<Uuid>,
 }
 
 impl MemberHistoryBuilder {
@@ -411,28 +359,13 @@ impl MemberHistoryBuilder {
         self
     }
 
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Build the MemberHistory entity
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<MemberHistory, String> {
-        let session_id = self
-            .session_id
-            .ok_or_else(|| "session_id is required".to_string())?;
-        let persona = self
-            .persona
-            .ok_or_else(|| "persona is required".to_string())?;
-        let expertise_names = self
-            .expertise_names
-            .ok_or_else(|| "expertise_names is required".to_string())?;
-        let company_id = self
-            .company_id
-            .ok_or_else(|| "company_id is required".to_string())?;
+        let session_id = self.session_id.ok_or_else(|| "session_id is required".to_string())?;
+        let persona = self.persona.ok_or_else(|| "persona is required".to_string())?;
+        let expertise_names = self.expertise_names.ok_or_else(|| "expertise_names is required".to_string())?;
 
         Ok(MemberHistory {
             id: Uuid::new_v4(),
@@ -446,7 +379,6 @@ impl MemberHistoryBuilder {
             message_count: self.message_count.unwrap_or(0),
             response_time_secs: self.response_time_secs,
             expertise_names,
-            company_id,
             metadata: AuditMetadata::default(),
         })
     }

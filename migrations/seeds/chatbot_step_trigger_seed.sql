@@ -8,7 +8,6 @@
 --     id,
 --     answer_id,
 --     target_step_id,
---     company_id,
 --     metadata
 -- ) VALUES
 -- (

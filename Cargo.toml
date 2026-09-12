@@ -1,6 +1,6 @@
 [package]
 name = "backbone-livechat"
-version = "0.2.3"
+version = "0.3.0"
 edition = "2021"
 description = "The livechat module (Odoo im_livechat + website_livechat port) — the deterministic operator-selection ladder (capacity, the 120s anti-burst buffer on every path, the one 30-minute ongoing window, total-order tie-breaks with no randomness), the visitor conversation lifecycle behind Tier A guest capabilities on a declared nine-path public surface, the member-history ledger under three partial uniques plus a strict persona trichotomy, the chatbot pointer state machine closed at the seven community step types, and the website bridge overlays (operator-initiated invites, message-piggyback heartbeats, merge relink) as columns and behavior inside this one crate"
 

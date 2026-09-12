@@ -8,7 +8,6 @@
 --     id,
 --     channel_id,
 --     user_id,
---     company_id,
 --     metadata
 -- ) VALUES
 -- (

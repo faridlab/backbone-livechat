@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::Channel;
+use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::LivechatMaxSessionsMode;
 
 // =============================================================================
@@ -39,18 +39,10 @@ pub struct CreateChannelDto {
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "website_id")]
     pub website_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "button_text"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "button_text")]
     pub button_text: Option<String>,
     #[cfg_attr(feature = "validation", validate(length(max = 1000)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "welcome_message"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "welcome_message")]
     pub welcome_message: Option<String>,
     #[serde(alias = "max_sessions_mode")]
     pub max_sessions_mode: LivechatMaxSessionsMode,
@@ -61,21 +53,11 @@ pub struct CreateChannelDto {
     #[serde(alias = "block_assignment_during_call")]
     pub block_assignment_during_call: bool,
     #[cfg_attr(feature = "validation", validate(url))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "review_link"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "review_link")]
     pub review_link: Option<String>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(alias = "is_active")]
     pub is_active: bool,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -97,18 +79,10 @@ pub struct UpdateChannelDto {
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "website_id")]
     pub website_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "button_text"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "button_text")]
     pub button_text: Option<String>,
     #[cfg_attr(feature = "validation", validate(length(max = 1000)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "welcome_message"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "welcome_message")]
     pub welcome_message: Option<String>,
     #[serde(alias = "max_sessions_mode")]
     pub max_sessions_mode: LivechatMaxSessionsMode,
@@ -119,21 +93,11 @@ pub struct UpdateChannelDto {
     #[serde(alias = "block_assignment_during_call")]
     pub block_assignment_during_call: bool,
     #[cfg_attr(feature = "validation", validate(url))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "review_link"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "review_link")]
     pub review_link: Option<String>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(alias = "is_active")]
     pub is_active: bool,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -167,10 +131,7 @@ pub struct PatchChannelDto {
     #[serde(skip_serializing_if = "Option::is_none", alias = "max_sessions")]
     pub max_sessions: Option<i32>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
-    #[serde(
-        skip_serializing_if = "Option::is_none",
-        alias = "block_assignment_during_call"
-    )]
+    #[serde(skip_serializing_if = "Option::is_none", alias = "block_assignment_during_call")]
     pub block_assignment_during_call: Option<bool>,
     #[cfg_attr(feature = "validation", validate(url))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "review_link")]
@@ -178,27 +139,12 @@ pub struct PatchChannelDto {
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "is_active")]
     pub is_active: Option<bool>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
 }
 
 impl PatchChannelDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.name.is_some()
-            || self.website_id.is_some()
-            || self.button_text.is_some()
-            || self.welcome_message.is_some()
-            || self.max_sessions_mode.is_some()
-            || self.max_sessions.is_some()
-            || self.block_assignment_during_call.is_some()
-            || self.review_link.is_some()
-            || self.is_active.is_some()
-            || self.company_id.is_some()
+        self.name.is_some() || self.website_id.is_some() || self.button_text.is_some() || self.welcome_message.is_some() || self.max_sessions_mode.is_some() || self.max_sessions.is_some() || self.block_assignment_during_call.is_some() || self.review_link.is_some() || self.is_active.is_some()
     }
 }
 
@@ -214,10 +160,7 @@ impl PatchChannelDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
@@ -232,11 +175,6 @@ pub struct ChannelResponseDto {
     pub review_link: Option<String>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     pub is_active: bool,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
     pub metadata: AuditMetadata,
 }
 
@@ -317,7 +255,6 @@ impl From<Channel> for ChannelResponseDto {
             block_assignment_during_call: entity.block_assignment_during_call,
             review_link: entity.review_link,
             is_active: entity.is_active,
-            company_id: entity.company_id,
             metadata: entity.metadata,
         }
     }
@@ -349,7 +286,6 @@ impl From<CreateChannelDto> for Channel {
             block_assignment_during_call: dto.block_assignment_during_call,
             review_link: dto.review_link,
             is_active: dto.is_active,
-            company_id: dto.company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -368,7 +304,6 @@ impl From<&Channel> for ChannelResponseDto {
             block_assignment_during_call: entity.block_assignment_during_call.clone(),
             review_link: entity.review_link.clone(),
             is_active: entity.is_active.clone(),
-            company_id: entity.company_id.clone(),
             metadata: entity.metadata.clone(),
         }
     }
@@ -391,7 +326,6 @@ impl backbone_core::ApplyUpdateDto<UpdateChannelDto> for Channel {
         self.block_assignment_during_call = dto.block_assignment_during_call;
         self.review_link = dto.review_link;
         self.is_active = dto.is_active;
-        self.company_id = dto.company_id;
         Ok(self)
     }
 }

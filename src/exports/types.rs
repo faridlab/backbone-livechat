@@ -5,10 +5,10 @@
 //! These DTOs are the ONLY types other modules should use.
 //! They are decoupled from internal domain entities.
 
-use crate::domain::entity::*;
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
+use crate::domain::entity::*;
 
 // ============================================================================
 // CHANNEL TYPES
@@ -57,7 +57,6 @@ pub struct ChannelDto {
     pub block_assignment_during_call: bool,
     pub review_link: Option<String>,
     pub is_active: bool,
-    pub company_id: Uuid,
     pub metadata: serde_json::Value,
 }
 
@@ -114,7 +113,6 @@ pub struct ChannelMemberDto {
     pub id: ChannelMemberId,
     pub channel_id: Uuid,
     pub user_id: Uuid,
-    pub company_id: Uuid,
     pub metadata: serde_json::Value,
 }
 
@@ -176,7 +174,6 @@ pub struct ChannelRuleDto {
     pub chatbot_enabled_condition: LivechatChatbotCondition,
     pub country_codes: Vec<String>,
     pub sequence: i32,
-    pub company_id: Uuid,
     pub metadata: serde_json::Value,
 }
 
@@ -234,7 +231,6 @@ pub struct ChatbotAnswerDto {
     pub sequence: i32,
     pub label: String,
     pub redirect_url: Option<String>,
-    pub company_id: Uuid,
     pub metadata: serde_json::Value,
 }
 
@@ -294,7 +290,6 @@ pub struct ChatbotMessageDto {
     pub selected_answer_id: Option<Uuid>,
     pub visitor_answer: Option<String>,
     pub created_at: DateTime<Utc>,
-    pub company_id: Uuid,
     pub metadata: serde_json::Value,
 }
 
@@ -351,7 +346,6 @@ pub struct ChatbotScriptDto {
     pub id: ChatbotScriptId,
     pub title: String,
     pub is_active: bool,
-    pub company_id: Uuid,
     pub metadata: serde_json::Value,
 }
 
@@ -411,7 +405,6 @@ pub struct ChatbotStepDto {
     pub step_type: LivechatStepType,
     pub message: Option<String>,
     pub expertise_tag_ids: Vec<Uuid>,
-    pub company_id: Uuid,
     pub metadata: serde_json::Value,
 }
 
@@ -467,7 +460,6 @@ pub struct ChatbotStepTriggerDto {
     pub id: ChatbotStepTriggerId,
     pub answer_id: Uuid,
     pub target_step_id: Uuid,
-    pub company_id: Uuid,
     pub metadata: serde_json::Value,
 }
 
@@ -522,7 +514,6 @@ impl From<ConversationTagId> for Uuid {
 pub struct ConversationTagDto {
     pub id: ConversationTagId,
     pub name: String,
-    pub company_id: Uuid,
     pub metadata: serde_json::Value,
 }
 
@@ -578,7 +569,6 @@ impl From<ExpertiseTagId> for Uuid {
 pub struct ExpertiseTagDto {
     pub id: ExpertiseTagId,
     pub name: String,
-    pub company_id: Uuid,
     pub metadata: serde_json::Value,
 }
 
@@ -639,7 +629,6 @@ pub struct LivechatAuditLogDto {
     pub subject_id: Option<Uuid>,
     pub detail: Option<serde_json::Value>,
     pub created_at: DateTime<Utc>,
-    pub company_id: Uuid,
     pub metadata: serde_json::Value,
 }
 
@@ -704,7 +693,6 @@ pub struct MemberHistoryDto {
     pub message_count: i32,
     pub response_time_secs: Option<i32>,
     pub expertise_names: Vec<String>,
-    pub company_id: Uuid,
     pub metadata: serde_json::Value,
 }
 
@@ -760,7 +748,6 @@ pub struct OperatorExpertiseDto {
     pub id: OperatorExpertiseId,
     pub operator_profile_id: Uuid,
     pub expertise_tag_id: Uuid,
-    pub company_id: Uuid,
     pub metadata: serde_json::Value,
 }
 
@@ -819,7 +806,6 @@ pub struct OperatorProfileDto {
     pub languages: Vec<String>,
     pub last_heartbeat_at: Option<DateTime<Utc>>,
     pub last_assigned_at: Option<DateTime<Utc>>,
-    pub company_id: Uuid,
     pub metadata: serde_json::Value,
 }
 
@@ -881,7 +867,6 @@ pub struct RatingDto {
     pub chatbot_script_id: Option<Uuid>,
     pub comment: Option<String>,
     pub created_at: DateTime<Utc>,
-    pub company_id: Uuid,
     pub metadata: serde_json::Value,
 }
 
@@ -950,6 +935,7 @@ pub struct SessionDto {
     pub visitor_country_code: Option<String>,
     pub visitor_timezone: Option<String>,
     pub is_pending_request: bool,
+    pub crm_lead_id: Option<Uuid>,
     pub visitor_language: Option<String>,
     pub message_count: i32,
     pub first_response_at: Option<DateTime<Utc>>,
@@ -958,7 +944,6 @@ pub struct SessionDto {
     pub last_operator_message_at: Option<DateTime<Utc>>,
     pub is_test: bool,
     pub error_detail: Option<String>,
-    pub company_id: Uuid,
     pub metadata: serde_json::Value,
 }
 
@@ -1016,7 +1001,6 @@ pub struct SessionTagDto {
     pub id: SessionTagId,
     pub session_id: Uuid,
     pub tag_id: Uuid,
-    pub company_id: Uuid,
     pub metadata: serde_json::Value,
 }
 

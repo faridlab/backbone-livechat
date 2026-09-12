@@ -22,7 +22,6 @@ fn op_uuid(low: u128) -> Uuid {
 async fn ladder_is_deterministic_with_buffer_and_one_window() {
     let db = TestDb::new("ladder").await;
     let pool = db.pool.clone();
-    let company = Uuid::new_v4();
     let website = Uuid::new_v4();
 
     // ── 1. The total-order tie-break replaces the die roll ────────
@@ -33,7 +32,7 @@ async fn ladder_is_deterministic_with_buffer_and_one_window() {
     let op_small = op_uuid(0x01);
     let op_large = op_uuid(0x02);
     assert!(op_small < op_large, "fixture must order the ids");
-    let channel = seed_channel_with_operators(&pool, company, website, &[op_small, op_large]).await;
+    let channel = seed_channel_with_operators(&pool, website, &[op_small, op_large]).await;
     let selection = SelectionRepository::new(pool.clone());
 
     let pick_a = selection
@@ -64,22 +63,19 @@ async fn ladder_is_deterministic_with_buffer_and_one_window() {
     // last_assigned_at. The NEXT assign — even with the stickiness
     // arm pointing at op_small — cannot read around the 120s buffer.
     assert_eq!(ASSIGNMENT_BUFFER_SECS, 120, "the anti-burst buffer is 120s");
-    let s0 = open_session(&pool, company, channel, "ladder:buffer:0").await;
-    let outcome = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        selection
-            .assign(&AssignInput {
-                session_id: s0.id,
-                channel_id: channel,
-                previous_operator: None,
-                visitor_language: None,
-                expertise: Vec::new(),
-                visitor_country: None,
-                actor: None,
-            })
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("first assign failed: {e:?}"));
+    let s0 = open_session(&pool, channel, "ladder:buffer:0").await;
+    let outcome = selection
+        .assign(&AssignInput {
+            session_id: s0.id,
+            channel_id: channel,
+            previous_operator: None,
+            visitor_language: None,
+            expertise: Vec::new(),
+            visitor_country: None,
+            actor: None,
+        })
+        .await
+        .unwrap_or_else(|e| panic!("first assign failed: {e:?}"));
     match &outcome {
         AssignOutcome::Assigned {
             operator_user_id, ..
@@ -92,22 +88,19 @@ async fn ladder_is_deterministic_with_buffer_and_one_window() {
         AssignOutcome::Empty => panic!("first assign hit an empty pool unexpectedly"),
     }
 
-    let s1 = open_session(&pool, company, channel, "ladder:buffer:1").await;
-    let outcome = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        selection
-            .assign(&AssignInput {
-                session_id: s1.id,
-                channel_id: channel,
-                previous_operator: Some(op_small),
-                visitor_language: None,
-                expertise: Vec::new(),
-                visitor_country: None,
-                actor: None,
-            })
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("buffered assign failed: {e:?}"));
+    let s1 = open_session(&pool, channel, "ladder:buffer:1").await;
+    let outcome = selection
+        .assign(&AssignInput {
+            session_id: s1.id,
+            channel_id: channel,
+            previous_operator: Some(op_small),
+            visitor_language: None,
+            expertise: Vec::new(),
+            visitor_country: None,
+            actor: None,
+        })
+        .await
+        .unwrap_or_else(|e| panic!("buffered assign failed: {e:?}"));
     match &outcome {
         AssignOutcome::Assigned {
             operator_user_id,
@@ -150,29 +143,25 @@ async fn ladder_is_deterministic_with_buffer_and_one_window() {
     sqlx::query(
         r#"UPDATE livechat.operator_profiles
               SET last_assigned_at = now() - interval '10 minutes'
-            WHERE user_id = $1 AND company_id = $2"#,
+            WHERE user_id = $1"#,
     )
     .bind(op_small)
-    .bind(company)
     .execute(&pool)
     .await
     .unwrap_or_else(|e| panic!("backdate failed: {e}"));
-    let s2 = open_session(&pool, company, channel, "ladder:buffer:2").await;
-    let outcome = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        selection
-            .assign(&AssignInput {
-                session_id: s2.id,
-                channel_id: channel,
-                previous_operator: Some(op_small),
-                visitor_language: None,
-                expertise: Vec::new(),
-                visitor_country: None,
-                actor: None,
-            })
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("stickiness assign failed: {e:?}"));
+    let s2 = open_session(&pool, channel, "ladder:buffer:2").await;
+    let outcome = selection
+        .assign(&AssignInput {
+            session_id: s2.id,
+            channel_id: channel,
+            previous_operator: Some(op_small),
+            visitor_language: None,
+            expertise: Vec::new(),
+            visitor_country: None,
+            actor: None,
+        })
+        .await
+        .unwrap_or_else(|e| panic!("stickiness assign failed: {e:?}"));
     match &outcome {
         AssignOutcome::Assigned {
             operator_user_id,
@@ -201,10 +190,9 @@ async fn ladder_is_deterministic_with_buffer_and_one_window() {
     // as ongoing (the 15-months arm is gone); 20 minutes old DOES.
     let (old_counts,): (i64,) = sqlx::query_as(
         r#"SELECT count(*) FROM livechat.sessions
-            WHERE company_id = $1 AND closed_at IS NULL
-              AND last_interest_at >= now() - make_interval(secs => $2)"#,
+            WHERE closed_at IS NULL
+              AND last_interest_at >= now() - make_interval(secs => $1)"#,
     )
-    .bind(company)
     .bind(ONGOING_WINDOW_SECS)
     .fetch_one(&pool)
     .await
@@ -220,10 +208,9 @@ async fn ladder_is_deterministic_with_buffer_and_one_window() {
         .unwrap_or_else(|e| panic!("ageing failed: {e}"));
     let (after_ageing,): (i64,) = sqlx::query_as(
         r#"SELECT count(*) FROM livechat.sessions
-            WHERE company_id = $1 AND closed_at IS NULL
-              AND last_interest_at >= now() - make_interval(secs => $2)"#,
+            WHERE closed_at IS NULL
+              AND last_interest_at >= now() - make_interval(secs => $1)"#,
     )
-    .bind(company)
     .bind(ONGOING_WINDOW_SECS)
     .fetch_one(&pool)
     .await
@@ -234,10 +221,9 @@ async fn ladder_is_deterministic_with_buffer_and_one_window() {
     );
 
     // ── 5. Capacity gating uses the SAME window ───────────────────
-    let cap_company = Uuid::new_v4();
     let cap_a = op_uuid(0x11);
     let cap_b = op_uuid(0x12);
-    let capped = seed_channel_with_operators(&pool, cap_company, website, &[cap_a, cap_b]).await;
+    let capped = seed_channel_with_operators(&pool, website, &[cap_a, cap_b]).await;
     sqlx::query(
         r#"UPDATE livechat.channels
               SET max_sessions_mode = 'limited', max_sessions = 1
@@ -247,26 +233,22 @@ async fn ladder_is_deterministic_with_buffer_and_one_window() {
     .execute(&pool)
     .await
     .unwrap_or_else(|e| panic!("capacity shape failed: {e}"));
-    let busy_session = open_session(&pool, cap_company, capped, "ladder:cap:busy").await;
+    let busy_session = open_session(&pool, capped, "ladder:cap:busy").await;
     sqlx::query("UPDATE livechat.sessions SET operator_user_id = $2 WHERE id = $1")
         .bind(busy_session.id)
         .bind(cap_a)
         .execute(&pool)
         .await
         .unwrap_or_else(|e| panic!("busy assignment failed: {e}"));
-    sqlx::query("UPDATE livechat.operator_profiles SET last_assigned_at = NULL WHERE user_id = $1 AND company_id = $2")
+    sqlx::query("UPDATE livechat.operator_profiles SET last_assigned_at = NULL WHERE user_id = $1")
         .bind(cap_a)
-        .bind(cap_company)
         .execute(&pool)
         .await
         .unwrap_or_else(|e| panic!("stamp clear failed: {e}"));
-    let pick = backbone_orm::company_scope::with_company_scope(Some(cap_company), async {
-        selection
-            .pick_operator(capped, Some(cap_a), None, &[], None)
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("capacity pick failed: {e:?}"))
+    let pick = selection
+        .pick_operator(capped, Some(cap_a), None, &[], None)
+        .await
+        .unwrap_or_else(|e| panic!("capacity pick failed: {e:?}"))
     .unwrap_or_else(|| panic!("capacity pick returned no candidate"));
     assert_eq!(
         pick.operator_user_id, cap_b,
@@ -274,33 +256,28 @@ async fn ladder_is_deterministic_with_buffer_and_one_window() {
     );
 
     // ── 6. The empty pool is a defined, audited path ─────────────
-    let empty_company = Uuid::new_v4();
     let empty_website = Uuid::new_v4();
     let solo = op_uuid(0x21);
     let empty_channel =
-        seed_channel_with_operators(&pool, empty_company, empty_website, &[solo]).await;
-    sqlx::query("UPDATE livechat.operator_profiles SET last_heartbeat_at = now() - interval '10 minutes' WHERE user_id = $1 AND company_id = $2")
+        seed_channel_with_operators(&pool, empty_website, &[solo]).await;
+    sqlx::query("UPDATE livechat.operator_profiles SET last_heartbeat_at = now() - interval '10 minutes' WHERE user_id = $1")
         .bind(solo)
-        .bind(empty_company)
         .execute(&pool)
         .await
         .unwrap_or_else(|e| panic!("heartbeat ageing failed: {e}"));
-    let s3 = open_session(&pool, empty_company, empty_channel, "ladder:empty").await;
-    let outcome = backbone_orm::company_scope::with_company_scope(Some(empty_company), async {
-        selection
-            .assign(&AssignInput {
-                session_id: s3.id,
-                channel_id: empty_channel,
-                previous_operator: Some(solo),
-                visitor_language: None,
-                expertise: Vec::new(),
-                visitor_country: None,
-                actor: None,
-            })
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("empty-pool assign failed: {e:?}"));
+    let s3 = open_session(&pool, empty_channel, "ladder:empty").await;
+    let outcome = selection
+        .assign(&AssignInput {
+            session_id: s3.id,
+            channel_id: empty_channel,
+            previous_operator: Some(solo),
+            visitor_language: None,
+            expertise: Vec::new(),
+            visitor_country: None,
+            actor: None,
+        })
+        .await
+        .unwrap_or_else(|e| panic!("empty-pool assign failed: {e:?}"));
     assert!(
         matches!(outcome, AssignOutcome::Empty),
         "a dead heartbeat empties the pool"
@@ -343,17 +320,15 @@ async fn ladder_is_deterministic_with_buffer_and_one_window() {
         "the ladder's read path mints NOTHING and GCs NOTHING"
     );
 
-    // A miss under no scope stays the typed database error family —
-    // never a panic and never an unfenced read.
-    let unfenced = selection
+    // The pick on the scratch owner pool must always answer — the
+    // default-deny posture lives in the posture probe, the
+    // determinism contract here.
+    let pick_again = selection
         .pick_operator(channel, None, None, &[], None)
         .await;
-    // The scratch pool runs as the DB owner, so this call succeeds —
-    // the fence assertions live in the fenced-runtime probe. The
-    // determinism contract stands either way.
     assert!(
-        unfenced.is_ok(),
-        "the pick on the owner pool must answer, got {unfenced:?}"
+        pick_again.is_ok(),
+        "the pick on the owner pool must answer, got {pick_again:?}"
     );
     let _ = LivechatError::SessionNotFound; // link the typed family
     db.dispose().await;

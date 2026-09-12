@@ -23,9 +23,7 @@ pub struct ChatbotMessageRepository(
 
 impl std::ops::Deref for ChatbotMessageRepository {
     type Target = backbone_orm::GenericCrudRepository<ChatbotMessage, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl ChatbotMessageRepository {

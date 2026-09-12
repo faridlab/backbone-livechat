@@ -5,8 +5,8 @@
 //! `DomainPolicy` enforces pure business invariants (state-based rules).
 //! Identity-based rules live in `backbone_auth::ResourcePolicy`.
 
-use crate::domain::entity::ChatbotAnswer;
 use backbone_core::PermitAllPolicy;
+use crate::domain::entity::ChatbotAnswer;
 
 /// Domain policy for ChatbotAnswer — permits all operations (no business invariants).
 ///

@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::SessionTag;
+use crate::domain::entity::AuditMetadata;
 
 // =============================================================================
 // Create DTO
@@ -32,24 +32,12 @@ use crate::domain::entity::SessionTag;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateSessionTagDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "session_id")]
     pub session_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "tag_id")]
     pub tag_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -65,24 +53,12 @@ pub struct CreateSessionTagDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateSessionTagDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "session_id")]
     pub session_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "tag_id")]
     pub tag_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -98,30 +74,18 @@ pub struct UpdateSessionTagDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchSessionTagDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "session_id")]
     pub session_id: Option<Uuid>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "tag_id")]
     pub tag_id: Option<Uuid>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
 }
 
 impl PatchSessionTagDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.session_id.is_some() || self.tag_id.is_some() || self.company_id.is_some()
+        self.session_id.is_some() || self.tag_id.is_some()
     }
 }
 
@@ -137,26 +101,12 @@ impl PatchSessionTagDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct SessionTagResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub session_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub tag_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
     pub metadata: AuditMetadata,
 }
 
@@ -216,7 +166,6 @@ pub struct SessionTagSummaryDto {
     pub id: Uuid,
     pub session_id: Uuid,
     pub tag_id: Uuid,
-    pub company_id: Uuid,
     pub created_at: Option<DateTime<Utc>>,
 }
 
@@ -230,7 +179,6 @@ impl From<SessionTag> for SessionTagResponseDto {
             id: entity.id,
             session_id: entity.session_id,
             tag_id: entity.tag_id,
-            company_id: entity.company_id,
             metadata: entity.metadata,
         }
     }
@@ -243,7 +191,6 @@ impl From<SessionTag> for SessionTagSummaryDto {
             id: entity.id,
             session_id: entity.session_id,
             tag_id: entity.tag_id,
-            company_id: entity.company_id,
             created_at,
         }
     }
@@ -255,7 +202,6 @@ impl From<CreateSessionTagDto> for SessionTag {
             id: Uuid::new_v4(),
             session_id: dto.session_id,
             tag_id: dto.tag_id,
-            company_id: dto.company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -267,7 +213,6 @@ impl From<&SessionTag> for SessionTagResponseDto {
             id: entity.id.clone(),
             session_id: entity.session_id.clone(),
             tag_id: entity.tag_id.clone(),
-            company_id: entity.company_id.clone(),
             metadata: entity.metadata.clone(),
         }
     }
@@ -283,7 +228,6 @@ impl backbone_core::ApplyUpdateDto<UpdateSessionTagDto> for SessionTag {
     fn apply_update(mut self, dto: UpdateSessionTagDto) -> backbone_core::ServiceResult<Self> {
         self.session_id = dto.session_id;
         self.tag_id = dto.tag_id;
-        self.company_id = dto.company_id;
         Ok(self)
     }
 }

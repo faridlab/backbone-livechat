@@ -5,11 +5,11 @@
 //! This trait defines the repository contract for the Rating aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
-use crate::domain::entity::{LivechatRatedPersona, Rating};
+use crate::domain::entity::{Rating, LivechatRatedPersona};
 
 /// Pagination parameters for list queries
 #[derive(Debug, Clone, Default)]
@@ -49,18 +49,12 @@ pub struct RatingFilter {
     pub operator_user_id: Option<Uuid>,
     pub chatbot_script_id: Option<Uuid>,
     pub comment: Option<String>,
-    pub company_id: Option<Uuid>,
 }
 
 impl RatingFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.session_id.is_some()
-            || self.rated_persona.is_some()
-            || self.operator_user_id.is_some()
-            || self.chatbot_script_id.is_some()
-            || self.comment.is_some()
-            || self.company_id.is_some()
+        self.session_id.is_some() || self.rated_persona.is_some() || self.operator_user_id.is_some() || self.chatbot_script_id.is_some() || self.comment.is_some()
     }
 }
 
@@ -70,6 +64,7 @@ impl RatingFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait RatingRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -97,11 +92,7 @@ pub trait RatingRepository: Send + Sync {
     async fn list(&self, params: RatingPaginationParams) -> Result<RatingPaginatedResult>;
 
     /// List rating with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: RatingPaginationParams,
-        filters: RatingFilter,
-    ) -> Result<RatingPaginatedResult>;
+    async fn list_with_filters(&self, params: RatingPaginationParams, filters: RatingFilter) -> Result<RatingPaginatedResult>;
 
     /// Count all rating entities
     async fn count(&self) -> Result<u64>;

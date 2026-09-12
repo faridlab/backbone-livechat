@@ -15,12 +15,17 @@
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use backbone_orm::company_scope;
+// The typed multi-row read twins live only in the legacy `company_scope` module. Their
+// connection discipline is what this repository needs — request-dedicated connection when
+// the composing service bound one, plain pool otherwise. The helper's legacy task-local
+// branch is never taken: this module sets no legacy scope of its own (ADR-0029).
+use backbone_orm::company_scope::fetch_optional_scoped;
 
 use crate::application::service::livechat_error::LivechatError;
 
 use super::selection_repository::audit_tx;
 use super::session_command_repository::SessionRow;
+use super::relay_ambient_scope;
 
 /// The website's bound channel, projected for the availability
 /// answer and the invite verbs.
@@ -57,7 +62,7 @@ impl WebsiteRequestRepository {
         &self,
         website_id: Uuid,
     ) -> Result<Option<ChannelSummary>, LivechatError> {
-        let row = backbone_orm::company_scope::fetch_optional_scoped(
+        let row = fetch_optional_scoped(
             &self.pool,
             sqlx::query_as::<_, ChannelSummary>(
                 r#"SELECT id, name, button_text, welcome_message
@@ -82,7 +87,7 @@ impl WebsiteRequestRepository {
         channel_id: Uuid,
         referer: Option<&str>,
     ) -> Result<Option<RuleMatch>, LivechatError> {
-        let row = backbone_orm::company_scope::fetch_optional_scoped(
+        let row = fetch_optional_scoped(
             &self.pool,
             sqlx::query_as::<_, RuleMatch>(
                 r#"SELECT action::text, auto_popup_timer, chatbot_script_id,
@@ -111,7 +116,7 @@ impl WebsiteRequestRepository {
         channel_id: Uuid,
         visitor_key: &str,
     ) -> Result<Option<SessionRow>, LivechatError> {
-        let row = backbone_orm::company_scope::fetch_optional_scoped(
+        let row = fetch_optional_scoped(
             &self.pool,
             sqlx::query_as::<_, SessionRow>(
                 r#"SELECT id, channel_id, title, status::text, failure::text,
@@ -121,7 +126,7 @@ impl WebsiteRequestRepository {
                           crm_lead_id, visitor_language, message_count, first_response_at,
                           last_interest_at,
                           last_visitor_message_at, last_operator_message_at, is_test,
-                          error_detail, company_id
+                          error_detail
                      FROM livechat.sessions
                     WHERE channel_id = $1
                       AND is_pending_request
@@ -146,7 +151,7 @@ impl WebsiteRequestRepository {
         channel_id: Uuid,
         visitor_key: &str,
     ) -> Result<Option<SessionRow>, LivechatError> {
-        let row = backbone_orm::company_scope::fetch_optional_scoped(
+        let row = fetch_optional_scoped(
             &self.pool,
             sqlx::query_as::<_, SessionRow>(
                 r#"SELECT id, channel_id, title, status::text, failure::text,
@@ -156,7 +161,7 @@ impl WebsiteRequestRepository {
                           crm_lead_id, visitor_language, message_count, first_response_at,
                           last_interest_at,
                           last_visitor_message_at, last_operator_message_at, is_test,
-                          error_detail, company_id
+                          error_detail
                      FROM livechat.sessions
                     WHERE channel_id = $1
                       AND is_pending_request
@@ -184,7 +189,7 @@ impl WebsiteRequestRepository {
         actor: Option<Uuid>,
     ) -> Result<SessionRow, LivechatError> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
         let updated: Option<SessionRow> = sqlx::query_as::<_, SessionRow>(
             r#"UPDATE livechat.sessions
                   SET is_pending_request = FALSE, status = 'in_progress'
@@ -196,7 +201,7 @@ impl WebsiteRequestRepository {
                           crm_lead_id, visitor_language, message_count, first_response_at,
                           last_interest_at,
                           last_visitor_message_at, last_operator_message_at, is_test,
-                          error_detail, company_id"#,
+                          error_detail"#,
         )
         .bind(session_id)
         .fetch_optional(&mut *tx)
@@ -207,15 +212,14 @@ impl WebsiteRequestRepository {
         };
         sqlx::query(
             r#"INSERT INTO livechat.member_histories
-                   (session_id, persona, visitor_key, expertise_names, company_id)
-               VALUES ($1, 'visitor', $2, '{}', $3)
+                   (session_id, persona, visitor_key, expertise_names)
+               VALUES ($1, 'visitor', $2, '{}')
                ON CONFLICT (session_id, visitor_key)
                WHERE persona = 'visitor' AND visitor_key IS NOT NULL
                DO UPDATE SET left_at = NULL, joined_at = now()"#,
         )
         .bind(session_id)
         .bind(visitor_key)
-        .bind(row.company_id)
         .execute(&mut *tx)
         .await?;
         audit_tx(
@@ -246,7 +250,7 @@ impl WebsiteRequestRepository {
             "request_declined"
         };
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
         let updated: Option<SessionRow> = sqlx::query_as::<_, SessionRow>(
             r#"UPDATE livechat.sessions
                   SET is_pending_request = FALSE, closed_at = now(),
@@ -259,7 +263,7 @@ impl WebsiteRequestRepository {
                           crm_lead_id, visitor_language, message_count, first_response_at,
                           last_interest_at,
                           last_visitor_message_at, last_operator_message_at, is_test,
-                          error_detail, company_id"#,
+                          error_detail"#,
         )
         .bind(session_id)
         .bind(reason)
@@ -300,7 +304,7 @@ impl WebsiteRequestRepository {
         actor: Option<Uuid>,
     ) -> Result<bool, LivechatError> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
         // The gate opens ONCE, atomically: the claim stamps the
         // delivery marker under the row lock, so exactly one caller
         // ever audits `invite_delivered` — the pending flag itself
@@ -347,7 +351,7 @@ impl WebsiteRequestRepository {
         actor: Option<Uuid>,
     ) -> Result<u64, LivechatError> {
         let mut tx = self.pool.begin().await?;
-        company_scope::bind_current_company(&mut tx).await?;
+        relay_ambient_scope(&mut tx).await?;
         let rebound = sqlx::query(
             "UPDATE livechat.sessions SET website_visitor_id = $2 WHERE website_visitor_id = $1",
         )

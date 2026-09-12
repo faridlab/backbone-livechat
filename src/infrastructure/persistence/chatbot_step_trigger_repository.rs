@@ -23,9 +23,7 @@ pub struct ChatbotStepTriggerRepository(
 
 impl std::ops::Deref for ChatbotStepTriggerRepository {
     type Target = backbone_orm::GenericCrudRepository<ChatbotStepTrigger, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl ChatbotStepTriggerRepository {
@@ -35,8 +33,4 @@ impl ChatbotStepTriggerRepository {
     }
 }
 
-backbone_core::impl_crud_repository!(
-    ChatbotStepTriggerRepository,
-    ChatbotStepTrigger,
-    soft_delete
-);
+backbone_core::impl_crud_repository!(ChatbotStepTriggerRepository, ChatbotStepTrigger, soft_delete);

@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,12 +16,12 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
+use crate::domain::entity::Session;
 use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::LivechatCloseReason;
 use crate::domain::entity::LivechatFailure;
 use crate::domain::entity::LivechatSessionOutcome;
 use crate::domain::entity::LivechatSessionStatus;
-use crate::domain::entity::Session;
 
 // =============================================================================
 // Create DTO
@@ -36,10 +36,7 @@ use crate::domain::entity::Session;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateSessionDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "channel_id")]
     pub channel_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 300)))]
@@ -50,98 +47,50 @@ pub struct CreateSessionDto {
     pub failure: LivechatFailure,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub outcome: Option<LivechatSessionOutcome>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "close_reason"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "close_reason")]
     pub close_reason: Option<LivechatCloseReason>,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "closed_at")]
     pub closed_at: Option<DateTime<Utc>>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "operator_user_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "operator_user_id")]
     pub operator_user_id: Option<Uuid>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "chatbot_current_step_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "chatbot_current_step_id")]
     pub chatbot_current_step_id: Option<Uuid>,
     #[serde(alias = "expertise_names")]
     pub expertise_names: Vec<String>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "website_visitor_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "website_visitor_id")]
     pub website_visitor_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 2)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "visitor_country_code"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "visitor_country_code")]
     pub visitor_country_code: Option<String>,
     #[cfg_attr(feature = "validation", validate(length(max = 60)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "visitor_timezone"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "visitor_timezone")]
     pub visitor_timezone: Option<String>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(alias = "is_pending_request")]
     pub is_pending_request: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "crm_lead_id")]
+    pub crm_lead_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 35)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "visitor_language"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "visitor_language")]
     pub visitor_language: Option<String>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     #[serde(alias = "message_count")]
     pub message_count: i32,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "first_response_at"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "first_response_at")]
     pub first_response_at: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(alias = "last_interest_at")]
     pub last_interest_at: DateTime<Utc>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "last_visitor_message_at"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "last_visitor_message_at")]
     pub last_visitor_message_at: Option<DateTime<Utc>>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "last_operator_message_at"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "last_operator_message_at")]
     pub last_operator_message_at: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(alias = "is_test")]
     pub is_test: bool,
     #[cfg_attr(feature = "validation", validate(length(max = 500)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "error_detail"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "error_detail")]
     pub error_detail: Option<String>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -157,10 +106,7 @@ pub struct CreateSessionDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateSessionDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "channel_id")]
     pub channel_id: Uuid,
     #[cfg_attr(feature = "validation", validate(length(max = 300)))]
@@ -171,98 +117,50 @@ pub struct UpdateSessionDto {
     pub failure: LivechatFailure,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub outcome: Option<LivechatSessionOutcome>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "close_reason"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "close_reason")]
     pub close_reason: Option<LivechatCloseReason>,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "closed_at")]
     pub closed_at: Option<DateTime<Utc>>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "operator_user_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "operator_user_id")]
     pub operator_user_id: Option<Uuid>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "chatbot_current_step_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "chatbot_current_step_id")]
     pub chatbot_current_step_id: Option<Uuid>,
     #[serde(alias = "expertise_names")]
     pub expertise_names: Vec<String>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "website_visitor_id"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "website_visitor_id")]
     pub website_visitor_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 2)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "visitor_country_code"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "visitor_country_code")]
     pub visitor_country_code: Option<String>,
     #[cfg_attr(feature = "validation", validate(length(max = 60)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "visitor_timezone"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "visitor_timezone")]
     pub visitor_timezone: Option<String>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(alias = "is_pending_request")]
     pub is_pending_request: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "crm_lead_id")]
+    pub crm_lead_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 35)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "visitor_language"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "visitor_language")]
     pub visitor_language: Option<String>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     #[serde(alias = "message_count")]
     pub message_count: i32,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "first_response_at"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "first_response_at")]
     pub first_response_at: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(alias = "last_interest_at")]
     pub last_interest_at: DateTime<Utc>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "last_visitor_message_at"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "last_visitor_message_at")]
     pub last_visitor_message_at: Option<DateTime<Utc>>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "last_operator_message_at"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "last_operator_message_at")]
     pub last_operator_message_at: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(alias = "is_test")]
     pub is_test: bool,
     #[cfg_attr(feature = "validation", validate(length(max = 500)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "error_detail"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "error_detail")]
     pub error_detail: Option<String>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -278,10 +176,7 @@ pub struct UpdateSessionDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchSessionDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "channel_id")]
     pub channel_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 300)))]
@@ -299,20 +194,14 @@ pub struct PatchSessionDto {
     pub closed_at: Option<DateTime<Utc>>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "operator_user_id")]
     pub operator_user_id: Option<Uuid>,
-    #[serde(
-        skip_serializing_if = "Option::is_none",
-        alias = "chatbot_current_step_id"
-    )]
+    #[serde(skip_serializing_if = "Option::is_none", alias = "chatbot_current_step_id")]
     pub chatbot_current_step_id: Option<Uuid>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "expertise_names")]
     pub expertise_names: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "website_visitor_id")]
     pub website_visitor_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 2)))]
-    #[serde(
-        skip_serializing_if = "Option::is_none",
-        alias = "visitor_country_code"
-    )]
+    #[serde(skip_serializing_if = "Option::is_none", alias = "visitor_country_code")]
     pub visitor_country_code: Option<String>,
     #[cfg_attr(feature = "validation", validate(length(max = 60)))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "visitor_timezone")]
@@ -320,6 +209,8 @@ pub struct PatchSessionDto {
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "is_pending_request")]
     pub is_pending_request: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none", alias = "crm_lead_id")]
+    pub crm_lead_id: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 35)))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "visitor_language")]
     pub visitor_language: Option<String>,
@@ -331,15 +222,9 @@ pub struct PatchSessionDto {
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "last_interest_at")]
     pub last_interest_at: Option<DateTime<Utc>>,
-    #[serde(
-        skip_serializing_if = "Option::is_none",
-        alias = "last_visitor_message_at"
-    )]
+    #[serde(skip_serializing_if = "Option::is_none", alias = "last_visitor_message_at")]
     pub last_visitor_message_at: Option<DateTime<Utc>>,
-    #[serde(
-        skip_serializing_if = "Option::is_none",
-        alias = "last_operator_message_at"
-    )]
+    #[serde(skip_serializing_if = "Option::is_none", alias = "last_operator_message_at")]
     pub last_operator_message_at: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "is_test")]
@@ -347,40 +232,12 @@ pub struct PatchSessionDto {
     #[cfg_attr(feature = "validation", validate(length(max = 500)))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "error_detail")]
     pub error_detail: Option<String>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
 }
 
 impl PatchSessionDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.channel_id.is_some()
-            || self.title.is_some()
-            || self.status.is_some()
-            || self.failure.is_some()
-            || self.outcome.is_some()
-            || self.close_reason.is_some()
-            || self.closed_at.is_some()
-            || self.operator_user_id.is_some()
-            || self.chatbot_current_step_id.is_some()
-            || self.expertise_names.is_some()
-            || self.website_visitor_id.is_some()
-            || self.visitor_country_code.is_some()
-            || self.visitor_timezone.is_some()
-            || self.is_pending_request.is_some()
-            || self.visitor_language.is_some()
-            || self.message_count.is_some()
-            || self.first_response_at.is_some()
-            || self.last_interest_at.is_some()
-            || self.last_visitor_message_at.is_some()
-            || self.last_operator_message_at.is_some()
-            || self.is_test.is_some()
-            || self.error_detail.is_some()
-            || self.company_id.is_some()
+        self.channel_id.is_some() || self.title.is_some() || self.status.is_some() || self.failure.is_some() || self.outcome.is_some() || self.close_reason.is_some() || self.closed_at.is_some() || self.operator_user_id.is_some() || self.chatbot_current_step_id.is_some() || self.expertise_names.is_some() || self.website_visitor_id.is_some() || self.visitor_country_code.is_some() || self.visitor_timezone.is_some() || self.is_pending_request.is_some() || self.crm_lead_id.is_some() || self.visitor_language.is_some() || self.message_count.is_some() || self.first_response_at.is_some() || self.last_interest_at.is_some() || self.last_visitor_message_at.is_some() || self.last_operator_message_at.is_some() || self.is_test.is_some() || self.error_detail.is_some()
     }
 }
 
@@ -396,15 +253,9 @@ impl PatchSessionDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct SessionResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub channel_id: Uuid,
     pub title: Option<String>,
     pub status: Option<LivechatSessionStatus>,
@@ -420,6 +271,7 @@ pub struct SessionResponseDto {
     pub visitor_timezone: Option<String>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     pub is_pending_request: bool,
+    pub crm_lead_id: Option<Uuid>,
     pub visitor_language: Option<String>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     pub message_count: i32,
@@ -431,11 +283,6 @@ pub struct SessionResponseDto {
     #[cfg_attr(feature = "openapi", schema(example = true))]
     pub is_test: bool,
     pub error_detail: Option<String>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
     pub metadata: AuditMetadata,
 }
 
@@ -521,6 +368,7 @@ impl From<Session> for SessionResponseDto {
             visitor_country_code: entity.visitor_country_code,
             visitor_timezone: entity.visitor_timezone,
             is_pending_request: entity.is_pending_request,
+            crm_lead_id: entity.crm_lead_id,
             visitor_language: entity.visitor_language,
             message_count: entity.message_count,
             first_response_at: entity.first_response_at,
@@ -529,7 +377,6 @@ impl From<Session> for SessionResponseDto {
             last_operator_message_at: entity.last_operator_message_at,
             is_test: entity.is_test,
             error_detail: entity.error_detail,
-            company_id: entity.company_id,
             metadata: entity.metadata,
         }
     }
@@ -566,6 +413,7 @@ impl From<CreateSessionDto> for Session {
             visitor_country_code: dto.visitor_country_code,
             visitor_timezone: dto.visitor_timezone,
             is_pending_request: dto.is_pending_request,
+            crm_lead_id: dto.crm_lead_id,
             visitor_language: dto.visitor_language,
             message_count: dto.message_count,
             first_response_at: dto.first_response_at,
@@ -574,7 +422,6 @@ impl From<CreateSessionDto> for Session {
             last_operator_message_at: dto.last_operator_message_at,
             is_test: dto.is_test,
             error_detail: dto.error_detail,
-            company_id: dto.company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -598,6 +445,7 @@ impl From<&Session> for SessionResponseDto {
             visitor_country_code: entity.visitor_country_code.clone(),
             visitor_timezone: entity.visitor_timezone.clone(),
             is_pending_request: entity.is_pending_request.clone(),
+            crm_lead_id: entity.crm_lead_id.clone(),
             visitor_language: entity.visitor_language.clone(),
             message_count: entity.message_count.clone(),
             first_response_at: entity.first_response_at.clone(),
@@ -606,7 +454,6 @@ impl From<&Session> for SessionResponseDto {
             last_operator_message_at: entity.last_operator_message_at.clone(),
             is_test: entity.is_test.clone(),
             error_detail: entity.error_detail.clone(),
-            company_id: entity.company_id.clone(),
             metadata: entity.metadata.clone(),
         }
     }
@@ -634,6 +481,7 @@ impl backbone_core::ApplyUpdateDto<UpdateSessionDto> for Session {
         self.visitor_country_code = dto.visitor_country_code;
         self.visitor_timezone = dto.visitor_timezone;
         self.is_pending_request = dto.is_pending_request;
+        self.crm_lead_id = dto.crm_lead_id;
         self.visitor_language = dto.visitor_language;
         self.message_count = dto.message_count;
         self.first_response_at = dto.first_response_at;
@@ -642,7 +490,6 @@ impl backbone_core::ApplyUpdateDto<UpdateSessionDto> for Session {
         self.last_operator_message_at = dto.last_operator_message_at;
         self.is_test = dto.is_test;
         self.error_detail = dto.error_detail;
-        self.company_id = dto.company_id;
         Ok(self)
     }
 }

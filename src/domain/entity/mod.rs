@@ -12,24 +12,24 @@ pub mod chatbot_step;
 pub mod chatbot_step_trigger;
 pub mod conversation_tag;
 pub mod expertise_tag;
-pub mod livechat_audit_event;
 pub mod livechat_audit_log;
-pub mod livechat_chatbot_condition;
-pub mod livechat_close_reason;
-pub mod livechat_failure;
-pub mod livechat_max_sessions_mode;
-pub mod livechat_persona;
-pub mod livechat_rated_persona;
-pub mod livechat_rule_action;
-pub mod livechat_session_outcome;
-pub mod livechat_session_status;
-pub mod livechat_step_type;
 pub mod member_history;
 pub mod operator_expertise;
 pub mod operator_profile;
 pub mod rating;
 pub mod session;
 pub mod session_tag;
+pub mod livechat_max_sessions_mode;
+pub mod livechat_rule_action;
+pub mod livechat_chatbot_condition;
+pub mod livechat_step_type;
+pub mod livechat_audit_event;
+pub mod livechat_persona;
+pub mod livechat_rated_persona;
+pub mod livechat_session_status;
+pub mod livechat_failure;
+pub mod livechat_session_outcome;
+pub mod livechat_close_reason;
 
 // Re-exports
 pub use channel::Channel;
@@ -62,20 +62,9 @@ pub use conversation_tag::ConversationTagId;
 pub use expertise_tag::ExpertiseTag;
 pub use expertise_tag::ExpertiseTagBuilder;
 pub use expertise_tag::ExpertiseTagId;
-pub use livechat_audit_event::LivechatAuditEvent;
 pub use livechat_audit_log::LivechatAuditLog;
 pub use livechat_audit_log::LivechatAuditLogBuilder;
 pub use livechat_audit_log::LivechatAuditLogId;
-pub use livechat_chatbot_condition::LivechatChatbotCondition;
-pub use livechat_close_reason::LivechatCloseReason;
-pub use livechat_failure::LivechatFailure;
-pub use livechat_max_sessions_mode::LivechatMaxSessionsMode;
-pub use livechat_persona::LivechatPersona;
-pub use livechat_rated_persona::LivechatRatedPersona;
-pub use livechat_rule_action::LivechatRuleAction;
-pub use livechat_session_outcome::LivechatSessionOutcome;
-pub use livechat_session_status::LivechatSessionStatus;
-pub use livechat_step_type::LivechatStepType;
 pub use member_history::MemberHistory;
 pub use member_history::MemberHistoryBuilder;
 pub use member_history::MemberHistoryId;
@@ -94,6 +83,17 @@ pub use session::SessionId;
 pub use session_tag::SessionTag;
 pub use session_tag::SessionTagBuilder;
 pub use session_tag::SessionTagId;
+pub use livechat_max_sessions_mode::LivechatMaxSessionsMode;
+pub use livechat_rule_action::LivechatRuleAction;
+pub use livechat_chatbot_condition::LivechatChatbotCondition;
+pub use livechat_step_type::LivechatStepType;
+pub use livechat_audit_event::LivechatAuditEvent;
+pub use livechat_persona::LivechatPersona;
+pub use livechat_rated_persona::LivechatRatedPersona;
+pub use livechat_session_status::LivechatSessionStatus;
+pub use livechat_failure::LivechatFailure;
+pub use livechat_session_outcome::LivechatSessionOutcome;
+pub use livechat_close_reason::LivechatCloseReason;
 
 // ==========================================================================
 // Entity Trait
@@ -122,9 +122,9 @@ pub trait Entity: Debug + Clone {
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 #[cfg(feature = "openapi")]
 use utoipa::ToSchema;
-use uuid::Uuid;
 
 /// Audit metadata stored as JSONB in the database
 ///

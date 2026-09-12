@@ -8,7 +8,6 @@
 --     id,
 --     operator_profile_id,
 --     expertise_tag_id,
---     company_id,
 --     metadata
 -- ) VALUES
 -- (

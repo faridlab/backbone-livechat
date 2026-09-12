@@ -5,9 +5,9 @@
 //! Returns an `EntityValidator<ChatbotStep>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
-use crate::domain::entity::ChatbotStep;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
 use backbone_core::{NonNegative, OptionalNotBlank};
+use crate::domain::entity::ChatbotStep;
 
 /// Validator type alias for ChatbotStep entities.
 pub type ChatbotStepValidator = EntityValidator<ChatbotStep>;
@@ -15,12 +15,8 @@ pub type ChatbotStepValidator = EntityValidator<ChatbotStep>;
 /// Build a validator for ChatbotStep with all schema-defined field rules.
 pub fn chatbot_step_validator() -> ChatbotStepValidator {
     EntityValidator::new()
-        .rule(NonNegative::new("sequence", |e: &ChatbotStep| {
-            e.sequence as i64
-        }))
-        .rule(OptionalNotBlank::new("message", |e: &ChatbotStep| {
-            e.message.as_deref()
-        }))
+        .rule(NonNegative::new("sequence", |e: &ChatbotStep| e.sequence as i64))
+        .rule(OptionalNotBlank::new("message", |e: &ChatbotStep| e.message.as_deref()))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

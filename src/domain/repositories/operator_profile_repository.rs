@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the OperatorProfile aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
 use crate::domain::entity::OperatorProfile;
@@ -46,13 +46,12 @@ pub struct OperatorProfilePaginatedResult {
 pub struct OperatorProfileFilter {
     pub user_id: Option<Uuid>,
     pub display_name: Option<String>,
-    pub company_id: Option<Uuid>,
 }
 
 impl OperatorProfileFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.user_id.is_some() || self.display_name.is_some() || self.company_id.is_some()
+        self.user_id.is_some() || self.display_name.is_some()
     }
 }
 
@@ -62,6 +61,7 @@ impl OperatorProfileFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait OperatorProfileRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -86,17 +86,10 @@ pub trait OperatorProfileRepository: Send + Sync {
     // =========================================================================
 
     /// List operator_profile with pagination
-    async fn list(
-        &self,
-        params: OperatorProfilePaginationParams,
-    ) -> Result<OperatorProfilePaginatedResult>;
+    async fn list(&self, params: OperatorProfilePaginationParams) -> Result<OperatorProfilePaginatedResult>;
 
     /// List operator_profile with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: OperatorProfilePaginationParams,
-        filters: OperatorProfileFilter,
-    ) -> Result<OperatorProfilePaginatedResult>;
+    async fn list_with_filters(&self, params: OperatorProfilePaginationParams, filters: OperatorProfileFilter) -> Result<OperatorProfilePaginatedResult>;
 
     /// Count all operator_profile entities
     async fn count(&self) -> Result<u64>;
@@ -118,10 +111,7 @@ pub trait OperatorProfileRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<OperatorProfile>>;
 
     /// List soft-deleted operator_profile entities
-    async fn list_deleted(
-        &self,
-        params: OperatorProfilePaginationParams,
-    ) -> Result<OperatorProfilePaginatedResult>;
+    async fn list_deleted(&self, params: OperatorProfilePaginationParams) -> Result<OperatorProfilePaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

@@ -16,14 +16,13 @@ use super::common::{open_session, seed_channel_with_operators, TestDb};
 /// shape: the rating names the session's operator).
 async fn agent_session(
     pool: &sqlx::PgPool,
-    company: Uuid,
     channel: Uuid,
     operator: Uuid,
     key: &str,
 ) -> backbone_livechat::infrastructure::persistence::SessionRow {
-    let row = open_session(pool, company, channel, key).await;
+    let row = open_session(pool, channel, key).await;
     let mut tx = pool.begin().await.unwrap_or_else(|e| panic!("tx: {e}"));
-    upsert_agent_ledger_tx(&mut tx, row.id, operator, company)
+    upsert_agent_ledger_tx(&mut tx, row.id, operator)
         .await
         .unwrap_or_else(|e| panic!("agent ledger: {e:?}"));
     sqlx::query("UPDATE livechat.sessions SET operator_user_id = $2 WHERE id = $1")
@@ -40,21 +39,17 @@ async fn agent_session(
 async fn one_rating_per_session_and_the_scale_is_closed() {
     let db = TestDb::new("rating").await;
     let pool = db.pool.clone();
-    let company = Uuid::new_v4();
     let website = Uuid::new_v4();
     let operator = Uuid::new_v4();
-    let channel = seed_channel_with_operators(&pool, company, website, &[operator]).await;
+    let channel = seed_channel_with_operators(&pool, website, &[operator]).await;
     let ratings = RatingSubmitService::new(pool.clone(), std::sync::Arc::new(UnwiredNotifier));
 
     // ── The happy path: an agent rating attributes to the operator ─
-    let session = agent_session(&pool, company, channel, operator, "rating:visitor").await;
-    let row = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        ratings
-            .submit(session.id, 5, "agent", Some("fine"), None)
-            .await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("the first rating must land: {e:?}"));
+    let session = agent_session(&pool, channel, operator, "rating:visitor").await;
+    let row = ratings
+        .submit(session.id, 5, "agent", Some("fine"), None)
+        .await
+        .unwrap_or_else(|e| panic!("the first rating must land: {e:?}"));
     assert_eq!(row.value, 5);
     assert_eq!(
         row.operator_user_id,
@@ -62,18 +57,14 @@ async fn one_rating_per_session_and_the_scale_is_closed() {
         "an agent rating names the operator"
     );
     assert_eq!(row.chatbot_script_id, None);
-    let found = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        ratings.find_for_session(session.id).await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("rating read: {e:?}"));
+    let found = ratings
+        .find_for_session(session.id)
+        .await
+        .unwrap_or_else(|e| panic!("rating read: {e:?}"));
     assert!(found.is_some(), "the rating reads back once");
 
     // ── The once wall: a second submit is the TYPED 409 ────────────
-    let refused = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        ratings.submit(session.id, 10, "agent", None, None).await
-    })
-    .await;
+    let refused = ratings.submit(session.id, 10, "agent", None, None).await;
     assert!(
         matches!(refused, Err(LivechatError::RatingAlreadySubmitted)),
         "a second rating is the typed once-wall refusal, got {refused:?}"
@@ -92,13 +83,10 @@ async fn one_rating_per_session_and_the_scale_is_closed() {
     assert_eq!(stored, 1, "exactly ONE rating row exists (no overwrite)");
 
     // ── The scale: 3 is outside 1/5/10 ─────────────────────────────
-    let scale_session = agent_session(&pool, company, channel, operator, "rating:scale").await;
-    let refused = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        ratings
-            .submit(scale_session.id, 3, "agent", None, None)
-            .await
-    })
-    .await;
+    let scale_session = agent_session(&pool, channel, operator, "rating:scale").await;
+    let refused = ratings
+        .submit(scale_session.id, 3, "agent", None, None)
+        .await;
     assert!(
         matches!(&refused, Err(LivechatError::Validation(msg)) if msg.contains("1, 5, 10")),
         "a value outside the scale refuses typed naming it, got {refused:?}"
@@ -116,12 +104,11 @@ async fn one_rating_per_session_and_the_scale_is_closed() {
     // The DB CHECK is the wall behind the verb: a raw out-of-scale
     // insert cannot land even bypassing the service.
     let err = sqlx::query(
-        r#"INSERT INTO livechat.ratings (session_id, value, rated_persona, operator_user_id, company_id)
-           VALUES ($1, 7, 'agent', $2, $3)"#,
+        r#"INSERT INTO livechat.ratings (session_id, value, rated_persona, operator_user_id)
+           VALUES ($1, 7, 'agent', $2)"#,
     )
     .bind(scale_session.id)
     .bind(operator)
-    .bind(company)
     .execute(&pool)
     .await
     .err()
@@ -132,12 +119,9 @@ async fn one_rating_per_session_and_the_scale_is_closed() {
     );
 
     // ── The persona dichotomy: visitor is not a rated persona ──────
-    let refused = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        ratings
-            .submit(scale_session.id, 5, "visitor", None, None)
-            .await
-    })
-    .await;
+    let refused = ratings
+        .submit(scale_session.id, 5, "visitor", None, None)
+        .await;
     assert!(
         matches!(&refused, Err(LivechatError::Validation(msg)) if msg.contains("'agent' or 'bot'")),
         "rated_persona accepts agent|bot only, got {refused:?}"
@@ -145,23 +129,21 @@ async fn one_rating_per_session_and_the_scale_is_closed() {
 
     // ── The bot arm: attribution names the script, never an operator ─
     let script = Uuid::new_v4();
-    let bot_session = open_session(&pool, company, channel, "rating:bot").await;
+    let bot_session = open_session(&pool, channel, "rating:bot").await;
     sqlx::query(
         r#"INSERT INTO livechat.member_histories
-               (session_id, persona, chatbot_script_id, expertise_names, company_id)
-           VALUES ($1, 'bot', $2, '{}', $3)"#,
+               (session_id, persona, chatbot_script_id, expertise_names)
+           VALUES ($1, 'bot', $2, '{}')"#,
     )
     .bind(bot_session.id)
     .bind(script)
-    .bind(company)
     .execute(&pool)
     .await
     .unwrap_or_else(|e| panic!("bot ledger seed: {e}"));
-    let row = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        ratings.submit(bot_session.id, 10, "bot", None, None).await
-    })
-    .await
-    .unwrap_or_else(|e| panic!("the bot rating must land: {e:?}"));
+    let row = ratings
+        .submit(bot_session.id, 10, "bot", None, None)
+        .await
+        .unwrap_or_else(|e| panic!("the bot rating must land: {e:?}"));
     assert_eq!(
         row.chatbot_script_id,
         Some(script),
@@ -170,10 +152,7 @@ async fn one_rating_per_session_and_the_scale_is_closed() {
     assert_eq!(row.operator_user_id, None);
 
     // ── The missing session is the uniform 404 family ─────────────
-    let refused = backbone_orm::company_scope::with_company_scope(Some(company), async {
-        ratings.submit(Uuid::new_v4(), 5, "agent", None, None).await
-    })
-    .await;
+    let refused = ratings.submit(Uuid::new_v4(), 5, "agent", None, None).await;
     assert!(
         matches!(refused, Err(LivechatError::SessionNotFound)),
         "a rating on a missing session is the uniform 404 family, got {refused:?}"

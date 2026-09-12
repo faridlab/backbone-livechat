@@ -7,9 +7,9 @@
 pub mod error;
 pub use error::{ServiceError, ServiceResult};
 
+pub mod channel_service;
 pub mod channel_member_service;
 pub mod channel_rule_service;
-pub mod channel_service;
 pub mod chatbot_answer_service;
 pub mod chatbot_message_service;
 pub mod chatbot_script_service;
@@ -49,9 +49,9 @@ pub mod website_bridge;
 pub mod website_request_service;
 // END CUSTOM
 
+pub use channel_service::ChannelService;
 pub use channel_member_service::ChannelMemberService;
 pub use channel_rule_service::ChannelRuleService;
-pub use channel_service::ChannelService;
 pub use chatbot_answer_service::ChatbotAnswerService;
 pub use chatbot_message_service::ChatbotMessageService;
 pub use chatbot_script_service::ChatbotScriptService;

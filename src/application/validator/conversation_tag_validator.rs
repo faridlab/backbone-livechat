@@ -5,16 +5,17 @@
 //! Returns an `EntityValidator<ConversationTag>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
+use backbone_core::{RequiredString};
 use crate::domain::entity::ConversationTag;
-use backbone_core::RequiredString;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for ConversationTag entities.
 pub type ConversationTagValidator = EntityValidator<ConversationTag>;
 
 /// Build a validator for ConversationTag with all schema-defined field rules.
 pub fn conversation_tag_validator() -> ConversationTagValidator {
-    EntityValidator::new().rule(RequiredString::new("name", |e: &ConversationTag| &e.name))
+    EntityValidator::new()
+        .rule(RequiredString::new("name", |e: &ConversationTag| &e.name))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

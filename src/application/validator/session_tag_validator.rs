@@ -5,8 +5,8 @@
 //! Returns an `EntityValidator<SessionTag>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
+use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
 use crate::domain::entity::SessionTag;
-use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for SessionTag entities.
 pub type SessionTagValidator = EntityValidator<SessionTag>;
@@ -16,7 +16,7 @@ pub fn session_tag_validator() -> SessionTagValidator {
     EntityValidator::new()
     // <<< CUSTOM RULES
     // END CUSTOM RULES
-    // No schema-derived rules — add custom rules above.
+        // No schema-derived rules — add custom rules above.
 }
 
 // <<< CUSTOM

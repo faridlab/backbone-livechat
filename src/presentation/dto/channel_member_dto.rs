@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::ChannelMember;
+use crate::domain::entity::AuditMetadata;
 
 // =============================================================================
 // Create DTO
@@ -32,24 +32,12 @@ use crate::domain::entity::ChannelMember;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateChannelMemberDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "channel_id")]
     pub channel_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "user_id")]
     pub user_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -65,24 +53,12 @@ pub struct CreateChannelMemberDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateChannelMemberDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "channel_id")]
     pub channel_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "user_id")]
     pub user_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -98,30 +74,18 @@ pub struct UpdateChannelMemberDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchChannelMemberDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "channel_id")]
     pub channel_id: Option<Uuid>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "user_id")]
     pub user_id: Option<Uuid>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
 }
 
 impl PatchChannelMemberDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.channel_id.is_some() || self.user_id.is_some() || self.company_id.is_some()
+        self.channel_id.is_some() || self.user_id.is_some()
     }
 }
 
@@ -137,26 +101,12 @@ impl PatchChannelMemberDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelMemberResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub channel_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub user_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
     pub metadata: AuditMetadata,
 }
 
@@ -216,7 +166,6 @@ pub struct ChannelMemberSummaryDto {
     pub id: Uuid,
     pub channel_id: Uuid,
     pub user_id: Uuid,
-    pub company_id: Uuid,
     pub created_at: Option<DateTime<Utc>>,
 }
 
@@ -230,7 +179,6 @@ impl From<ChannelMember> for ChannelMemberResponseDto {
             id: entity.id,
             channel_id: entity.channel_id,
             user_id: entity.user_id,
-            company_id: entity.company_id,
             metadata: entity.metadata,
         }
     }
@@ -243,7 +191,6 @@ impl From<ChannelMember> for ChannelMemberSummaryDto {
             id: entity.id,
             channel_id: entity.channel_id,
             user_id: entity.user_id,
-            company_id: entity.company_id,
             created_at,
         }
     }
@@ -255,7 +202,6 @@ impl From<CreateChannelMemberDto> for ChannelMember {
             id: Uuid::new_v4(),
             channel_id: dto.channel_id,
             user_id: dto.user_id,
-            company_id: dto.company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -267,7 +213,6 @@ impl From<&ChannelMember> for ChannelMemberResponseDto {
             id: entity.id.clone(),
             channel_id: entity.channel_id.clone(),
             user_id: entity.user_id.clone(),
-            company_id: entity.company_id.clone(),
             metadata: entity.metadata.clone(),
         }
     }
@@ -283,7 +228,6 @@ impl backbone_core::ApplyUpdateDto<UpdateChannelMemberDto> for ChannelMember {
     fn apply_update(mut self, dto: UpdateChannelMemberDto) -> backbone_core::ServiceResult<Self> {
         self.channel_id = dto.channel_id;
         self.user_id = dto.user_id;
-        self.company_id = dto.company_id;
         Ok(self)
     }
 }

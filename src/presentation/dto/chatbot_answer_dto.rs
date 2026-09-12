@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::ChatbotAnswer;
+use crate::domain::entity::AuditMetadata;
 
 // =============================================================================
 // Create DTO
@@ -32,10 +32,7 @@ use crate::domain::entity::ChatbotAnswer;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateChatbotAnswerDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "question_step_id")]
     pub question_step_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
@@ -44,18 +41,8 @@ pub struct CreateChatbotAnswerDto {
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub label: String,
     #[cfg_attr(feature = "validation", validate(url))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "redirect_url"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "redirect_url")]
     pub redirect_url: Option<String>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -71,10 +58,7 @@ pub struct CreateChatbotAnswerDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateChatbotAnswerDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "question_step_id")]
     pub question_step_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
@@ -83,18 +67,8 @@ pub struct UpdateChatbotAnswerDto {
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub label: String,
     #[cfg_attr(feature = "validation", validate(url))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "redirect_url"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "redirect_url")]
     pub redirect_url: Option<String>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -110,10 +84,7 @@ pub struct UpdateChatbotAnswerDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchChatbotAnswerDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "question_step_id")]
     pub question_step_id: Option<Uuid>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
@@ -126,22 +97,12 @@ pub struct PatchChatbotAnswerDto {
     #[cfg_attr(feature = "validation", validate(url))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "redirect_url")]
     pub redirect_url: Option<String>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
 }
 
 impl PatchChatbotAnswerDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.question_step_id.is_some()
-            || self.sequence.is_some()
-            || self.label.is_some()
-            || self.redirect_url.is_some()
-            || self.company_id.is_some()
+        self.question_step_id.is_some() || self.sequence.is_some() || self.label.is_some() || self.redirect_url.is_some()
     }
 }
 
@@ -157,26 +118,15 @@ impl PatchChatbotAnswerDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ChatbotAnswerResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub question_step_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     pub sequence: i32,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub label: String,
     pub redirect_url: Option<String>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
     pub metadata: AuditMetadata,
 }
 
@@ -252,7 +202,6 @@ impl From<ChatbotAnswer> for ChatbotAnswerResponseDto {
             sequence: entity.sequence,
             label: entity.label,
             redirect_url: entity.redirect_url,
-            company_id: entity.company_id,
             metadata: entity.metadata,
         }
     }
@@ -279,7 +228,6 @@ impl From<CreateChatbotAnswerDto> for ChatbotAnswer {
             sequence: dto.sequence,
             label: dto.label,
             redirect_url: dto.redirect_url,
-            company_id: dto.company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -293,7 +241,6 @@ impl From<&ChatbotAnswer> for ChatbotAnswerResponseDto {
             sequence: entity.sequence.clone(),
             label: entity.label.clone(),
             redirect_url: entity.redirect_url.clone(),
-            company_id: entity.company_id.clone(),
             metadata: entity.metadata.clone(),
         }
     }
@@ -311,7 +258,6 @@ impl backbone_core::ApplyUpdateDto<UpdateChatbotAnswerDto> for ChatbotAnswer {
         self.sequence = dto.sequence;
         self.label = dto.label;
         self.redirect_url = dto.redirect_url;
-        self.company_id = dto.company_id;
         Ok(self)
     }
 }

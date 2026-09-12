@@ -11,7 +11,6 @@
 --     languages,
 --     last_heartbeat_at,
 --     last_assigned_at,
---     company_id,
 --     metadata
 -- ) VALUES
 -- (

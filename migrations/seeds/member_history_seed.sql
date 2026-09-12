@@ -16,7 +16,6 @@
 --     message_count,
 --     response_time_secs,
 --     expertise_names,
---     company_id,
 --     metadata
 -- ) VALUES
 -- (

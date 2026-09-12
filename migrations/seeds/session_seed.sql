@@ -28,7 +28,6 @@
 --     last_operator_message_at,
 --     is_test,
 --     error_detail,
---     company_id,
 --     metadata
 -- ) VALUES
 -- (

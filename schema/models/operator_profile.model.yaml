@@ -13,7 +13,7 @@ models:
 
   - name: OperatorProfile
     collection: operator_profiles
-    description: "OperatorProfile — the module-owned operator surface: the visitor-facing display alias, the BCP-47 language list, the presence heartbeat, and last_assigned_at (the anti-burst buffer + the deterministic tiebreak anchor). (company_id, user_id) UNIQUE."
+    description: "OperatorProfile — the module-owned operator surface: the visitor-facing display alias, the BCP-47 language list, the presence heartbeat, and last_assigned_at (the anti-burst buffer + the deterministic tiebreak anchor). One profile per operator per org unit (org-scoped unique re-declared by the composing tenancy decorator, ADR-0029)."
     fields:
       id:
         type: uuid
@@ -37,10 +37,6 @@ models:
       last_assigned_at:
         type: datetime?
         description: "The anti-burst anchor: a candidate whose last_assigned_at is within LIVECHAT_ASSIGNMENT_BUFFER_SECS (120s) is not eligible — inside the candidate pool, so EVERY path passes through it."
-      company_id:
-        type: uuid
-        attributes: ["@required", "@exclude_from_foreign_key_check", "@indexed"]
-        description: "Owning company (strict fence — logical corporate ref)."
       metadata:
         type: Metadata
         attributes: ["@audit_metadata"]
@@ -52,7 +48,6 @@ models:
         attributes: ["@one_to_many", "@foreign_key(operator_profile_id)", "@restrict"]
         description: "The operator's expertise bindings"
 
-    indexes:
-      - type: unique
-        fields: [company_id, user_id]
-        description: "One profile per operator per company"
+    indexes: []           # one profile per operator per unit is re-declared
+                          # org-scoped by the composing tenancy decorator
+                          # (ADR-0029); the module ships no unique of its own

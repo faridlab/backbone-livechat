@@ -8,7 +8,6 @@
 --     id,
 --     title,
 --     is_active,
---     company_id,
 --     metadata
 -- ) VALUES
 -- (

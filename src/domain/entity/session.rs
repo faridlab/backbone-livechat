@@ -3,11 +3,11 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::AuditMetadata;
-use super::LivechatCloseReason;
+use super::LivechatSessionStatus;
 use super::LivechatFailure;
 use super::LivechatSessionOutcome;
-use super::LivechatSessionStatus;
+use super::LivechatCloseReason;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for Session
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -15,15 +15,9 @@ use super::LivechatSessionStatus;
 pub struct SessionId(pub Uuid);
 
 impl SessionId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for SessionId {
@@ -40,28 +34,20 @@ impl std::str::FromStr for SessionId {
 }
 
 impl From<Uuid> for SessionId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<SessionId> for Uuid {
-    fn from(id: SessionId) -> Self {
-        id.0
-    }
+    fn from(id: SessionId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for SessionId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for SessionId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -81,6 +67,7 @@ pub struct Session {
     pub visitor_country_code: Option<String>,
     pub visitor_timezone: Option<String>,
     pub is_pending_request: bool,
+    pub crm_lead_id: Option<Uuid>,
     pub visitor_language: Option<String>,
     pub message_count: i32,
     pub first_response_at: Option<DateTime<Utc>>,
@@ -89,7 +76,6 @@ pub struct Session {
     pub last_operator_message_at: Option<DateTime<Utc>>,
     pub is_test: bool,
     pub error_detail: Option<String>,
-    pub company_id: Uuid,
     #[serde(default)]
     #[sqlx(json)]
     pub metadata: AuditMetadata,
@@ -102,16 +88,7 @@ impl Session {
     }
 
     /// Create a new Session with required fields
-    pub fn new(
-        channel_id: Uuid,
-        failure: LivechatFailure,
-        expertise_names: Vec<String>,
-        is_pending_request: bool,
-        message_count: i32,
-        last_interest_at: DateTime<Utc>,
-        is_test: bool,
-        company_id: Uuid,
-    ) -> Self {
+    pub fn new(channel_id: Uuid, failure: LivechatFailure, expertise_names: Vec<String>, is_pending_request: bool, message_count: i32, last_interest_at: DateTime<Utc>, is_test: bool) -> Self {
         Self {
             id: Uuid::new_v4(),
             channel_id,
@@ -128,6 +105,7 @@ impl Session {
             visitor_country_code: None,
             visitor_timezone: None,
             is_pending_request,
+            crm_lead_id: None,
             visitor_language: None,
             message_count,
             first_response_at: None,
@@ -136,7 +114,6 @@ impl Session {
             last_operator_message_at: None,
             is_test,
             error_detail: None,
-            company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -195,6 +172,7 @@ impl Session {
     pub fn status(&self) -> Option<&LivechatSessionStatus> {
         self.status.as_ref()
     }
+
 
     // ==========================================================
     // Fluent Setters (with_* for optional fields)
@@ -260,6 +238,12 @@ impl Session {
         self
     }
 
+    /// Set the crm_lead_id field (chainable)
+    pub fn with_crm_lead_id(mut self, value: Uuid) -> Self {
+        self.crm_lead_id = Some(value);
+        self
+    }
+
     /// Set the visitor_language field (chainable)
     pub fn with_visitor_language(mut self, value: String) -> Self {
         self.visitor_language = Some(value);
@@ -299,119 +283,73 @@ impl Session {
         for (key, value) in fields {
             match key.as_str() {
                 "channel_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.channel_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.channel_id = v; }
                 }
                 "title" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.title = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.title = v; }
                 }
                 "status" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.status = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.status = v; }
                 }
                 "failure" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.failure = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.failure = v; }
                 }
                 "outcome" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.outcome = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.outcome = v; }
                 }
                 "close_reason" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.close_reason = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.close_reason = v; }
                 }
                 "closed_at" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.closed_at = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.closed_at = v; }
                 }
                 "operator_user_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.operator_user_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.operator_user_id = v; }
                 }
                 "chatbot_current_step_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.chatbot_current_step_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.chatbot_current_step_id = v; }
                 }
                 "expertise_names" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.expertise_names = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.expertise_names = v; }
                 }
                 "website_visitor_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.website_visitor_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.website_visitor_id = v; }
                 }
                 "visitor_country_code" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.visitor_country_code = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.visitor_country_code = v; }
                 }
                 "visitor_timezone" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.visitor_timezone = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.visitor_timezone = v; }
                 }
                 "is_pending_request" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.is_pending_request = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.is_pending_request = v; }
+                }
+                "crm_lead_id" => {
+                    if let Ok(v) = serde_json::from_value(value) { self.crm_lead_id = v; }
                 }
                 "visitor_language" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.visitor_language = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.visitor_language = v; }
                 }
                 "message_count" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.message_count = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.message_count = v; }
                 }
                 "first_response_at" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.first_response_at = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.first_response_at = v; }
                 }
                 "last_interest_at" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.last_interest_at = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.last_interest_at = v; }
                 }
                 "last_visitor_message_at" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.last_visitor_message_at = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.last_visitor_message_at = v; }
                 }
                 "last_operator_message_at" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.last_operator_message_at = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.last_operator_message_at = v; }
                 }
                 "is_test" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.is_test = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.is_test = v; }
                 }
                 "error_detail" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.error_detail = v;
-                    }
-                }
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.company_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.error_detail = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -471,24 +409,15 @@ impl backbone_orm::EntityRepoMeta for Session {
         m.insert("operator_user_id".to_string(), "uuid".to_string());
         m.insert("chatbot_current_step_id".to_string(), "uuid".to_string());
         m.insert("website_visitor_id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
+        m.insert("crm_lead_id".to_string(), "uuid".to_string());
         m.insert("status".to_string(), "livechat_session_status".to_string());
         m.insert("failure".to_string(), "livechat_failure".to_string());
-        m.insert(
-            "outcome".to_string(),
-            "livechat_session_outcome".to_string(),
-        );
-        m.insert(
-            "close_reason".to_string(),
-            "livechat_close_reason".to_string(),
-        );
+        m.insert("outcome".to_string(), "livechat_session_outcome".to_string());
+        m.insert("close_reason".to_string(), "livechat_close_reason".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &[]
-    }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
     }
     fn relations() -> &'static [(&'static str, &'static str, &'static str)] {
         &[("channel", "channels", "channelId")]
@@ -515,6 +444,7 @@ pub struct SessionBuilder {
     visitor_country_code: Option<String>,
     visitor_timezone: Option<String>,
     is_pending_request: Option<bool>,
+    crm_lead_id: Option<Uuid>,
     visitor_language: Option<String>,
     message_count: Option<i32>,
     first_response_at: Option<DateTime<Utc>>,
@@ -523,7 +453,6 @@ pub struct SessionBuilder {
     last_operator_message_at: Option<DateTime<Utc>>,
     is_test: Option<bool>,
     error_detail: Option<String>,
-    company_id: Option<Uuid>,
 }
 
 impl SessionBuilder {
@@ -611,6 +540,12 @@ impl SessionBuilder {
         self
     }
 
+    /// Set the crm_lead_id field (optional)
+    pub fn crm_lead_id(mut self, value: Uuid) -> Self {
+        self.crm_lead_id = Some(value);
+        self
+    }
+
     /// Set the visitor_language field (optional)
     pub fn visitor_language(mut self, value: String) -> Self {
         self.visitor_language = Some(value);
@@ -659,25 +594,12 @@ impl SessionBuilder {
         self
     }
 
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Build the Session entity
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<Session, String> {
-        let channel_id = self
-            .channel_id
-            .ok_or_else(|| "channel_id is required".to_string())?;
-        let expertise_names = self
-            .expertise_names
-            .ok_or_else(|| "expertise_names is required".to_string())?;
-        let company_id = self
-            .company_id
-            .ok_or_else(|| "company_id is required".to_string())?;
+        let channel_id = self.channel_id.ok_or_else(|| "channel_id is required".to_string())?;
+        let expertise_names = self.expertise_names.ok_or_else(|| "expertise_names is required".to_string())?;
 
         Ok(Session {
             id: Uuid::new_v4(),
@@ -695,6 +617,7 @@ impl SessionBuilder {
             visitor_country_code: self.visitor_country_code,
             visitor_timezone: self.visitor_timezone,
             is_pending_request: self.is_pending_request.unwrap_or(false),
+            crm_lead_id: self.crm_lead_id,
             visitor_language: self.visitor_language,
             message_count: self.message_count.unwrap_or(0),
             first_response_at: self.first_response_at,
@@ -703,7 +626,6 @@ impl SessionBuilder {
             last_operator_message_at: self.last_operator_message_at,
             is_test: self.is_test.unwrap_or(false),
             error_detail: self.error_detail,
-            company_id,
             metadata: AuditMetadata::default(),
         })
     }

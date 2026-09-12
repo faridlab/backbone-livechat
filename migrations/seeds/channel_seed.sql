@@ -15,7 +15,6 @@
 --     block_assignment_during_call,
 --     review_link,
 --     is_active,
---     company_id,
 --     metadata
 -- ) VALUES
 -- (

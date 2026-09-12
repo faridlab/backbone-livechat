@@ -5,8 +5,9 @@
 //! DDD Repository traits - define persistence contracts for aggregates.
 //! Implementations should be in the infrastructure layer.
 
-pub mod channel_member_repository;
+
 pub mod channel_repository;
+pub mod channel_member_repository;
 pub mod channel_rule_repository;
 pub mod chatbot_answer_repository;
 pub mod chatbot_message_repository;
@@ -24,67 +25,105 @@ pub mod session_repository;
 pub mod session_tag_repository;
 
 // Re-exports
-pub use channel_member_repository::{
-    ChannelMemberFilter, ChannelMemberPaginatedResult, ChannelMemberPaginationParams,
-    ChannelMemberRepository,
-};
 pub use channel_repository::{
-    ChannelFilter, ChannelPaginatedResult, ChannelPaginationParams, ChannelRepository,
+    ChannelRepository,
+    ChannelPaginationParams,
+    ChannelPaginatedResult,
+    ChannelFilter,
+};
+pub use channel_member_repository::{
+    ChannelMemberRepository,
+    ChannelMemberPaginationParams,
+    ChannelMemberPaginatedResult,
+    ChannelMemberFilter,
 };
 pub use channel_rule_repository::{
-    ChannelRuleFilter, ChannelRulePaginatedResult, ChannelRulePaginationParams,
     ChannelRuleRepository,
+    ChannelRulePaginationParams,
+    ChannelRulePaginatedResult,
+    ChannelRuleFilter,
 };
 pub use chatbot_answer_repository::{
-    ChatbotAnswerFilter, ChatbotAnswerPaginatedResult, ChatbotAnswerPaginationParams,
     ChatbotAnswerRepository,
+    ChatbotAnswerPaginationParams,
+    ChatbotAnswerPaginatedResult,
+    ChatbotAnswerFilter,
 };
 pub use chatbot_message_repository::{
-    ChatbotMessageFilter, ChatbotMessagePaginatedResult, ChatbotMessagePaginationParams,
     ChatbotMessageRepository,
+    ChatbotMessagePaginationParams,
+    ChatbotMessagePaginatedResult,
+    ChatbotMessageFilter,
 };
 pub use chatbot_script_repository::{
-    ChatbotScriptFilter, ChatbotScriptPaginatedResult, ChatbotScriptPaginationParams,
     ChatbotScriptRepository,
+    ChatbotScriptPaginationParams,
+    ChatbotScriptPaginatedResult,
+    ChatbotScriptFilter,
 };
 pub use chatbot_step_repository::{
-    ChatbotStepFilter, ChatbotStepPaginatedResult, ChatbotStepPaginationParams,
     ChatbotStepRepository,
+    ChatbotStepPaginationParams,
+    ChatbotStepPaginatedResult,
+    ChatbotStepFilter,
 };
 pub use chatbot_step_trigger_repository::{
-    ChatbotStepTriggerFilter, ChatbotStepTriggerPaginatedResult,
-    ChatbotStepTriggerPaginationParams, ChatbotStepTriggerRepository,
+    ChatbotStepTriggerRepository,
+    ChatbotStepTriggerPaginationParams,
+    ChatbotStepTriggerPaginatedResult,
+    ChatbotStepTriggerFilter,
 };
 pub use conversation_tag_repository::{
-    ConversationTagFilter, ConversationTagPaginatedResult, ConversationTagPaginationParams,
     ConversationTagRepository,
+    ConversationTagPaginationParams,
+    ConversationTagPaginatedResult,
+    ConversationTagFilter,
 };
 pub use expertise_tag_repository::{
-    ExpertiseTagFilter, ExpertiseTagPaginatedResult, ExpertiseTagPaginationParams,
     ExpertiseTagRepository,
+    ExpertiseTagPaginationParams,
+    ExpertiseTagPaginatedResult,
+    ExpertiseTagFilter,
 };
 pub use livechat_audit_log_repository::{
-    LivechatAuditLogFilter, LivechatAuditLogPaginatedResult, LivechatAuditLogPaginationParams,
     LivechatAuditLogRepository,
+    LivechatAuditLogPaginationParams,
+    LivechatAuditLogPaginatedResult,
+    LivechatAuditLogFilter,
 };
 pub use member_history_repository::{
-    MemberHistoryFilter, MemberHistoryPaginatedResult, MemberHistoryPaginationParams,
     MemberHistoryRepository,
+    MemberHistoryPaginationParams,
+    MemberHistoryPaginatedResult,
+    MemberHistoryFilter,
 };
 pub use operator_expertise_repository::{
-    OperatorExpertiseFilter, OperatorExpertisePaginatedResult, OperatorExpertisePaginationParams,
     OperatorExpertiseRepository,
+    OperatorExpertisePaginationParams,
+    OperatorExpertisePaginatedResult,
+    OperatorExpertiseFilter,
 };
 pub use operator_profile_repository::{
-    OperatorProfileFilter, OperatorProfilePaginatedResult, OperatorProfilePaginationParams,
     OperatorProfileRepository,
+    OperatorProfilePaginationParams,
+    OperatorProfilePaginatedResult,
+    OperatorProfileFilter,
 };
 pub use rating_repository::{
-    RatingFilter, RatingPaginatedResult, RatingPaginationParams, RatingRepository,
+    RatingRepository,
+    RatingPaginationParams,
+    RatingPaginatedResult,
+    RatingFilter,
 };
 pub use session_repository::{
-    SessionFilter, SessionPaginatedResult, SessionPaginationParams, SessionRepository,
+    SessionRepository,
+    SessionPaginationParams,
+    SessionPaginatedResult,
+    SessionFilter,
 };
 pub use session_tag_repository::{
-    SessionTagFilter, SessionTagPaginatedResult, SessionTagPaginationParams, SessionTagRepository,
+    SessionTagRepository,
+    SessionTagPaginationParams,
+    SessionTagPaginatedResult,
+    SessionTagFilter,
 };

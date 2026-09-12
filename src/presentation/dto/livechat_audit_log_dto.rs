@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,9 +16,9 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
+use crate::domain::entity::LivechatAuditLog;
 use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::LivechatAuditEvent;
-use crate::domain::entity::LivechatAuditLog;
 
 // =============================================================================
 // Create DTO
@@ -37,22 +37,12 @@ pub struct CreateLivechatAuditLogDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub actor: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "subject_type"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "subject_type")]
     pub subject_type: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "subject_id")]
     pub subject_id: Option<Uuid>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub detail: Option<serde_json::Value>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -72,22 +62,12 @@ pub struct UpdateLivechatAuditLogDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub actor: Option<Uuid>,
     #[cfg_attr(feature = "validation", validate(length(max = 120)))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "subject_type"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "subject_type")]
     pub subject_type: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "subject_id")]
     pub subject_id: Option<Uuid>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub detail: Option<serde_json::Value>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
 }
 
 // =============================================================================
@@ -114,23 +94,12 @@ pub struct PatchLivechatAuditLogDto {
     pub subject_id: Option<Uuid>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub detail: Option<serde_json::Value>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
 }
 
 impl PatchLivechatAuditLogDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.event.is_some()
-            || self.actor.is_some()
-            || self.subject_type.is_some()
-            || self.subject_id.is_some()
-            || self.detail.is_some()
-            || self.company_id.is_some()
+        self.event.is_some() || self.actor.is_some() || self.subject_type.is_some() || self.subject_id.is_some() || self.detail.is_some()
     }
 }
 
@@ -146,10 +115,7 @@ impl PatchLivechatAuditLogDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct LivechatAuditLogResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
     pub event: LivechatAuditEvent,
     pub actor: Option<Uuid>,
@@ -158,11 +124,6 @@ pub struct LivechatAuditLogResponseDto {
     pub detail: Option<serde_json::Value>,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     pub created_at: DateTime<Utc>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
-    pub company_id: Uuid,
     pub metadata: AuditMetadata,
 }
 
@@ -196,12 +157,7 @@ pub struct LivechatAuditLogListResponseDto {
 
 impl LivechatAuditLogListResponseDto {
     /// Create a new list response from items and pagination info
-    pub fn new(
-        items: Vec<LivechatAuditLogResponseDto>,
-        total: u64,
-        page: u32,
-        per_page: u32,
-    ) -> Self {
+    pub fn new(items: Vec<LivechatAuditLogResponseDto>, total: u64, page: u32, per_page: u32) -> Self {
         let total_pages = if per_page > 0 {
             ((total as f64) / (per_page as f64)).ceil() as u32
         } else {
@@ -245,7 +201,6 @@ impl From<LivechatAuditLog> for LivechatAuditLogResponseDto {
             subject_id: entity.subject_id,
             detail: entity.detail,
             created_at: entity.created_at,
-            company_id: entity.company_id,
             metadata: entity.metadata,
         }
     }
@@ -273,7 +228,6 @@ impl From<CreateLivechatAuditLogDto> for LivechatAuditLog {
             subject_id: dto.subject_id,
             detail: dto.detail,
             created_at: Utc::now(),
-            company_id: dto.company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -289,7 +243,6 @@ impl From<&LivechatAuditLog> for LivechatAuditLogResponseDto {
             subject_id: entity.subject_id.clone(),
             detail: entity.detail.clone(),
             created_at: entity.created_at.clone(),
-            company_id: entity.company_id.clone(),
             metadata: entity.metadata.clone(),
         }
     }
@@ -302,16 +255,12 @@ impl backbone_core::FromCreateDto<CreateLivechatAuditLogDto> for LivechatAuditLo
 }
 
 impl backbone_core::ApplyUpdateDto<UpdateLivechatAuditLogDto> for LivechatAuditLog {
-    fn apply_update(
-        mut self,
-        dto: UpdateLivechatAuditLogDto,
-    ) -> backbone_core::ServiceResult<Self> {
+    fn apply_update(mut self, dto: UpdateLivechatAuditLogDto) -> backbone_core::ServiceResult<Self> {
         self.event = dto.event;
         self.actor = dto.actor;
         self.subject_type = dto.subject_type;
         self.subject_id = dto.subject_id;
         self.detail = dto.detail;
-        self.company_id = dto.company_id;
         Ok(self)
     }
 }

@@ -1,8 +1,8 @@
-use super::AuditMetadata;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for ChatbotAnswer
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -10,15 +10,9 @@ use uuid::Uuid;
 pub struct ChatbotAnswerId(pub Uuid);
 
 impl ChatbotAnswerId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for ChatbotAnswerId {
@@ -35,28 +29,20 @@ impl std::str::FromStr for ChatbotAnswerId {
 }
 
 impl From<Uuid> for ChatbotAnswerId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<ChatbotAnswerId> for Uuid {
-    fn from(id: ChatbotAnswerId) -> Self {
-        id.0
-    }
+    fn from(id: ChatbotAnswerId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for ChatbotAnswerId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for ChatbotAnswerId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -66,7 +52,6 @@ pub struct ChatbotAnswer {
     pub sequence: i32,
     pub label: String,
     pub redirect_url: Option<String>,
-    pub company_id: Uuid,
     #[serde(default)]
     #[sqlx(json)]
     pub metadata: AuditMetadata,
@@ -79,14 +64,13 @@ impl ChatbotAnswer {
     }
 
     /// Create a new ChatbotAnswer with required fields
-    pub fn new(question_step_id: Uuid, sequence: i32, label: String, company_id: Uuid) -> Self {
+    pub fn new(question_step_id: Uuid, sequence: i32, label: String) -> Self {
         Self {
             id: Uuid::new_v4(),
             question_step_id,
             sequence,
             label,
             redirect_url: None,
-            company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -141,6 +125,7 @@ impl ChatbotAnswer {
         self.metadata.deleted_by.as_ref()
     }
 
+
     // ==========================================================
     // Fluent Setters (with_* for optional fields)
     // ==========================================================
@@ -160,29 +145,16 @@ impl ChatbotAnswer {
         for (key, value) in fields {
             match key.as_str() {
                 "question_step_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.question_step_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.question_step_id = v; }
                 }
                 "sequence" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.sequence = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.sequence = v; }
                 }
                 "label" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.label = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.label = v; }
                 }
                 "redirect_url" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.redirect_url = v;
-                    }
-                }
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.company_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.redirect_url = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -239,14 +211,10 @@ impl backbone_orm::EntityRepoMeta for ChatbotAnswer {
         let mut m = std::collections::HashMap::new();
         m.insert("id".to_string(), "uuid".to_string());
         m.insert("question_step_id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &["label"]
-    }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
     }
     fn relations() -> &'static [(&'static str, &'static str, &'static str)] {
         &[("questionStep", "chatbot_steps", "questionStepId")]
@@ -263,7 +231,6 @@ pub struct ChatbotAnswerBuilder {
     sequence: Option<i32>,
     label: Option<String>,
     redirect_url: Option<String>,
-    company_id: Option<Uuid>,
 }
 
 impl ChatbotAnswerBuilder {
@@ -291,26 +258,13 @@ impl ChatbotAnswerBuilder {
         self
     }
 
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Build the ChatbotAnswer entity
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<ChatbotAnswer, String> {
-        let question_step_id = self
-            .question_step_id
-            .ok_or_else(|| "question_step_id is required".to_string())?;
-        let sequence = self
-            .sequence
-            .ok_or_else(|| "sequence is required".to_string())?;
+        let question_step_id = self.question_step_id.ok_or_else(|| "question_step_id is required".to_string())?;
+        let sequence = self.sequence.ok_or_else(|| "sequence is required".to_string())?;
         let label = self.label.ok_or_else(|| "label is required".to_string())?;
-        let company_id = self
-            .company_id
-            .ok_or_else(|| "company_id is required".to_string())?;
 
         Ok(ChatbotAnswer {
             id: Uuid::new_v4(),
@@ -318,7 +272,6 @@ impl ChatbotAnswerBuilder {
             sequence,
             label,
             redirect_url: self.redirect_url,
-            company_id,
             metadata: AuditMetadata::default(),
         })
     }

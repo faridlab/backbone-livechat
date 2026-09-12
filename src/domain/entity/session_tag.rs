@@ -1,8 +1,8 @@
-use super::AuditMetadata;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for SessionTag
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -10,15 +10,9 @@ use uuid::Uuid;
 pub struct SessionTagId(pub Uuid);
 
 impl SessionTagId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for SessionTagId {
@@ -35,28 +29,20 @@ impl std::str::FromStr for SessionTagId {
 }
 
 impl From<Uuid> for SessionTagId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<SessionTagId> for Uuid {
-    fn from(id: SessionTagId) -> Self {
-        id.0
-    }
+    fn from(id: SessionTagId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for SessionTagId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for SessionTagId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -64,7 +50,6 @@ pub struct SessionTag {
     pub id: Uuid,
     pub session_id: Uuid,
     pub tag_id: Uuid,
-    pub company_id: Uuid,
     #[serde(default)]
     #[sqlx(json)]
     pub metadata: AuditMetadata,
@@ -77,12 +62,11 @@ impl SessionTag {
     }
 
     /// Create a new SessionTag with required fields
-    pub fn new(session_id: Uuid, tag_id: Uuid, company_id: Uuid) -> Self {
+    pub fn new(session_id: Uuid, tag_id: Uuid) -> Self {
         Self {
             id: Uuid::new_v4(),
             session_id,
             tag_id,
-            company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -137,6 +121,7 @@ impl SessionTag {
         self.metadata.deleted_by.as_ref()
     }
 
+
     // ==========================================================
     // Partial Update
     // ==========================================================
@@ -146,19 +131,10 @@ impl SessionTag {
         for (key, value) in fields {
             match key.as_str() {
                 "session_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.session_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.session_id = v; }
                 }
                 "tag_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.tag_id = v;
-                    }
-                }
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.company_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.tag_id = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -216,20 +192,13 @@ impl backbone_orm::EntityRepoMeta for SessionTag {
         m.insert("id".to_string(), "uuid".to_string());
         m.insert("session_id".to_string(), "uuid".to_string());
         m.insert("tag_id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &[]
     }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
-    }
     fn relations() -> &'static [(&'static str, &'static str, &'static str)] {
-        &[
-            ("session", "sessions", "sessionId"),
-            ("tag", "conversation_tags", "tagId"),
-        ]
+        &[("session", "sessions", "sessionId"), ("tag", "conversation_tags", "tagId")]
     }
 }
 
@@ -241,7 +210,6 @@ impl backbone_orm::EntityRepoMeta for SessionTag {
 pub struct SessionTagBuilder {
     session_id: Option<Uuid>,
     tag_id: Option<Uuid>,
-    company_id: Option<Uuid>,
 }
 
 impl SessionTagBuilder {
@@ -257,31 +225,17 @@ impl SessionTagBuilder {
         self
     }
 
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Build the SessionTag entity
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<SessionTag, String> {
-        let session_id = self
-            .session_id
-            .ok_or_else(|| "session_id is required".to_string())?;
-        let tag_id = self
-            .tag_id
-            .ok_or_else(|| "tag_id is required".to_string())?;
-        let company_id = self
-            .company_id
-            .ok_or_else(|| "company_id is required".to_string())?;
+        let session_id = self.session_id.ok_or_else(|| "session_id is required".to_string())?;
+        let tag_id = self.tag_id.ok_or_else(|| "tag_id is required".to_string())?;
 
         Ok(SessionTag {
             id: Uuid::new_v4(),
             session_id,
             tag_id,
-            company_id,
             metadata: AuditMetadata::default(),
         })
     }

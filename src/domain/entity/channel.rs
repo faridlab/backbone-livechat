@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::AuditMetadata;
 use super::LivechatMaxSessionsMode;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for Channel
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -12,15 +12,9 @@ use super::LivechatMaxSessionsMode;
 pub struct ChannelId(pub Uuid);
 
 impl ChannelId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for ChannelId {
@@ -37,28 +31,20 @@ impl std::str::FromStr for ChannelId {
 }
 
 impl From<Uuid> for ChannelId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<ChannelId> for Uuid {
-    fn from(id: ChannelId) -> Self {
-        id.0
-    }
+    fn from(id: ChannelId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for ChannelId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for ChannelId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -73,7 +59,6 @@ pub struct Channel {
     pub block_assignment_during_call: bool,
     pub review_link: Option<String>,
     pub is_active: bool,
-    pub company_id: Uuid,
     #[serde(default)]
     #[sqlx(json)]
     pub metadata: AuditMetadata,
@@ -86,14 +71,7 @@ impl Channel {
     }
 
     /// Create a new Channel with required fields
-    pub fn new(
-        name: String,
-        max_sessions_mode: LivechatMaxSessionsMode,
-        max_sessions: i32,
-        block_assignment_during_call: bool,
-        is_active: bool,
-        company_id: Uuid,
-    ) -> Self {
+    pub fn new(name: String, max_sessions_mode: LivechatMaxSessionsMode, max_sessions: i32, block_assignment_during_call: bool, is_active: bool) -> Self {
         Self {
             id: Uuid::new_v4(),
             name,
@@ -105,7 +83,6 @@ impl Channel {
             block_assignment_during_call,
             review_link: None,
             is_active,
-            company_id,
             metadata: AuditMetadata::default(),
         }
     }
@@ -160,6 +137,7 @@ impl Channel {
         self.metadata.deleted_by.as_ref()
     }
 
+
     // ==========================================================
     // Fluent Setters (with_* for optional fields)
     // ==========================================================
@@ -197,54 +175,31 @@ impl Channel {
         for (key, value) in fields {
             match key.as_str() {
                 "name" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.name = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.name = v; }
                 }
                 "website_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.website_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.website_id = v; }
                 }
                 "button_text" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.button_text = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.button_text = v; }
                 }
                 "welcome_message" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.welcome_message = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.welcome_message = v; }
                 }
                 "max_sessions_mode" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.max_sessions_mode = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.max_sessions_mode = v; }
                 }
                 "max_sessions" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.max_sessions = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.max_sessions = v; }
                 }
                 "block_assignment_during_call" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.block_assignment_during_call = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.block_assignment_during_call = v; }
                 }
                 "review_link" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.review_link = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.review_link = v; }
                 }
                 "is_active" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.is_active = v;
-                    }
-                }
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.company_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.is_active = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -301,18 +256,11 @@ impl backbone_orm::EntityRepoMeta for Channel {
         let mut m = std::collections::HashMap::new();
         m.insert("id".to_string(), "uuid".to_string());
         m.insert("website_id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
-        m.insert(
-            "max_sessions_mode".to_string(),
-            "livechat_max_sessions_mode".to_string(),
-        );
+        m.insert("max_sessions_mode".to_string(), "livechat_max_sessions_mode".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &["name"]
-    }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
     }
 }
 
@@ -331,7 +279,6 @@ pub struct ChannelBuilder {
     block_assignment_during_call: Option<bool>,
     review_link: Option<String>,
     is_active: Option<bool>,
-    company_id: Option<Uuid>,
 }
 
 impl ChannelBuilder {
@@ -389,20 +336,11 @@ impl ChannelBuilder {
         self
     }
 
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Build the Channel entity
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<Channel, String> {
         let name = self.name.ok_or_else(|| "name is required".to_string())?;
-        let company_id = self
-            .company_id
-            .ok_or_else(|| "company_id is required".to_string())?;
 
         Ok(Channel {
             id: Uuid::new_v4(),
@@ -415,7 +353,6 @@ impl ChannelBuilder {
             block_assignment_during_call: self.block_assignment_during_call.unwrap_or(false),
             review_link: self.review_link,
             is_active: self.is_active.unwrap_or(true),
-            company_id,
             metadata: AuditMetadata::default(),
         })
     }
