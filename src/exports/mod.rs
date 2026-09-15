@@ -57,9 +57,6 @@ pub use events::*;
 /// - `ExpertiseTagDto` - Data transfer object for ExpertiseTag
 /// - `ExpertiseTagSummary` - Summary view of ExpertiseTag
 /// - `ExpertiseTagId` - Type-safe ID wrapper
-/// - `LivechatAuditLogDto` - Data transfer object for LivechatAuditLog
-/// - `LivechatAuditLogSummary` - Summary view of LivechatAuditLog
-/// - `LivechatAuditLogId` - Type-safe ID wrapper
 /// - `MemberHistoryDto` - Data transfer object for MemberHistory
 /// - `MemberHistorySummary` - Summary view of MemberHistory
 /// - `MemberHistoryId` - Type-safe ID wrapper
@@ -110,9 +107,6 @@ pub use events::*;
 /// - `ExpertiseTagCreatedEvent` - Published when ExpertiseTag is created
 /// - `ExpertiseTagUpdatedEvent` - Published when ExpertiseTag is updated
 /// - `ExpertiseTagDeletedEvent` - Published when ExpertiseTag is deleted
-/// - `LivechatAuditLogCreatedEvent` - Published when LivechatAuditLog is created
-/// - `LivechatAuditLogUpdatedEvent` - Published when LivechatAuditLog is updated
-/// - `LivechatAuditLogDeletedEvent` - Published when LivechatAuditLog is deleted
 /// - `MemberHistoryCreatedEvent` - Published when MemberHistory is created
 /// - `MemberHistoryUpdatedEvent` - Published when MemberHistory is updated
 /// - `MemberHistoryDeletedEvent` - Published when MemberHistory is deleted

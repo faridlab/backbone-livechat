@@ -16,7 +16,6 @@ pub mod chatbot_step_repository;
 pub mod chatbot_step_trigger_repository;
 pub mod conversation_tag_repository;
 pub mod expertise_tag_repository;
-pub mod livechat_audit_log_repository;
 pub mod member_history_repository;
 pub mod operator_expertise_repository;
 pub mod operator_profile_repository;
@@ -84,12 +83,6 @@ pub use expertise_tag_repository::{
     ExpertiseTagPaginationParams,
     ExpertiseTagPaginatedResult,
     ExpertiseTagFilter,
-};
-pub use livechat_audit_log_repository::{
-    LivechatAuditLogRepository,
-    LivechatAuditLogPaginationParams,
-    LivechatAuditLogPaginatedResult,
-    LivechatAuditLogFilter,
 };
 pub use member_history_repository::{
     MemberHistoryRepository,

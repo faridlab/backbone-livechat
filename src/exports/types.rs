@@ -586,66 +586,6 @@ pub struct ExpertiseTagRef {
 }
 
 // ============================================================================
-// LIVECHATAUDITLOG TYPES
-// ============================================================================
-
-/// Type-safe ID for LivechatAuditLog
-///
-/// Use this instead of raw Uuid for type safety across modules.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct LivechatAuditLogId(pub Uuid);
-
-impl LivechatAuditLogId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
-}
-
-impl From<Uuid> for LivechatAuditLogId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
-}
-
-impl From<LivechatAuditLogId> for Uuid {
-    fn from(id: LivechatAuditLogId) -> Self {
-        id.0
-    }
-}
-
-/// Data transfer object for LivechatAuditLog
-///
-/// This is the public representation of LivechatAuditLog for other modules.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LivechatAuditLogDto {
-    pub id: LivechatAuditLogId,
-    pub event: LivechatAuditEvent,
-    pub actor: Option<Uuid>,
-    pub subject_type: Option<String>,
-    pub subject_id: Option<Uuid>,
-    pub detail: Option<serde_json::Value>,
-    pub created_at: DateTime<Utc>,
-    pub metadata: serde_json::Value,
-}
-
-/// Summary view of LivechatAuditLog for list displays
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LivechatAuditLogSummary {
-    pub id: LivechatAuditLogId,
-    pub created_at: DateTime<Utc>,
-}
-
-/// Reference to LivechatAuditLog for foreign key relationships
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LivechatAuditLogRef {
-    pub id: LivechatAuditLogId,
-}
-
-// ============================================================================
 // MEMBERHISTORY TYPES
 // ============================================================================
 

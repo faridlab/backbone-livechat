@@ -100,4 +100,3 @@ imports:
   - rating.model.yaml                 # Rating
   - conversation_tag.model.yaml       # ConversationTag
   - session_tag.model.yaml            # SessionTag
-  - livechat_audit_log.model.yaml     # LivechatAuditLog

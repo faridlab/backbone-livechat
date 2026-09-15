@@ -17,6 +17,10 @@
 # same change that lands it.
 
 user_owned:
+  # The shared-audit-trail funnel (hand-written; replaces this module's
+  # retired per-module audit table).
+  - "src/infrastructure/persistence/audit.rs"
+
 
   # ⚠ GENERATOR-DEFECT FREEZE (pinned generator only): the builder
   # constructor's `LivechatModule { ... }` initializer in lib.rs

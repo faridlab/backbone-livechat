@@ -4,7 +4,6 @@
 //!
 //! Uses backbone-orm's `DatabaseOperations<T>` trait.
 
-pub mod audit;
 mod channel_repository;
 mod channel_member_repository;
 mod channel_rule_repository;
@@ -15,7 +14,6 @@ mod chatbot_step_repository;
 mod chatbot_step_trigger_repository;
 mod conversation_tag_repository;
 mod expertise_tag_repository;
-mod livechat_audit_log_repository;
 mod member_history_repository;
 mod operator_expertise_repository;
 mod operator_profile_repository;
@@ -25,6 +23,9 @@ mod session_tag_repository;
 
 // Custom persistence modules
 // <<< CUSTOM
+// The shared-audit-trail funnel. Inside the markers so a regeneration
+// cannot drop the declaration and leave the file orphaned.
+pub mod audit;
 // Hand-written repositories carrying the verbs' transactional SQL
 // (user-owned; see metaphor.codegen.yaml). The generated CRUD
 // repositories keep their own files — these are the verb layer's.
@@ -61,7 +62,6 @@ pub use chatbot_step_repository::ChatbotStepRepository;
 pub use chatbot_step_trigger_repository::ChatbotStepTriggerRepository;
 pub use conversation_tag_repository::ConversationTagRepository;
 pub use expertise_tag_repository::ExpertiseTagRepository;
-pub use livechat_audit_log_repository::LivechatAuditLogRepository;
 pub use member_history_repository::MemberHistoryRepository;
 pub use operator_expertise_repository::OperatorExpertiseRepository;
 pub use operator_profile_repository::OperatorProfileRepository;

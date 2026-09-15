@@ -15,7 +15,6 @@ pub mod chatbot_step_dto;
 pub mod chatbot_step_trigger_dto;
 pub mod conversation_tag_dto;
 pub mod expertise_tag_dto;
-pub mod livechat_audit_log_dto;
 pub mod member_history_dto;
 pub mod operator_expertise_dto;
 pub mod operator_profile_dto;
@@ -103,14 +102,6 @@ pub use expertise_tag_dto::{
     ExpertiseTagResponseDto,
     ExpertiseTagListResponseDto,
     ExpertiseTagSummaryDto,
-};
-pub use livechat_audit_log_dto::{
-    CreateLivechatAuditLogDto,
-    UpdateLivechatAuditLogDto,
-    PatchLivechatAuditLogDto,
-    LivechatAuditLogResponseDto,
-    LivechatAuditLogListResponseDto,
-    LivechatAuditLogSummaryDto,
 };
 pub use member_history_dto::{
     CreateMemberHistoryDto,

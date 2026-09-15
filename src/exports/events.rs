@@ -281,33 +281,6 @@ pub struct ExpertiseTagDeletedEvent {
 }
 
 // ============================================================================
-// LIVECHATAUDITLOG EVENTS
-// ============================================================================
-
-/// Event published when a LivechatAuditLog is created
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LivechatAuditLogCreatedEvent {
-    pub id: LivechatAuditLogId,
-    pub data: LivechatAuditLogDto,
-    pub occurred_at: DateTime<Utc>,
-}
-
-/// Event published when a LivechatAuditLog is updated
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LivechatAuditLogUpdatedEvent {
-    pub id: LivechatAuditLogId,
-    pub data: LivechatAuditLogDto,
-    pub occurred_at: DateTime<Utc>,
-}
-
-/// Event published when a LivechatAuditLog is deleted
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LivechatAuditLogDeletedEvent {
-    pub id: LivechatAuditLogId,
-    pub occurred_at: DateTime<Utc>,
-}
-
-// ============================================================================
 // MEMBERHISTORY EVENTS
 // ============================================================================
 
@@ -507,9 +480,6 @@ pub enum LivechatEvent {
     ExpertiseTagCreated(ExpertiseTagCreatedEvent),
     ExpertiseTagUpdated(ExpertiseTagUpdatedEvent),
     ExpertiseTagDeleted(ExpertiseTagDeletedEvent),
-    LivechatAuditLogCreated(LivechatAuditLogCreatedEvent),
-    LivechatAuditLogUpdated(LivechatAuditLogUpdatedEvent),
-    LivechatAuditLogDeleted(LivechatAuditLogDeletedEvent),
     MemberHistoryCreated(MemberHistoryCreatedEvent),
     MemberHistoryUpdated(MemberHistoryUpdatedEvent),
     MemberHistoryDeleted(MemberHistoryDeletedEvent),

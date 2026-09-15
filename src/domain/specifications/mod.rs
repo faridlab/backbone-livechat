@@ -16,7 +16,6 @@ pub mod chatbot_step_specification;
 pub mod chatbot_step_trigger_specification;
 pub mod conversation_tag_specification;
 pub mod expertise_tag_specification;
-pub mod livechat_audit_log_specification;
 pub mod member_history_specification;
 pub mod operator_expertise_specification;
 pub mod operator_profile_specification;

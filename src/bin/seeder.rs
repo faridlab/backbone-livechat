@@ -22,7 +22,6 @@ use backbone_livechat::seeders::SeedChatbotStepSeeder;
 use backbone_livechat::seeders::SeedChatbotStepTriggerSeeder;
 use backbone_livechat::seeders::SeedConversationTagSeeder;
 use backbone_livechat::seeders::SeedExpertiseTagSeeder;
-use backbone_livechat::seeders::SeedLivechatAuditLogSeeder;
 use backbone_livechat::seeders::SeedMemberHistorySeeder;
 use backbone_livechat::seeders::SeedOperatorExpertiseSeeder;
 use backbone_livechat::seeders::SeedOperatorProfileSeeder;
@@ -67,7 +66,6 @@ async fn main() -> Result<()> {
     seeders.push(Box::new(SeedChatbotStepTriggerSeeder::new()));
     seeders.push(Box::new(SeedConversationTagSeeder::new()));
     seeders.push(Box::new(SeedExpertiseTagSeeder::new()));
-    seeders.push(Box::new(SeedLivechatAuditLogSeeder::new()));
     seeders.push(Box::new(SeedMemberHistorySeeder::new()));
     seeders.push(Box::new(SeedOperatorExpertiseSeeder::new()));
     seeders.push(Box::new(SeedOperatorProfileSeeder::new()));

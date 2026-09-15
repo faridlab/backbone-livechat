@@ -19,7 +19,6 @@ use super::{
     chatbot_step_trigger_handler::create_chatbot_step_trigger_routes,
     conversation_tag_handler::create_conversation_tag_routes,
     expertise_tag_handler::create_expertise_tag_routes,
-    livechat_audit_log_handler::create_livechat_audit_log_read_routes,
     member_history_handler::create_member_history_read_routes,
     operator_expertise_handler::create_operator_expertise_routes,
     operator_profile_handler::create_operator_profile_routes,
@@ -39,7 +38,6 @@ use crate::application::service::{
     ChatbotStepTriggerService,
     ConversationTagService,
     ExpertiseTagService,
-    LivechatAuditLogService,
     MemberHistoryService,
     OperatorExpertiseService,
     OperatorProfileService,
@@ -60,7 +58,6 @@ pub struct HttpServices {
     pub chatbot_step_trigger: Arc<ChatbotStepTriggerService>,
     pub conversation_tag: Arc<ConversationTagService>,
     pub expertise_tag: Arc<ExpertiseTagService>,
-    pub livechat_audit_log: Arc<LivechatAuditLogService>,
     pub member_history: Arc<MemberHistoryService>,
     pub operator_expertise: Arc<OperatorExpertiseService>,
     pub operator_profile: Arc<OperatorProfileService>,
@@ -106,8 +103,6 @@ pub fn configure_routes(services: HttpServices) -> Router {
         .merge(create_conversation_tag_routes(services.conversation_tag))
         // ExpertiseTag routes (12 Backbone endpoints)
         .merge(create_expertise_tag_routes(services.expertise_tag))
-        // LivechatAuditLog routes (READ-ONLY — append-only/event-sourced entity; writes arrive via the event handlers)
-        .merge(create_livechat_audit_log_read_routes(services.livechat_audit_log))
         // MemberHistory routes (READ-ONLY — append-only/event-sourced entity; writes arrive via the event handlers)
         .merge(create_member_history_read_routes(services.member_history))
         // OperatorExpertise routes (12 Backbone endpoints)
@@ -164,10 +159,6 @@ pub mod individual {
 
     pub fn expertise_tag_routes(service: Arc<ExpertiseTagService>) -> Router {
         create_expertise_tag_routes(service)
-    }
-
-    pub fn livechat_audit_log_routes(service: Arc<LivechatAuditLogService>) -> Router {
-        create_livechat_audit_log_routes(service)
     }
 
     pub fn member_history_routes(service: Arc<MemberHistoryService>) -> Router {

@@ -22,8 +22,6 @@ pub mod conversation_tag_events;
 pub mod conversation_tag_event_handlers;
 pub mod expertise_tag_events;
 pub mod expertise_tag_event_handlers;
-pub mod livechat_audit_log_events;
-pub mod livechat_audit_log_event_handlers;
 pub mod member_history_events;
 pub mod member_history_event_handlers;
 pub mod operator_expertise_events;
@@ -57,8 +55,6 @@ pub use conversation_tag_events::{ConversationTagEvent, ConversationTagEventPubl
 pub use conversation_tag_event_handlers::ConversationTagEventHandler;
 pub use expertise_tag_events::{ExpertiseTagEvent, ExpertiseTagEventPublisher, NoopExpertiseTagEventPublisher};
 pub use expertise_tag_event_handlers::ExpertiseTagEventHandler;
-pub use livechat_audit_log_events::{LivechatAuditLogEvent, LivechatAuditLogEventPublisher, NoopLivechatAuditLogEventPublisher};
-pub use livechat_audit_log_event_handlers::LivechatAuditLogEventHandler;
 pub use member_history_events::{MemberHistoryEvent, MemberHistoryEventPublisher, NoopMemberHistoryEventPublisher};
 pub use member_history_event_handlers::MemberHistoryEventHandler;
 pub use operator_expertise_events::{OperatorExpertiseEvent, OperatorExpertiseEventPublisher, NoopOperatorExpertiseEventPublisher};

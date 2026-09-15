@@ -19,7 +19,6 @@ use crate::application::service::ChatbotStepService;
 use crate::application::service::ChatbotStepTriggerService;
 use crate::application::service::ConversationTagService;
 use crate::application::service::ExpertiseTagService;
-use crate::application::service::LivechatAuditLogService;
 use crate::application::service::MemberHistoryService;
 use crate::application::service::OperatorExpertiseService;
 use crate::application::service::OperatorProfileService;
@@ -65,8 +64,6 @@ pub struct AppState {
     pub conversation_tag_service: Arc<ConversationTagService>,
     /// ExpertiseTag service
     pub expertise_tag_service: Arc<ExpertiseTagService>,
-    /// LivechatAuditLog service
-    pub livechat_audit_log_service: Arc<LivechatAuditLogService>,
     /// MemberHistory service
     pub member_history_service: Arc<MemberHistoryService>,
     /// OperatorExpertise service
@@ -94,7 +91,6 @@ impl AppState {
         chatbot_step_trigger_service: Arc<ChatbotStepTriggerService>,
         conversation_tag_service: Arc<ConversationTagService>,
         expertise_tag_service: Arc<ExpertiseTagService>,
-        livechat_audit_log_service: Arc<LivechatAuditLogService>,
         member_history_service: Arc<MemberHistoryService>,
         operator_expertise_service: Arc<OperatorExpertiseService>,
         operator_profile_service: Arc<OperatorProfileService>,
@@ -113,7 +109,6 @@ impl AppState {
             chatbot_step_trigger_service,
             conversation_tag_service,
             expertise_tag_service,
-            livechat_audit_log_service,
             member_history_service,
             operator_expertise_service,
             operator_profile_service,
@@ -136,7 +131,6 @@ impl AppState {
             chatbot_step_trigger_service: module.chatbot_step_trigger_service.clone(),
             conversation_tag_service: module.conversation_tag_service.clone(),
             expertise_tag_service: module.expertise_tag_service.clone(),
-            livechat_audit_log_service: module.livechat_audit_log_service.clone(),
             member_history_service: module.member_history_service.clone(),
             operator_expertise_service: module.operator_expertise_service.clone(),
             operator_profile_service: module.operator_profile_service.clone(),
@@ -162,7 +156,6 @@ pub struct AppStateBuilder {
     chatbot_step_trigger_service: Option<Arc<ChatbotStepTriggerService>>,
     conversation_tag_service: Option<Arc<ConversationTagService>>,
     expertise_tag_service: Option<Arc<ExpertiseTagService>>,
-    livechat_audit_log_service: Option<Arc<LivechatAuditLogService>>,
     member_history_service: Option<Arc<MemberHistoryService>>,
     operator_expertise_service: Option<Arc<OperatorExpertiseService>>,
     operator_profile_service: Option<Arc<OperatorProfileService>>,
@@ -237,12 +230,6 @@ impl AppStateBuilder {
         self
     }
 
-    /// Set the LivechatAuditLog service.
-    pub fn with_livechat_audit_log_service(mut self, service: Arc<LivechatAuditLogService>) -> Self {
-        self.livechat_audit_log_service = Some(service);
-        self
-    }
-
     /// Set the MemberHistory service.
     pub fn with_member_history_service(mut self, service: Arc<MemberHistoryService>) -> Self {
         self.member_history_service = Some(service);
@@ -296,7 +283,6 @@ impl AppStateBuilder {
             chatbot_step_trigger_service: self.chatbot_step_trigger_service.expect("chatbot_step_trigger_service is required"),
             conversation_tag_service: self.conversation_tag_service.expect("conversation_tag_service is required"),
             expertise_tag_service: self.expertise_tag_service.expect("expertise_tag_service is required"),
-            livechat_audit_log_service: self.livechat_audit_log_service.expect("livechat_audit_log_service is required"),
             member_history_service: self.member_history_service.expect("member_history_service is required"),
             operator_expertise_service: self.operator_expertise_service.expect("operator_expertise_service is required"),
             operator_profile_service: self.operator_profile_service.expect("operator_profile_service is required"),

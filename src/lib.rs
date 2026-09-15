@@ -42,7 +42,6 @@ pub use application::service::ChatbotStepService;
 pub use application::service::ChatbotStepTriggerService;
 pub use application::service::ConversationTagService;
 pub use application::service::ExpertiseTagService;
-pub use application::service::LivechatAuditLogService;
 pub use application::service::MemberHistoryService;
 pub use application::service::OperatorExpertiseService;
 pub use application::service::OperatorProfileService;
@@ -77,7 +76,6 @@ pub struct LivechatModule {
     pub(crate) chatbot_step_trigger_service: Arc<ChatbotStepTriggerService>,
     pub(crate) conversation_tag_service: Arc<ConversationTagService>,
     pub(crate) expertise_tag_service: Arc<ExpertiseTagService>,
-    pub(crate) livechat_audit_log_service: Arc<LivechatAuditLogService>,
     pub(crate) member_history_service: Arc<MemberHistoryService>,
     pub(crate) operator_expertise_service: Arc<OperatorExpertiseService>,
     pub(crate) operator_profile_service: Arc<OperatorProfileService>,
@@ -108,7 +106,7 @@ impl LivechatModule {
             create_chatbot_answer_routes, create_chatbot_message_read_routes,
             create_chatbot_script_routes, create_chatbot_step_routes,
             create_chatbot_step_trigger_routes, create_conversation_tag_routes,
-            create_expertise_tag_routes, create_livechat_audit_log_read_routes,
+            create_expertise_tag_routes,
             create_member_history_read_routes, create_operator_expertise_routes,
             create_operator_profile_routes, create_rating_routes, create_session_read_routes,
             create_session_tag_routes,
@@ -142,9 +140,6 @@ impl LivechatModule {
             ))
             .merge(create_expertise_tag_routes(
                 self.expertise_tag_service.clone(),
-            ))
-            .merge(create_livechat_audit_log_read_routes(
-                self.livechat_audit_log_service.clone(),
             ))
             .merge(create_member_history_read_routes(
                 self.member_history_service.clone(),
@@ -183,8 +178,7 @@ impl LivechatModule {
             create_channel_rule_read_routes, create_chatbot_answer_read_routes,
             create_chatbot_message_read_routes, create_chatbot_script_read_routes,
             create_chatbot_step_read_routes, create_chatbot_step_trigger_read_routes,
-            create_conversation_tag_read_routes, create_expertise_tag_read_routes,
-            create_livechat_audit_log_read_routes, create_member_history_read_routes,
+            create_conversation_tag_read_routes, create_expertise_tag_read_routes, create_member_history_read_routes,
             create_operator_expertise_read_routes, create_operator_profile_read_routes,
             create_rating_read_routes, create_session_read_routes, create_session_tag_read_routes,
         };
@@ -217,9 +211,6 @@ impl LivechatModule {
             ))
             .merge(create_expertise_tag_read_routes(
                 self.expertise_tag_service.clone(),
-            ))
-            .merge(create_livechat_audit_log_read_routes(
-                self.livechat_audit_log_service.clone(),
             ))
             .merge(create_member_history_read_routes(
                 self.member_history_service.clone(),
@@ -361,13 +352,6 @@ impl LivechatModuleBuilder {
             expertise_tag_repository.clone(),
         ));
 
-        // LivechatAuditLog service
-        let livechat_audit_log_repository =
-            Arc::new(LivechatAuditLogRepository::new(db_pool.clone()));
-        let livechat_audit_log_service = Arc::new(LivechatAuditLogService::with_repository(
-            livechat_audit_log_repository.clone(),
-        ));
-
         // MemberHistory service
         let member_history_repository = Arc::new(MemberHistoryRepository::new(db_pool.clone()));
         let member_history_service = Arc::new(MemberHistoryService::with_repository(
@@ -416,7 +400,6 @@ impl LivechatModuleBuilder {
             chatbot_step_trigger_service,
             conversation_tag_service,
             expertise_tag_service,
-            livechat_audit_log_service,
             member_history_service,
             operator_expertise_service,
             operator_profile_service,

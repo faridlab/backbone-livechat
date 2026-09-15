@@ -15,7 +15,6 @@ pub mod chatbot_step_handler;
 pub mod chatbot_step_trigger_handler;
 pub mod conversation_tag_handler;
 pub mod expertise_tag_handler;
-pub mod livechat_audit_log_handler;
 pub mod member_history_handler;
 pub mod operator_expertise_handler;
 pub mod operator_profile_handler;
@@ -43,7 +42,6 @@ pub use chatbot_step_handler::{create_chatbot_step_routes, create_chatbot_step_r
 pub use chatbot_step_trigger_handler::{create_chatbot_step_trigger_routes, create_chatbot_step_trigger_read_routes, create_chatbot_step_trigger_write_routes};
 pub use conversation_tag_handler::{create_conversation_tag_routes, create_conversation_tag_read_routes, create_conversation_tag_write_routes};
 pub use expertise_tag_handler::{create_expertise_tag_routes, create_expertise_tag_read_routes, create_expertise_tag_write_routes};
-pub use livechat_audit_log_handler::{create_livechat_audit_log_routes, create_livechat_audit_log_read_routes, create_livechat_audit_log_write_routes};
 pub use member_history_handler::{create_member_history_routes, create_member_history_read_routes, create_member_history_write_routes};
 pub use operator_expertise_handler::{create_operator_expertise_routes, create_operator_expertise_read_routes, create_operator_expertise_write_routes};
 pub use operator_profile_handler::{create_operator_profile_routes, create_operator_profile_read_routes, create_operator_profile_write_routes};
