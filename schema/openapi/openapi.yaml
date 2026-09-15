@@ -7,7 +7,7 @@ info:
     This API provides 11 standard CRUD endpoints for each model.
 
 servers:
-  - url: http://localhost:3000
+  - url: /
     description: Development server
 
 tags:
@@ -47,7 +47,7 @@ tags:
     description: SessionTag management endpoints
 
 paths:
-  /api/v1/channels:
+  /api/v1/livechat/channels:
     get:
       tags:
         - Channels
@@ -93,7 +93,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/channels/{id}:
+  /api/v1/livechat/channels/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -165,7 +165,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/channels/bulk:
+  /api/v1/livechat/channels/bulk:
     post:
       tags:
         - Channels
@@ -257,7 +257,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/channels/upsert:
+  /api/v1/livechat/channels/upsert:
     post:
       tags:
         - Channels
@@ -287,7 +287,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Channel'
 
-  /api/v1/channels/trash:
+  /api/v1/livechat/channels/trash:
     get:
       tags:
         - Channels
@@ -304,7 +304,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChannelList'
 
-  /api/v1/channels/{id}/restore:
+  /api/v1/livechat/channels/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -322,7 +322,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/channels/empty:
+  /api/v1/livechat/channels/empty:
     delete:
       tags:
         - Channels
@@ -339,7 +339,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/channels/delete/bulk:
+  /api/v1/livechat/channels/delete/bulk:
     post:
       tags:
         - Channels
@@ -359,7 +359,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/channels/restore/bulk:
+  /api/v1/livechat/channels/restore/bulk:
     post:
       tags:
         - Channels
@@ -377,7 +377,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/channels/restore/all:
+  /api/v1/livechat/channels/restore/all:
     post:
       tags:
         - Channels
@@ -393,7 +393,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/channels/trash/bulk:
+  /api/v1/livechat/channels/trash/bulk:
     delete:
       tags:
         - Channels
@@ -413,7 +413,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/channel_members:
+  /api/v1/livechat/channel_members:
     get:
       tags:
         - ChannelMembers
@@ -459,7 +459,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/channel_members/{id}:
+  /api/v1/livechat/channel_members/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -531,7 +531,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/channel_members/bulk:
+  /api/v1/livechat/channel_members/bulk:
     post:
       tags:
         - ChannelMembers
@@ -623,7 +623,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/channel_members/upsert:
+  /api/v1/livechat/channel_members/upsert:
     post:
       tags:
         - ChannelMembers
@@ -653,7 +653,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChannelMember'
 
-  /api/v1/channel_members/trash:
+  /api/v1/livechat/channel_members/trash:
     get:
       tags:
         - ChannelMembers
@@ -670,7 +670,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChannelMemberList'
 
-  /api/v1/channel_members/{id}/restore:
+  /api/v1/livechat/channel_members/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -688,7 +688,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/channel_members/empty:
+  /api/v1/livechat/channel_members/empty:
     delete:
       tags:
         - ChannelMembers
@@ -705,7 +705,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/channel_members/delete/bulk:
+  /api/v1/livechat/channel_members/delete/bulk:
     post:
       tags:
         - ChannelMembers
@@ -725,7 +725,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/channel_members/restore/bulk:
+  /api/v1/livechat/channel_members/restore/bulk:
     post:
       tags:
         - ChannelMembers
@@ -743,7 +743,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/channel_members/restore/all:
+  /api/v1/livechat/channel_members/restore/all:
     post:
       tags:
         - ChannelMembers
@@ -759,7 +759,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/channel_members/trash/bulk:
+  /api/v1/livechat/channel_members/trash/bulk:
     delete:
       tags:
         - ChannelMembers
@@ -779,7 +779,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/channel_rules:
+  /api/v1/livechat/channel_rules:
     get:
       tags:
         - ChannelRules
@@ -825,7 +825,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/channel_rules/{id}:
+  /api/v1/livechat/channel_rules/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -897,7 +897,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/channel_rules/bulk:
+  /api/v1/livechat/channel_rules/bulk:
     post:
       tags:
         - ChannelRules
@@ -989,7 +989,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/channel_rules/upsert:
+  /api/v1/livechat/channel_rules/upsert:
     post:
       tags:
         - ChannelRules
@@ -1019,7 +1019,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChannelRule'
 
-  /api/v1/channel_rules/trash:
+  /api/v1/livechat/channel_rules/trash:
     get:
       tags:
         - ChannelRules
@@ -1036,7 +1036,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChannelRuleList'
 
-  /api/v1/channel_rules/{id}/restore:
+  /api/v1/livechat/channel_rules/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -1054,7 +1054,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/channel_rules/empty:
+  /api/v1/livechat/channel_rules/empty:
     delete:
       tags:
         - ChannelRules
@@ -1071,7 +1071,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/channel_rules/delete/bulk:
+  /api/v1/livechat/channel_rules/delete/bulk:
     post:
       tags:
         - ChannelRules
@@ -1091,7 +1091,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/channel_rules/restore/bulk:
+  /api/v1/livechat/channel_rules/restore/bulk:
     post:
       tags:
         - ChannelRules
@@ -1109,7 +1109,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/channel_rules/restore/all:
+  /api/v1/livechat/channel_rules/restore/all:
     post:
       tags:
         - ChannelRules
@@ -1125,7 +1125,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/channel_rules/trash/bulk:
+  /api/v1/livechat/channel_rules/trash/bulk:
     delete:
       tags:
         - ChannelRules
@@ -1145,7 +1145,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_answers:
+  /api/v1/livechat/chatbot_answers:
     get:
       tags:
         - ChatbotAnswers
@@ -1191,7 +1191,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/chatbot_answers/{id}:
+  /api/v1/livechat/chatbot_answers/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -1263,7 +1263,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/chatbot_answers/bulk:
+  /api/v1/livechat/chatbot_answers/bulk:
     post:
       tags:
         - ChatbotAnswers
@@ -1355,7 +1355,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_answers/upsert:
+  /api/v1/livechat/chatbot_answers/upsert:
     post:
       tags:
         - ChatbotAnswers
@@ -1385,7 +1385,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChatbotAnswer'
 
-  /api/v1/chatbot_answers/trash:
+  /api/v1/livechat/chatbot_answers/trash:
     get:
       tags:
         - ChatbotAnswers
@@ -1402,7 +1402,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChatbotAnswerList'
 
-  /api/v1/chatbot_answers/{id}/restore:
+  /api/v1/livechat/chatbot_answers/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -1420,7 +1420,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/chatbot_answers/empty:
+  /api/v1/livechat/chatbot_answers/empty:
     delete:
       tags:
         - ChatbotAnswers
@@ -1437,7 +1437,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/chatbot_answers/delete/bulk:
+  /api/v1/livechat/chatbot_answers/delete/bulk:
     post:
       tags:
         - ChatbotAnswers
@@ -1457,7 +1457,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_answers/restore/bulk:
+  /api/v1/livechat/chatbot_answers/restore/bulk:
     post:
       tags:
         - ChatbotAnswers
@@ -1475,7 +1475,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_answers/restore/all:
+  /api/v1/livechat/chatbot_answers/restore/all:
     post:
       tags:
         - ChatbotAnswers
@@ -1491,7 +1491,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/chatbot_answers/trash/bulk:
+  /api/v1/livechat/chatbot_answers/trash/bulk:
     delete:
       tags:
         - ChatbotAnswers
@@ -1511,7 +1511,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_messages:
+  /api/v1/livechat/chatbot_messages:
     get:
       tags:
         - ChatbotMessages
@@ -1557,7 +1557,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/chatbot_messages/{id}:
+  /api/v1/livechat/chatbot_messages/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -1629,7 +1629,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/chatbot_messages/bulk:
+  /api/v1/livechat/chatbot_messages/bulk:
     post:
       tags:
         - ChatbotMessages
@@ -1721,7 +1721,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_messages/upsert:
+  /api/v1/livechat/chatbot_messages/upsert:
     post:
       tags:
         - ChatbotMessages
@@ -1751,7 +1751,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChatbotMessage'
 
-  /api/v1/chatbot_messages/trash:
+  /api/v1/livechat/chatbot_messages/trash:
     get:
       tags:
         - ChatbotMessages
@@ -1768,7 +1768,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChatbotMessageList'
 
-  /api/v1/chatbot_messages/{id}/restore:
+  /api/v1/livechat/chatbot_messages/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -1786,7 +1786,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/chatbot_messages/empty:
+  /api/v1/livechat/chatbot_messages/empty:
     delete:
       tags:
         - ChatbotMessages
@@ -1803,7 +1803,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/chatbot_messages/delete/bulk:
+  /api/v1/livechat/chatbot_messages/delete/bulk:
     post:
       tags:
         - ChatbotMessages
@@ -1823,7 +1823,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_messages/restore/bulk:
+  /api/v1/livechat/chatbot_messages/restore/bulk:
     post:
       tags:
         - ChatbotMessages
@@ -1841,7 +1841,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_messages/restore/all:
+  /api/v1/livechat/chatbot_messages/restore/all:
     post:
       tags:
         - ChatbotMessages
@@ -1857,7 +1857,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/chatbot_messages/trash/bulk:
+  /api/v1/livechat/chatbot_messages/trash/bulk:
     delete:
       tags:
         - ChatbotMessages
@@ -1877,7 +1877,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_scripts:
+  /api/v1/livechat/chatbot_scripts:
     get:
       tags:
         - ChatbotScripts
@@ -1923,7 +1923,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/chatbot_scripts/{id}:
+  /api/v1/livechat/chatbot_scripts/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -1995,7 +1995,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/chatbot_scripts/bulk:
+  /api/v1/livechat/chatbot_scripts/bulk:
     post:
       tags:
         - ChatbotScripts
@@ -2087,7 +2087,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_scripts/upsert:
+  /api/v1/livechat/chatbot_scripts/upsert:
     post:
       tags:
         - ChatbotScripts
@@ -2117,7 +2117,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChatbotScript'
 
-  /api/v1/chatbot_scripts/trash:
+  /api/v1/livechat/chatbot_scripts/trash:
     get:
       tags:
         - ChatbotScripts
@@ -2134,7 +2134,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChatbotScriptList'
 
-  /api/v1/chatbot_scripts/{id}/restore:
+  /api/v1/livechat/chatbot_scripts/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -2152,7 +2152,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/chatbot_scripts/empty:
+  /api/v1/livechat/chatbot_scripts/empty:
     delete:
       tags:
         - ChatbotScripts
@@ -2169,7 +2169,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/chatbot_scripts/delete/bulk:
+  /api/v1/livechat/chatbot_scripts/delete/bulk:
     post:
       tags:
         - ChatbotScripts
@@ -2189,7 +2189,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_scripts/restore/bulk:
+  /api/v1/livechat/chatbot_scripts/restore/bulk:
     post:
       tags:
         - ChatbotScripts
@@ -2207,7 +2207,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_scripts/restore/all:
+  /api/v1/livechat/chatbot_scripts/restore/all:
     post:
       tags:
         - ChatbotScripts
@@ -2223,7 +2223,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/chatbot_scripts/trash/bulk:
+  /api/v1/livechat/chatbot_scripts/trash/bulk:
     delete:
       tags:
         - ChatbotScripts
@@ -2243,7 +2243,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_steps:
+  /api/v1/livechat/chatbot_steps:
     get:
       tags:
         - ChatbotSteps
@@ -2289,7 +2289,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/chatbot_steps/{id}:
+  /api/v1/livechat/chatbot_steps/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -2361,7 +2361,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/chatbot_steps/bulk:
+  /api/v1/livechat/chatbot_steps/bulk:
     post:
       tags:
         - ChatbotSteps
@@ -2453,7 +2453,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_steps/upsert:
+  /api/v1/livechat/chatbot_steps/upsert:
     post:
       tags:
         - ChatbotSteps
@@ -2483,7 +2483,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChatbotStep'
 
-  /api/v1/chatbot_steps/trash:
+  /api/v1/livechat/chatbot_steps/trash:
     get:
       tags:
         - ChatbotSteps
@@ -2500,7 +2500,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChatbotStepList'
 
-  /api/v1/chatbot_steps/{id}/restore:
+  /api/v1/livechat/chatbot_steps/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -2518,7 +2518,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/chatbot_steps/empty:
+  /api/v1/livechat/chatbot_steps/empty:
     delete:
       tags:
         - ChatbotSteps
@@ -2535,7 +2535,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/chatbot_steps/delete/bulk:
+  /api/v1/livechat/chatbot_steps/delete/bulk:
     post:
       tags:
         - ChatbotSteps
@@ -2555,7 +2555,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_steps/restore/bulk:
+  /api/v1/livechat/chatbot_steps/restore/bulk:
     post:
       tags:
         - ChatbotSteps
@@ -2573,7 +2573,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_steps/restore/all:
+  /api/v1/livechat/chatbot_steps/restore/all:
     post:
       tags:
         - ChatbotSteps
@@ -2589,7 +2589,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/chatbot_steps/trash/bulk:
+  /api/v1/livechat/chatbot_steps/trash/bulk:
     delete:
       tags:
         - ChatbotSteps
@@ -2609,7 +2609,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_step_triggers:
+  /api/v1/livechat/chatbot_step_triggers:
     get:
       tags:
         - ChatbotStepTriggers
@@ -2655,7 +2655,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/chatbot_step_triggers/{id}:
+  /api/v1/livechat/chatbot_step_triggers/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -2727,7 +2727,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/chatbot_step_triggers/bulk:
+  /api/v1/livechat/chatbot_step_triggers/bulk:
     post:
       tags:
         - ChatbotStepTriggers
@@ -2819,7 +2819,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_step_triggers/upsert:
+  /api/v1/livechat/chatbot_step_triggers/upsert:
     post:
       tags:
         - ChatbotStepTriggers
@@ -2849,7 +2849,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChatbotStepTrigger'
 
-  /api/v1/chatbot_step_triggers/trash:
+  /api/v1/livechat/chatbot_step_triggers/trash:
     get:
       tags:
         - ChatbotStepTriggers
@@ -2866,7 +2866,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChatbotStepTriggerList'
 
-  /api/v1/chatbot_step_triggers/{id}/restore:
+  /api/v1/livechat/chatbot_step_triggers/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -2884,7 +2884,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/chatbot_step_triggers/empty:
+  /api/v1/livechat/chatbot_step_triggers/empty:
     delete:
       tags:
         - ChatbotStepTriggers
@@ -2901,7 +2901,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/chatbot_step_triggers/delete/bulk:
+  /api/v1/livechat/chatbot_step_triggers/delete/bulk:
     post:
       tags:
         - ChatbotStepTriggers
@@ -2921,7 +2921,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_step_triggers/restore/bulk:
+  /api/v1/livechat/chatbot_step_triggers/restore/bulk:
     post:
       tags:
         - ChatbotStepTriggers
@@ -2939,7 +2939,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/chatbot_step_triggers/restore/all:
+  /api/v1/livechat/chatbot_step_triggers/restore/all:
     post:
       tags:
         - ChatbotStepTriggers
@@ -2955,7 +2955,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/chatbot_step_triggers/trash/bulk:
+  /api/v1/livechat/chatbot_step_triggers/trash/bulk:
     delete:
       tags:
         - ChatbotStepTriggers
@@ -2975,7 +2975,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/conversation_tags:
+  /api/v1/livechat/conversation_tags:
     get:
       tags:
         - ConversationTags
@@ -3021,7 +3021,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/conversation_tags/{id}:
+  /api/v1/livechat/conversation_tags/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -3093,7 +3093,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/conversation_tags/bulk:
+  /api/v1/livechat/conversation_tags/bulk:
     post:
       tags:
         - ConversationTags
@@ -3185,7 +3185,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/conversation_tags/upsert:
+  /api/v1/livechat/conversation_tags/upsert:
     post:
       tags:
         - ConversationTags
@@ -3215,7 +3215,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConversationTag'
 
-  /api/v1/conversation_tags/trash:
+  /api/v1/livechat/conversation_tags/trash:
     get:
       tags:
         - ConversationTags
@@ -3232,7 +3232,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConversationTagList'
 
-  /api/v1/conversation_tags/{id}/restore:
+  /api/v1/livechat/conversation_tags/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -3250,7 +3250,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/conversation_tags/empty:
+  /api/v1/livechat/conversation_tags/empty:
     delete:
       tags:
         - ConversationTags
@@ -3267,7 +3267,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/conversation_tags/delete/bulk:
+  /api/v1/livechat/conversation_tags/delete/bulk:
     post:
       tags:
         - ConversationTags
@@ -3287,7 +3287,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/conversation_tags/restore/bulk:
+  /api/v1/livechat/conversation_tags/restore/bulk:
     post:
       tags:
         - ConversationTags
@@ -3305,7 +3305,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/conversation_tags/restore/all:
+  /api/v1/livechat/conversation_tags/restore/all:
     post:
       tags:
         - ConversationTags
@@ -3321,7 +3321,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/conversation_tags/trash/bulk:
+  /api/v1/livechat/conversation_tags/trash/bulk:
     delete:
       tags:
         - ConversationTags
@@ -3341,7 +3341,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/expertise_tags:
+  /api/v1/livechat/expertise_tags:
     get:
       tags:
         - ExpertiseTags
@@ -3387,7 +3387,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/expertise_tags/{id}:
+  /api/v1/livechat/expertise_tags/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -3459,7 +3459,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/expertise_tags/bulk:
+  /api/v1/livechat/expertise_tags/bulk:
     post:
       tags:
         - ExpertiseTags
@@ -3551,7 +3551,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/expertise_tags/upsert:
+  /api/v1/livechat/expertise_tags/upsert:
     post:
       tags:
         - ExpertiseTags
@@ -3581,7 +3581,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ExpertiseTag'
 
-  /api/v1/expertise_tags/trash:
+  /api/v1/livechat/expertise_tags/trash:
     get:
       tags:
         - ExpertiseTags
@@ -3598,7 +3598,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ExpertiseTagList'
 
-  /api/v1/expertise_tags/{id}/restore:
+  /api/v1/livechat/expertise_tags/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -3616,7 +3616,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/expertise_tags/empty:
+  /api/v1/livechat/expertise_tags/empty:
     delete:
       tags:
         - ExpertiseTags
@@ -3633,7 +3633,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/expertise_tags/delete/bulk:
+  /api/v1/livechat/expertise_tags/delete/bulk:
     post:
       tags:
         - ExpertiseTags
@@ -3653,7 +3653,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/expertise_tags/restore/bulk:
+  /api/v1/livechat/expertise_tags/restore/bulk:
     post:
       tags:
         - ExpertiseTags
@@ -3671,7 +3671,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/expertise_tags/restore/all:
+  /api/v1/livechat/expertise_tags/restore/all:
     post:
       tags:
         - ExpertiseTags
@@ -3687,7 +3687,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/expertise_tags/trash/bulk:
+  /api/v1/livechat/expertise_tags/trash/bulk:
     delete:
       tags:
         - ExpertiseTags
@@ -3707,7 +3707,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/livechat_audit_logs:
+  /api/v1/livechat/livechat_audit_logs:
     get:
       tags:
         - LivechatAuditLogs
@@ -3753,7 +3753,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/livechat_audit_logs/{id}:
+  /api/v1/livechat/livechat_audit_logs/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -3825,7 +3825,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/livechat_audit_logs/bulk:
+  /api/v1/livechat/livechat_audit_logs/bulk:
     post:
       tags:
         - LivechatAuditLogs
@@ -3917,7 +3917,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/livechat_audit_logs/upsert:
+  /api/v1/livechat/livechat_audit_logs/upsert:
     post:
       tags:
         - LivechatAuditLogs
@@ -3947,7 +3947,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/LivechatAuditLog'
 
-  /api/v1/livechat_audit_logs/trash:
+  /api/v1/livechat/livechat_audit_logs/trash:
     get:
       tags:
         - LivechatAuditLogs
@@ -3964,7 +3964,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/LivechatAuditLogList'
 
-  /api/v1/livechat_audit_logs/{id}/restore:
+  /api/v1/livechat/livechat_audit_logs/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -3982,7 +3982,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/livechat_audit_logs/empty:
+  /api/v1/livechat/livechat_audit_logs/empty:
     delete:
       tags:
         - LivechatAuditLogs
@@ -3999,7 +3999,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/livechat_audit_logs/delete/bulk:
+  /api/v1/livechat/livechat_audit_logs/delete/bulk:
     post:
       tags:
         - LivechatAuditLogs
@@ -4019,7 +4019,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/livechat_audit_logs/restore/bulk:
+  /api/v1/livechat/livechat_audit_logs/restore/bulk:
     post:
       tags:
         - LivechatAuditLogs
@@ -4037,7 +4037,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/livechat_audit_logs/restore/all:
+  /api/v1/livechat/livechat_audit_logs/restore/all:
     post:
       tags:
         - LivechatAuditLogs
@@ -4053,7 +4053,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/livechat_audit_logs/trash/bulk:
+  /api/v1/livechat/livechat_audit_logs/trash/bulk:
     delete:
       tags:
         - LivechatAuditLogs
@@ -4073,7 +4073,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/member_histories:
+  /api/v1/livechat/member_histories:
     get:
       tags:
         - MemberHistories
@@ -4119,7 +4119,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/member_histories/{id}:
+  /api/v1/livechat/member_histories/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -4191,7 +4191,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/member_histories/bulk:
+  /api/v1/livechat/member_histories/bulk:
     post:
       tags:
         - MemberHistories
@@ -4283,7 +4283,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/member_histories/upsert:
+  /api/v1/livechat/member_histories/upsert:
     post:
       tags:
         - MemberHistories
@@ -4313,7 +4313,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/MemberHistory'
 
-  /api/v1/member_histories/trash:
+  /api/v1/livechat/member_histories/trash:
     get:
       tags:
         - MemberHistories
@@ -4330,7 +4330,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/MemberHistoryList'
 
-  /api/v1/member_histories/{id}/restore:
+  /api/v1/livechat/member_histories/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -4348,7 +4348,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/member_histories/empty:
+  /api/v1/livechat/member_histories/empty:
     delete:
       tags:
         - MemberHistories
@@ -4365,7 +4365,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/member_histories/delete/bulk:
+  /api/v1/livechat/member_histories/delete/bulk:
     post:
       tags:
         - MemberHistories
@@ -4385,7 +4385,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/member_histories/restore/bulk:
+  /api/v1/livechat/member_histories/restore/bulk:
     post:
       tags:
         - MemberHistories
@@ -4403,7 +4403,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/member_histories/restore/all:
+  /api/v1/livechat/member_histories/restore/all:
     post:
       tags:
         - MemberHistories
@@ -4419,7 +4419,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/member_histories/trash/bulk:
+  /api/v1/livechat/member_histories/trash/bulk:
     delete:
       tags:
         - MemberHistories
@@ -4439,7 +4439,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/operator_expertises:
+  /api/v1/livechat/operator_expertises:
     get:
       tags:
         - OperatorExpertises
@@ -4485,7 +4485,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/operator_expertises/{id}:
+  /api/v1/livechat/operator_expertises/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -4557,7 +4557,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/operator_expertises/bulk:
+  /api/v1/livechat/operator_expertises/bulk:
     post:
       tags:
         - OperatorExpertises
@@ -4649,7 +4649,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/operator_expertises/upsert:
+  /api/v1/livechat/operator_expertises/upsert:
     post:
       tags:
         - OperatorExpertises
@@ -4679,7 +4679,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/OperatorExpertise'
 
-  /api/v1/operator_expertises/trash:
+  /api/v1/livechat/operator_expertises/trash:
     get:
       tags:
         - OperatorExpertises
@@ -4696,7 +4696,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/OperatorExpertiseList'
 
-  /api/v1/operator_expertises/{id}/restore:
+  /api/v1/livechat/operator_expertises/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -4714,7 +4714,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/operator_expertises/empty:
+  /api/v1/livechat/operator_expertises/empty:
     delete:
       tags:
         - OperatorExpertises
@@ -4731,7 +4731,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/operator_expertises/delete/bulk:
+  /api/v1/livechat/operator_expertises/delete/bulk:
     post:
       tags:
         - OperatorExpertises
@@ -4751,7 +4751,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/operator_expertises/restore/bulk:
+  /api/v1/livechat/operator_expertises/restore/bulk:
     post:
       tags:
         - OperatorExpertises
@@ -4769,7 +4769,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/operator_expertises/restore/all:
+  /api/v1/livechat/operator_expertises/restore/all:
     post:
       tags:
         - OperatorExpertises
@@ -4785,7 +4785,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/operator_expertises/trash/bulk:
+  /api/v1/livechat/operator_expertises/trash/bulk:
     delete:
       tags:
         - OperatorExpertises
@@ -4805,7 +4805,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/operator_profiles:
+  /api/v1/livechat/operator_profiles:
     get:
       tags:
         - OperatorProfiles
@@ -4851,7 +4851,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/operator_profiles/{id}:
+  /api/v1/livechat/operator_profiles/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -4923,7 +4923,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/operator_profiles/bulk:
+  /api/v1/livechat/operator_profiles/bulk:
     post:
       tags:
         - OperatorProfiles
@@ -5015,7 +5015,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/operator_profiles/upsert:
+  /api/v1/livechat/operator_profiles/upsert:
     post:
       tags:
         - OperatorProfiles
@@ -5045,7 +5045,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/OperatorProfile'
 
-  /api/v1/operator_profiles/trash:
+  /api/v1/livechat/operator_profiles/trash:
     get:
       tags:
         - OperatorProfiles
@@ -5062,7 +5062,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/OperatorProfileList'
 
-  /api/v1/operator_profiles/{id}/restore:
+  /api/v1/livechat/operator_profiles/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -5080,7 +5080,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/operator_profiles/empty:
+  /api/v1/livechat/operator_profiles/empty:
     delete:
       tags:
         - OperatorProfiles
@@ -5097,7 +5097,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/operator_profiles/delete/bulk:
+  /api/v1/livechat/operator_profiles/delete/bulk:
     post:
       tags:
         - OperatorProfiles
@@ -5117,7 +5117,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/operator_profiles/restore/bulk:
+  /api/v1/livechat/operator_profiles/restore/bulk:
     post:
       tags:
         - OperatorProfiles
@@ -5135,7 +5135,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/operator_profiles/restore/all:
+  /api/v1/livechat/operator_profiles/restore/all:
     post:
       tags:
         - OperatorProfiles
@@ -5151,7 +5151,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/operator_profiles/trash/bulk:
+  /api/v1/livechat/operator_profiles/trash/bulk:
     delete:
       tags:
         - OperatorProfiles
@@ -5171,7 +5171,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/ratings:
+  /api/v1/livechat/ratings:
     get:
       tags:
         - Ratings
@@ -5217,7 +5217,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/ratings/{id}:
+  /api/v1/livechat/ratings/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -5289,7 +5289,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/ratings/bulk:
+  /api/v1/livechat/ratings/bulk:
     post:
       tags:
         - Ratings
@@ -5381,7 +5381,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/ratings/upsert:
+  /api/v1/livechat/ratings/upsert:
     post:
       tags:
         - Ratings
@@ -5411,7 +5411,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Rating'
 
-  /api/v1/ratings/trash:
+  /api/v1/livechat/ratings/trash:
     get:
       tags:
         - Ratings
@@ -5428,7 +5428,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RatingList'
 
-  /api/v1/ratings/{id}/restore:
+  /api/v1/livechat/ratings/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -5446,7 +5446,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/ratings/empty:
+  /api/v1/livechat/ratings/empty:
     delete:
       tags:
         - Ratings
@@ -5463,7 +5463,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/ratings/delete/bulk:
+  /api/v1/livechat/ratings/delete/bulk:
     post:
       tags:
         - Ratings
@@ -5483,7 +5483,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/ratings/restore/bulk:
+  /api/v1/livechat/ratings/restore/bulk:
     post:
       tags:
         - Ratings
@@ -5501,7 +5501,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/ratings/restore/all:
+  /api/v1/livechat/ratings/restore/all:
     post:
       tags:
         - Ratings
@@ -5517,7 +5517,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/ratings/trash/bulk:
+  /api/v1/livechat/ratings/trash/bulk:
     delete:
       tags:
         - Ratings
@@ -5537,7 +5537,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/sessions:
+  /api/v1/livechat/sessions:
     get:
       tags:
         - Sessions
@@ -5583,7 +5583,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/sessions/{id}:
+  /api/v1/livechat/sessions/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -5655,7 +5655,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/sessions/bulk:
+  /api/v1/livechat/sessions/bulk:
     post:
       tags:
         - Sessions
@@ -5747,7 +5747,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/sessions/upsert:
+  /api/v1/livechat/sessions/upsert:
     post:
       tags:
         - Sessions
@@ -5777,7 +5777,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Session'
 
-  /api/v1/sessions/trash:
+  /api/v1/livechat/sessions/trash:
     get:
       tags:
         - Sessions
@@ -5794,7 +5794,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SessionList'
 
-  /api/v1/sessions/{id}/restore:
+  /api/v1/livechat/sessions/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -5812,7 +5812,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/sessions/empty:
+  /api/v1/livechat/sessions/empty:
     delete:
       tags:
         - Sessions
@@ -5829,7 +5829,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/sessions/delete/bulk:
+  /api/v1/livechat/sessions/delete/bulk:
     post:
       tags:
         - Sessions
@@ -5849,7 +5849,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/sessions/restore/bulk:
+  /api/v1/livechat/sessions/restore/bulk:
     post:
       tags:
         - Sessions
@@ -5867,7 +5867,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/sessions/restore/all:
+  /api/v1/livechat/sessions/restore/all:
     post:
       tags:
         - Sessions
@@ -5883,7 +5883,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/sessions/trash/bulk:
+  /api/v1/livechat/sessions/trash/bulk:
     delete:
       tags:
         - Sessions
@@ -5903,7 +5903,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/session_tags:
+  /api/v1/livechat/session_tags:
     get:
       tags:
         - SessionTags
@@ -5949,7 +5949,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/session_tags/{id}:
+  /api/v1/livechat/session_tags/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
 
@@ -6021,7 +6021,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/session_tags/bulk:
+  /api/v1/livechat/session_tags/bulk:
     post:
       tags:
         - SessionTags
@@ -6113,7 +6113,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/session_tags/upsert:
+  /api/v1/livechat/session_tags/upsert:
     post:
       tags:
         - SessionTags
@@ -6143,7 +6143,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SessionTag'
 
-  /api/v1/session_tags/trash:
+  /api/v1/livechat/session_tags/trash:
     get:
       tags:
         - SessionTags
@@ -6160,7 +6160,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SessionTagList'
 
-  /api/v1/session_tags/{id}/restore:
+  /api/v1/livechat/session_tags/{id}/restore:
     parameters:
       - $ref: '#/components/parameters/IdParam'
     post:
@@ -6178,7 +6178,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v1/session_tags/empty:
+  /api/v1/livechat/session_tags/empty:
     delete:
       tags:
         - SessionTags
@@ -6195,7 +6195,7 @@ paths:
                   deleted_count:
                     type: integer
 
-  /api/v1/session_tags/delete/bulk:
+  /api/v1/livechat/session_tags/delete/bulk:
     post:
       tags:
         - SessionTags
@@ -6215,7 +6215,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/session_tags/restore/bulk:
+  /api/v1/livechat/session_tags/restore/bulk:
     post:
       tags:
         - SessionTags
@@ -6233,7 +6233,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /api/v1/session_tags/restore/all:
+  /api/v1/livechat/session_tags/restore/all:
     post:
       tags:
         - SessionTags
@@ -6249,7 +6249,7 @@ paths:
                 properties:
                   restored: { type: integer }
 
-  /api/v1/session_tags/trash/bulk:
+  /api/v1/livechat/session_tags/trash/bulk:
     delete:
       tags:
         - SessionTags
