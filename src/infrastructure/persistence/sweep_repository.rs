@@ -144,17 +144,19 @@ async fn bulk_audit(
     ids: &[Uuid],
     detail: serde_json::Value,
 ) -> Result<(), LivechatError> {
-    sqlx::query(
-        r#"INSERT INTO livechat.livechat_audit_log
-               (event, actor, subject_type, subject_id, detail)
-           SELECT $1::livechat_audit_event, NULL, $2, i, $3
-             FROM unnest($4::uuid[]) AS i"#,
-    )
-    .bind(kind)
-    .bind(subject_type)
-    .bind(detail)
-    .bind(ids)
-    .execute(&mut *tx)
-    .await?;
+    // One row per subject, as the set-returning INSERT did. The sweep has no
+    // actor to name, so these attribute to the session default — which for a
+    // sweep is `system`, and truthfully so.
+    for id in ids {
+        crate::infrastructure::persistence::audit::record_audit(
+            &mut *tx,
+            kind,
+            None,
+            subject_type,
+            Some(*id),
+            detail.clone(),
+        )
+        .await?;
+    }
     Ok(())
 }

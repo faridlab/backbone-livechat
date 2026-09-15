@@ -4,6 +4,7 @@
 //!
 //! Uses backbone-orm's `DatabaseOperations<T>` trait.
 
+pub mod audit;
 mod channel_repository;
 mod channel_member_repository;
 mod channel_rule_repository;

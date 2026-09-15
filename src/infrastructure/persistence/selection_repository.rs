@@ -684,17 +684,14 @@ pub async fn audit_tx(
     subject_id: Uuid,
     detail: serde_json::Value,
 ) -> Result<(), LivechatError> {
-    sqlx::query(
-        r#"INSERT INTO livechat.livechat_audit_log
-               (event, actor, subject_type, subject_id, detail)
-           VALUES ($1::livechat_audit_event, $2, $3, $4, $5)"#,
+    crate::infrastructure::persistence::audit::record_audit(
+        &mut *tx,
+        kind,
+        actor,
+        subject_type,
+        Some(subject_id),
+        detail,
     )
-    .bind(kind)
-    .bind(actor)
-    .bind(subject_type)
-    .bind(subject_id)
-    .bind(detail)
-    .execute(&mut *tx)
     .await?;
     Ok(())
 }
@@ -708,18 +705,16 @@ pub async fn record_audit(
     subject_id: Uuid,
     detail: serde_json::Value,
 ) {
-    let _ = org_scope::execute_scoped(
+    // Best-effort, as before: a failed audit must not fail the verb it
+    // describes. The append rides the caller's pool the same way the scoped
+    // execute did.
+    let _ = crate::infrastructure::persistence::audit::record_audit(
         pool,
-        sqlx::query(
-            r#"INSERT INTO livechat.livechat_audit_log
-               (event, actor, subject_type, subject_id, detail)
-           VALUES ($1::livechat_audit_event, $2, $3, $4, $5)"#,
-        )
-        .bind(kind)
-        .bind(actor)
-        .bind(subject_type)
-        .bind(subject_id)
-        .bind(detail),
+        kind,
+        actor,
+        subject_type,
+        Some(subject_id),
+        detail,
     )
     .await;
 }
