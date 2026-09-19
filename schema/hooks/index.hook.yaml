@@ -1,0 +1,72 @@
+# livechat Module - Hooks Index
+# Version: 2.0
+#
+# Module-level configuration for hooks (lifecycle behaviors).
+# Hooks define: state machines, rules, permissions, triggers, computed fields.
+
+module: livechat
+version: 2
+
+# No per-entity hook files: this module's lifecycle rules live in its write
+# services. The file exists for the scheduled-job declarations below, which
+# ADR-0020 requires to have a module-side home.
+imports: []
+
+# =============================================================================
+# Module-level configuration
+# =============================================================================
+config:
+  audit:
+    retention_days: 365
+    archive_after_days: 90
+    critical_events: []
+
+  notifications:
+    email_enabled: false
+    sms_enabled: false
+    push_enabled: false
+
+# =============================================================================
+# Shared domain events
+# =============================================================================
+events: {}
+
+# =============================================================================
+# Scheduled jobs
+# =============================================================================
+# Two maintenance horizons, both declared in the specification and both
+# implemented in `SweepService` (src/application/service/sweep_service.rs).
+#
+# Posture ruling (ADR-0020): host_riding. This module owns no cron row. The
+# composing service runs one interval and calls the module's single entry point
+# `SweepService::sweep_at`, which runs both passes; the host is also what binds
+# an org scope per live unit, because the jobs loop has no request scope and an
+# unscoped pass reads zero rows through the fence without saying so.
+#
+# The interval is a floor, not the contract: the horizons are read per pass from
+# the environment (LIVECHAT_IDLE_CLOSE_HOURS / LIVECHAT_INVITE_EXPIRY_HOURS,
+# 24 hours each by default), so a rotation needs no restart, and a pass that
+# runs late closes the same rows a moment later.
+#
+# Both passes claim with FOR UPDATE SKIP LOCKED and commit per capped batch
+# (200 rows), so two hosts running the pass at once divide the work instead of
+# repeating it, and a pass that dies keeps what it already closed.
+#
+# Nothing is deleted by either pass: rows are closed and audited. The reference
+# implementation's message-less hard unlink is deliberately not ported.
+scheduled_jobs:
+  idle_close_sessions:
+    schedule: "every 5.minutes"
+    handler: "livechat::sweep_at"
+    posture: host_riding
+    triggers: []
+    commit_policy: commit_per_batch
+    pickup_lock: true
+
+  expire_pending_invites:
+    schedule: "every 5.minutes"
+    handler: "livechat::sweep_at"
+    posture: host_riding
+    triggers: []
+    commit_policy: commit_per_batch
+    pickup_lock: true
