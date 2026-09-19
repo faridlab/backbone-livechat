@@ -708,7 +708,7 @@ pub async fn record_audit(
     // Best-effort, as before: a failed audit must not fail the verb it
     // describes. The append rides the caller's pool the same way the scoped
     // execute did.
-    let _ = crate::infrastructure::persistence::audit::record_audit(
+    let _ = crate::infrastructure::persistence::audit::record_audit_on_pool(
         pool,
         kind,
         actor,
