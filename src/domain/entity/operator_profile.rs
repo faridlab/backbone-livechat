@@ -228,6 +228,8 @@ impl backbone_orm::EntityRepoMeta for OperatorProfile {
         let mut m = std::collections::HashMap::new();
         m.insert("id".to_string(), "uuid".to_string());
         m.insert("user_id".to_string(), "uuid".to_string());
+        m.insert("last_heartbeat_at".to_string(), "timestamptz".to_string());
+        m.insert("last_assigned_at".to_string(), "timestamptz".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {

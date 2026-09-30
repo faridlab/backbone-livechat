@@ -70,9 +70,9 @@ async fn one_rating_per_session_and_the_scale_is_closed() {
         "a second rating is the typed once-wall refusal, got {refused:?}"
     );
     let (refused_audits, stored): (i64, i64) = sqlx::query_as(
-        r#"SELECT (SELECT count(*) FROM livechat.livechat_audit_log
-                     WHERE subject_id = $1 AND event = 'rating_refused'
-                       AND detail->>'reason' = 'already_submitted'),
+        r#"SELECT (SELECT count(*) FROM auditlog.audit_trails
+                     WHERE subject_id = $1::text AND action = 'rating_refused'
+                       AND changed->>'reason' = 'already_submitted'),
                   (SELECT count(*) FROM livechat.ratings WHERE session_id = $1)"#,
     )
     .bind(session.id)
@@ -92,9 +92,9 @@ async fn one_rating_per_session_and_the_scale_is_closed() {
         "a value outside the scale refuses typed naming it, got {refused:?}"
     );
     let (scale_audits,): (i64,) = sqlx::query_as(
-        r#"SELECT count(*) FROM livechat.livechat_audit_log
-            WHERE subject_id = $1 AND event = 'rating_refused'
-              AND detail->>'reason' LIKE '%scale%'"#,
+        r#"SELECT count(*) FROM auditlog.audit_trails
+            WHERE subject_id = $1::text AND action = 'rating_refused'
+              AND changed->>'reason' LIKE '%scale%'"#,
     )
     .bind(scale_session.id)
     .fetch_one(&pool)

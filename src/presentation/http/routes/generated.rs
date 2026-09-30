@@ -138,7 +138,7 @@ pub mod individual {
     }
 
     pub fn chatbot_message_routes(service: Arc<ChatbotMessageService>) -> Router {
-        create_chatbot_message_routes(service)
+        create_chatbot_message_read_routes(service)
     }
 
     pub fn chatbot_script_routes(service: Arc<ChatbotScriptService>) -> Router {
@@ -162,7 +162,7 @@ pub mod individual {
     }
 
     pub fn member_history_routes(service: Arc<MemberHistoryService>) -> Router {
-        create_member_history_routes(service)
+        create_member_history_read_routes(service)
     }
 
     pub fn operator_expertise_routes(service: Arc<OperatorExpertiseService>) -> Router {
@@ -178,7 +178,7 @@ pub mod individual {
     }
 
     pub fn session_routes(service: Arc<SessionService>) -> Router {
-        create_session_routes(service)
+        create_session_read_routes(service)
     }
 
     pub fn session_tag_routes(service: Arc<SessionTagService>) -> Router {

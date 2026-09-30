@@ -414,6 +414,11 @@ impl backbone_orm::EntityRepoMeta for Session {
         m.insert("failure".to_string(), "livechat_failure".to_string());
         m.insert("outcome".to_string(), "livechat_session_outcome".to_string());
         m.insert("close_reason".to_string(), "livechat_close_reason".to_string());
+        m.insert("closed_at".to_string(), "timestamptz".to_string());
+        m.insert("first_response_at".to_string(), "timestamptz".to_string());
+        m.insert("last_interest_at".to_string(), "timestamptz".to_string());
+        m.insert("last_visitor_message_at".to_string(), "timestamptz".to_string());
+        m.insert("last_operator_message_at".to_string(), "timestamptz".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {

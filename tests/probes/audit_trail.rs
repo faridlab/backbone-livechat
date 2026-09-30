@@ -61,9 +61,9 @@ async fn every_decision_leaves_its_row_and_the_vocabulary_is_closed() {
         .unwrap_or_else(|e| panic!("close: {e:?}"));
 
     // ── Every decision left its audit row ─────────────────────────
-    let trail: Vec<(String, Option<Uuid>)> = sqlx::query_as(
-        r#"SELECT event::text, actor FROM livechat.livechat_audit_log
-            WHERE subject_id = $1 ORDER BY created_at, id"#,
+    let trail: Vec<(String, Option<String>)> = sqlx::query_as(
+        r#"SELECT action, actor FROM auditlog.audit_trails
+            WHERE subject_id = $1::text ORDER BY occurred_at, id"#,
     )
     .bind(session.id)
     .fetch_all(&pool)
@@ -87,15 +87,15 @@ async fn every_decision_leaves_its_row_and_the_vocabulary_is_closed() {
         trail
             .iter()
             .filter(|(e, _)| e == "operator_assigned")
-            .all(|(_, actor)| *actor == Some(op_a)),
+            .all(|(_, actor)| *actor == Some(op_a.to_string())),
         "the assignment audit names the acting operator"
     );
     // The assignment row carries the replay facts (the ladder probe
     // re-checks the full set; here the presence of the rung).
     let (with_rung,): (i64,) = sqlx::query_as(
-        r#"SELECT count(*) FROM livechat.livechat_audit_log
-            WHERE subject_id = $1 AND event = 'operator_assigned'
-              AND detail ? 'rung' AND detail ? 'candidates_considered'"#,
+        r#"SELECT count(*) FROM auditlog.audit_trails
+            WHERE subject_id = $1::text AND action = 'operator_assigned'
+              AND changed ? 'rung' AND changed ? 'candidates_considered'"#,
     )
     .bind(session.id)
     .fetch_one(&pool)
@@ -106,23 +106,15 @@ async fn every_decision_leaves_its_row_and_the_vocabulary_is_closed() {
         "the assignment audit carries its replay facts"
     );
 
-    // ── The event vocabulary is CLOSED: an unknown event refuses ──
-    let err = sqlx::query(
-        r#"INSERT INTO livechat.livechat_audit_log (event, subject_type, subject_id, detail)
-           VALUES ('made_up_event', 'session', $1, '{}'::jsonb)"#,
-    )
-    .bind(session.id)
-    .execute(&pool)
-    .await
-    .err()
-    .unwrap_or_else(|| panic!("an event outside the enum must be refused by the DB"));
-    assert!(
-        err.to_string().contains("livechat_audit_event"),
-        "the enum wall fires naming the type, got {err}"
-    );
+    // ── The event vocabulary is CLOSED in the verbs, not the DB ──
+    // The retired per-module audit table carried a closed DB enum; the
+    // shared trail's action column is text, so the closed set is enforced by
+    // the module's verbs (every action above is staged by a verb, and no verb
+    // stages anything else). The trail-content asserts above are the proof;
+    // there is no DB-level refusal left to assert.
 
-    // The closed reason vocabulary too: a made-up reason refuses at
-    // the DB cast (the session row already exists; only the cast is
+    // The closed reason vocabulary still has its DB wall: a made-up reason
+    // refuses at the cast (the session row already exists; only the cast is
     // under test).
     let err = sqlx::query(
         r#"UPDATE livechat.sessions SET close_reason = 'made_up_reason' WHERE id = $1"#,

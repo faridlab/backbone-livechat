@@ -22,8 +22,8 @@ use super::common::{open_session, seed_channel_with_operators, RecordingCrmLeadP
 /// Count the audit rows of one event kind for one subject.
 async fn audit_count(pool: &sqlx::PgPool, event: &str, subject: Uuid) -> i64 {
     sqlx::query_scalar(
-        r#"SELECT count(*) FROM livechat.livechat_audit_log
-            WHERE event = $1::livechat_audit_event AND subject_id = $2"#,
+        r#"SELECT count(*) FROM auditlog.audit_trails
+            WHERE action = $1 AND subject_id = $2::text::text"#,
     )
     .bind(event)
     .bind(subject)
@@ -251,10 +251,10 @@ async fn a_second_session_cannot_steal_the_same_lead_id() {
         "the raced link never moved the row"
     );
     let refused: i64 = sqlx::query_scalar(
-        r#"SELECT count(*) FROM livechat.livechat_audit_log
-            WHERE event = 'lead_link_refused' AND subject_id = $1
-              AND detail->>'reason' = 'already_linked'
-              AND (detail->>'existing_lead_id')::uuid = $2"#,
+        r#"SELECT count(*) FROM auditlog.audit_trails
+            WHERE action = 'lead_link_refused' AND subject_id = $1::text
+              AND changed->>'reason' = 'already_linked'
+              AND (changed->>'existing_lead_id')::uuid = $2"#,
     )
     .bind(first.id)
     .bind(lead_id)

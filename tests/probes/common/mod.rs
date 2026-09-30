@@ -179,7 +179,14 @@ impl Drop for TestDb {
 /// `.up.sql` order — the module's files are self-contained).
 async fn apply_module_migrations(pool: &PgPool, marker: &str) -> Result<(), String> {
     let manifest = env!("CARGO_MANIFEST_DIR");
-    let dir = format!("{manifest}/migrations");
+    // The audit capture schema comes first: this module's writes stage audit
+    // rows, so the auditlog sibling's enums and capture function must exist
+    // before this module's own migrations run.
+    let dirs = [
+        format!("{manifest}/../backbone-auditlog/migrations"),
+        format!("{manifest}/migrations"),
+    ];
+    for dir in dirs {
     let mut files: Vec<std::path::PathBuf> = match std::fs::read_dir(&dir) {
         Ok(rd) => rd
             .filter_map(|e| e.ok())
@@ -207,6 +214,7 @@ async fn apply_module_migrations(pool: &PgPool, marker: &str) -> Result<(), Stri
                 file.display()
             ));
         }
+    }
     }
     Ok(())
 }

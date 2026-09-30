@@ -303,8 +303,8 @@ async fn the_pointer_state_machine_is_forward_only_and_sanitized() {
         r#"SELECT (SELECT visitor_answer FROM livechat.chatbot_messages
                           WHERE session_id = $1 AND visitor_answer IS NOT NULL
                           ORDER BY created_at DESC LIMIT 1),
-                      (SELECT count(*) FROM livechat.livechat_audit_log
-                        WHERE subject_id = $1 AND event = 'chatbot_forwarded'),
+                      (SELECT count(*) FROM auditlog.audit_trails
+                        WHERE subject_id = $1::text AND action = 'chatbot_forwarded'),
                       (closed_at IS NOT NULL),
                       operator_user_id
                  FROM livechat.sessions WHERE id = $1"#,

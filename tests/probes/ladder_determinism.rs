@@ -120,11 +120,11 @@ async fn ladder_is_deterministic_with_buffer_and_one_window() {
     // The assign audit row carries the replay facts (rung,
     // candidates, buffer, one window).
     let (audit_count,): (i64,) = sqlx::query_as(
-        r#"SELECT count(*) FROM livechat.livechat_audit_log
-            WHERE event = 'operator_assigned' AND subject_id = $1
-              AND detail->>'buffer_applied' = 'true'
-              AND (detail->>'buffer_secs')::int = $2
-              AND (detail->>'window_secs')::int = $3"#,
+        r#"SELECT count(*) FROM auditlog.audit_trails
+            WHERE action = 'operator_assigned' AND subject_id = $1::text
+              AND changed->>'buffer_applied' = 'true'
+              AND (changed->>'buffer_secs')::int = $2
+              AND (changed->>'window_secs')::int = $3"#,
     )
     .bind(s0.id)
     .bind(ASSIGNMENT_BUFFER_SECS)
@@ -283,8 +283,8 @@ async fn ladder_is_deterministic_with_buffer_and_one_window() {
         "a dead heartbeat empties the pool"
     );
     let (empty_audits,): (i64,) = sqlx::query_as(
-        r#"SELECT count(*) FROM livechat.livechat_audit_log
-            WHERE event = 'assignment_empty' AND subject_id = $1"#,
+        r#"SELECT count(*) FROM auditlog.audit_trails
+            WHERE action = 'assignment_empty' AND subject_id = $1::text"#,
     )
     .bind(s3.id)
     .fetch_one(&pool)
@@ -298,7 +298,7 @@ async fn ladder_is_deterministic_with_buffer_and_one_window() {
     let (before,): (i64,) = sqlx::query_as(
         r#"SELECT (SELECT count(*) FROM livechat.sessions)
                  + (SELECT count(*) FROM livechat.member_histories)
-                 + (SELECT count(*) FROM livechat.livechat_audit_log)"#,
+                 + (SELECT count(*) FROM auditlog.audit_trails)"#,
     )
     .fetch_one(&pool)
     .await
@@ -310,7 +310,7 @@ async fn ladder_is_deterministic_with_buffer_and_one_window() {
     let (after,): (i64,) = sqlx::query_as(
         r#"SELECT (SELECT count(*) FROM livechat.sessions)
                  + (SELECT count(*) FROM livechat.member_histories)
-                 + (SELECT count(*) FROM livechat.livechat_audit_log)"#,
+                 + (SELECT count(*) FROM auditlog.audit_trails)"#,
     )
     .fetch_one(&pool)
     .await

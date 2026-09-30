@@ -91,7 +91,7 @@ async fn sweeps_close_and_expire_without_ever_deleting() {
 
     let (before_sessions, before_audit): (i64, i64) = sqlx::query_as(
         r#"SELECT (SELECT count(*) FROM livechat.sessions),
-                  (SELECT count(*) FROM livechat.livechat_audit_log)"#,
+                  (SELECT count(*) FROM auditlog.audit_trails)"#,
     )
     .fetch_one(&pool)
     .await
@@ -170,13 +170,13 @@ async fn sweeps_close_and_expire_without_ever_deleting() {
     // Every swept id is audited, and NO row was deleted.
     let (audit_closed, audit_invite_expired, after_sessions, after_audit): (i64, i64, i64, i64) =
         sqlx::query_as(
-            r#"SELECT (SELECT count(*) FROM livechat.livechat_audit_log
-                        WHERE event = 'session_closed' AND subject_id = ANY($1)
-                          AND detail->>'via' = 'idle_sweep'),
-                      (SELECT count(*) FROM livechat.livechat_audit_log
-                        WHERE event = 'invite_expired' AND subject_id = $2),
+            r#"SELECT (SELECT count(*) FROM auditlog.audit_trails
+                        WHERE action = 'session_closed' AND subject_id = ANY($1::text[])
+                          AND changed->>'via' = 'idle_sweep'),
+                      (SELECT count(*) FROM auditlog.audit_trails
+                        WHERE action = 'invite_expired' AND subject_id = $2::text),
                       (SELECT count(*) FROM livechat.sessions),
-                      (SELECT count(*) FROM livechat.livechat_audit_log)"#,
+                      (SELECT count(*) FROM auditlog.audit_trails)"#,
         )
         .bind(vec![idle_a.id, idle_b.id])
         .bind(invite.id)

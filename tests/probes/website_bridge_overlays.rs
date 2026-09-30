@@ -91,8 +91,8 @@ async fn the_invite_lifecycle_is_fenced_visible_and_visitor_wins() {
         "the invite create is idempotent per visitor"
     );
     let (invite_created, agent_rows): (i64, i64) = sqlx::query_as(
-        r#"SELECT (SELECT count(*) FROM livechat.livechat_audit_log
-                     WHERE event = 'invite_created' AND subject_id = $1),
+        r#"SELECT (SELECT count(*) FROM auditlog.audit_trails
+                     WHERE action = 'invite_created' AND subject_id = $1::text),
                   (SELECT count(*) FROM livechat.member_histories
                      WHERE session_id = $1 AND persona = 'agent' AND operator_user_id = $2)"#,
     )
@@ -159,8 +159,8 @@ async fn the_invite_lifecycle_is_fenced_visible_and_visitor_wins() {
         .unwrap_or_else(|e| panic!("repeat delivery audit: {e:?}"));
     assert!(!delivered_again, "the gate opens ONCE");
     let (delivered_audits,): (i64,) = sqlx::query_as(
-        r#"SELECT count(*) FROM livechat.livechat_audit_log
-            WHERE event = 'invite_delivered' AND subject_id = $1"#,
+        r#"SELECT count(*) FROM auditlog.audit_trails
+            WHERE action = 'invite_delivered' AND subject_id = $1::text"#,
     )
     .bind(invite.id)
     .fetch_one(&pool)
@@ -190,8 +190,8 @@ async fn the_invite_lifecycle_is_fenced_visible_and_visitor_wins() {
         "accept cleared the pending flag"
     );
     let (accepted_audits, visitor_rows): (i64, i64) = sqlx::query_as(
-        r#"SELECT (SELECT count(*) FROM livechat.livechat_audit_log
-                     WHERE event = 'invite_accepted' AND subject_id = $1),
+        r#"SELECT (SELECT count(*) FROM auditlog.audit_trails
+                     WHERE action = 'invite_accepted' AND subject_id = $1::text),
                   (SELECT count(*) FROM livechat.member_histories
                      WHERE session_id = $1 AND persona = 'visitor' AND visitor_key = $2)"#,
     )
@@ -231,8 +231,8 @@ async fn the_invite_lifecycle_is_fenced_visible_and_visitor_wins() {
     let (b_closed, b_pending, b_reason, cancelled_audits): (bool, bool, Option<String>, i64) =
         sqlx::query_as(
             r#"SELECT (closed_at IS NOT NULL), is_pending_request, close_reason::text,
-                      (SELECT count(*) FROM livechat.livechat_audit_log
-                        WHERE event = 'invite_cancelled' AND subject_id = s.id)
+                      (SELECT count(*) FROM auditlog.audit_trails
+                        WHERE action = 'invite_cancelled' AND subject_id = s.id::text)
                  FROM livechat.sessions s WHERE id = $1"#,
         )
         .bind(pending_b.id)
@@ -277,9 +277,9 @@ async fn the_invite_lifecycle_is_fenced_visible_and_visitor_wins() {
             r#"SELECT (SELECT website_visitor_id FROM livechat.sessions WHERE id = $1),
                       (SELECT count(*) FROM livechat.member_histories
                         WHERE session_id = $1 AND persona = 'visitor' AND visitor_key = $2),
-                      (SELECT count(*) FROM livechat.livechat_audit_log
-                        WHERE event = 'visitor_relinked'
-                          AND subject_type = 'visitor' AND subject_id = $3)"#,
+                      (SELECT count(*) FROM auditlog.audit_trails
+                        WHERE action = 'visitor_relinked'
+                          AND subject_type = 'livechat.visitor' AND subject_id = $3::text)"#,
         )
         .bind(doomed.id)
         .bind(to_key)

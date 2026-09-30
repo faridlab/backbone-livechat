@@ -238,6 +238,7 @@ impl backbone_orm::EntityRepoMeta for ChatbotMessage {
         m.insert("session_id".to_string(), "uuid".to_string());
         m.insert("step_id".to_string(), "uuid".to_string());
         m.insert("selected_answer_id".to_string(), "uuid".to_string());
+        m.insert("created_at".to_string(), "timestamptz".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {

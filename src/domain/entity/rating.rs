@@ -240,6 +240,7 @@ impl backbone_orm::EntityRepoMeta for Rating {
         m.insert("operator_user_id".to_string(), "uuid".to_string());
         m.insert("chatbot_script_id".to_string(), "uuid".to_string());
         m.insert("rated_persona".to_string(), "livechat_rated_persona".to_string());
+        m.insert("created_at".to_string(), "timestamptz".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {

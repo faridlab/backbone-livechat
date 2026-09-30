@@ -36,7 +36,7 @@ fn pg_code(err: &sqlx::Error) -> String {
 
 /// The livechat base tables the strip migration freed of their
 /// company axis — every one must stay behind the armed half-fence.
-const BASE_TABLES: [&str; 17] = [
+const BASE_TABLES: [&str; 16] = [
     "channels",
     "channel_members",
     "channel_rules",
@@ -47,7 +47,8 @@ const BASE_TABLES: [&str; 17] = [
     "chatbot_step_triggers",
     "conversation_tags",
     "expertise_tags",
-    "livechat_audit_log",
+    // livechat_audit_log is retired: audited facts go to the shared
+    // auditlog.audit_trails (schema-pinned by the auditlog module).
     "member_histories",
     "operator_expertise",
     "operator_profiles",
