@@ -53,6 +53,13 @@ impl WebsiteRequestService {
         }
     }
 
+    /// The database this call runs on: the composer's request pool when one
+    /// is bound (a tenant mount, or a relay consumer wrapped by the host),
+    /// else the composed pool (ADR-0029 pool law).
+    fn rpool(&self) -> PgPool {
+        crate::request_pool::current().unwrap_or_else(|| self.pool.clone())
+    }
+
     /// The website's bound ACTIVE channel (the open verb's target;
     /// a miss is the typed 404 — no fallback channel).
     pub async fn active_channel(
@@ -127,14 +134,14 @@ impl WebsiteRequestService {
         // ledger row per session, not a channel-membership side
         // effect).
         if let Some(operator) = actor {
-            let mut tx = self.pool.begin().await?;
+            let mut tx = self.rpool().begin().await?;
             relay_ambient_scope(&mut tx).await?;
             upsert_agent_ledger_tx(&mut tx, row.id, operator).await?;
             tx.commit().await?;
         }
 
         crate::infrastructure::persistence::record_audit(
-            &self.pool,
+            &self.rpool(),
             "invite_created",
             actor,
             "session",

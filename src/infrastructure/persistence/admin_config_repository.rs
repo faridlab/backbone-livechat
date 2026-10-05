@@ -102,12 +102,19 @@ impl AdminConfigRepository {
         Self { pool }
     }
 
+    /// The database this call runs on: the composer's request pool when one
+    /// is bound (a tenant mount, or a relay consumer wrapped by the host),
+    /// else the composed pool (ADR-0029 pool law).
+    fn rpool(&self) -> PgPool {
+        crate::request_pool::current().unwrap_or_else(|| self.pool.clone())
+    }
+
     // ── Channels ───────────────────────────────────────────────────
 
     /// List the company's channels (non-deleted, by name).
     pub async fn channel_list(&self) -> Result<Vec<JsonRow>, LivechatError> {
         let rows = fetch_all_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"SELECT to_jsonb(e) FROM livechat.channels e
                     WHERE e.metadata->>'deleted_at' IS NULL ORDER BY e.name"#,
@@ -120,7 +127,7 @@ impl AdminConfigRepository {
     /// One channel (non-deleted).
     pub async fn channel_get(&self, id: Uuid) -> Result<Option<JsonRow>, LivechatError> {
         let row = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"SELECT to_jsonb(e) FROM livechat.channels e
                     WHERE e.id = $1 AND e.metadata->>'deleted_at' IS NULL"#,
@@ -156,7 +163,7 @@ impl AdminConfigRepository {
             ));
         }
         let row = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"INSERT INTO livechat.channels
                        (name, website_id, button_text, welcome_message,
@@ -278,7 +285,7 @@ impl AdminConfigRepository {
             q = q.bind(v);
         }
         let q = q.bind(id);
-        let row = fetch_optional_scoped(&self.pool, q).await?;
+        let row = fetch_optional_scoped(&self.rpool(), q).await?;
         Ok(row.map(|(j,)| j.0))
     }
 
@@ -286,7 +293,7 @@ impl AdminConfigRepository {
     /// assignment scans skip deleted channels).
     pub async fn channel_delete(&self, id: Uuid) -> Result<bool, LivechatError> {
         let n = execute_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query(
                 r#"UPDATE livechat.channels
                       SET metadata = jsonb_set(metadata, '{{deleted_at}}', to_jsonb(now()))
@@ -310,7 +317,7 @@ impl AdminConfigRepository {
     ) -> Result<JsonRow, LivechatError> {
         // The profile mint (idempotent; the membership needs it).
         execute_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query(
                 // No conflict target: the per-unit unique (org_unit_id, user_id) is
                 // decorator-declared, so the module cannot name it. Untargeted DO NOTHING
@@ -323,7 +330,7 @@ impl AdminConfigRepository {
         )
         .await?;
         let row = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"INSERT INTO livechat.channel_members (channel_id, user_id)
                    VALUES ($1, $2)
@@ -347,7 +354,7 @@ impl AdminConfigRepository {
         user_id: Uuid,
     ) -> Result<bool, LivechatError> {
         let n = execute_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query(
                 "DELETE FROM livechat.channel_members WHERE channel_id = $1 AND user_id = $2",
             )
@@ -362,7 +369,7 @@ impl AdminConfigRepository {
     /// every channel of the company).
     pub async fn channel_leave_all(&self, user_id: Uuid) -> Result<u64, LivechatError> {
         let n = execute_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query("DELETE FROM livechat.channel_members WHERE user_id = $1").bind(user_id),
         )
         .await?;
@@ -374,7 +381,7 @@ impl AdminConfigRepository {
     /// The profile read (self or officer).
     pub async fn profile_get(&self, user_id: Uuid) -> Result<Option<JsonRow>, LivechatError> {
         let row = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"SELECT to_jsonb(e) FROM livechat.operator_profiles e
                     WHERE e.user_id = $1 AND e.metadata->>'deleted_at' IS NULL"#,
@@ -399,7 +406,7 @@ impl AdminConfigRepository {
         // the write on the existing profile. Same outcome as the targeted DO UPDATE,
         // including under concurrency (the loser of the insert race takes the UPDATE).
         let row = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"INSERT INTO livechat.operator_profiles (user_id, display_name, languages)
                    VALUES ($1, $2, $3)
@@ -414,7 +421,7 @@ impl AdminConfigRepository {
         let row = match row {
             Some((j,)) => Some(j.0),
             None => fetch_optional_scoped(
-                &self.pool,
+                &self.rpool(),
                 sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                     r#"UPDATE livechat.operator_profiles
                           SET display_name = $2, languages = $3
@@ -437,7 +444,7 @@ impl AdminConfigRepository {
     pub async fn tag_list(&self, table: &str) -> Result<Vec<JsonRow>, LivechatError> {
         let table = tag_table(table)?;
         let rows = fetch_all_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(&format!(
                 r#"SELECT to_jsonb(e) FROM {table} e
                     WHERE e.metadata->>'deleted_at' IS NULL ORDER BY e.name"#
@@ -455,7 +462,7 @@ impl AdminConfigRepository {
             return Err(LivechatError::Validation("tag name is required".into()));
         }
         let row = match fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(&format!(
                 r#"INSERT INTO {table} AS t (name)
                    VALUES ($1)
@@ -492,7 +499,7 @@ impl AdminConfigRepository {
             return Err(LivechatError::Validation("tag name is required".into()));
         }
         let row = match fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(&format!(
                 r#"UPDATE {table} AS t SET name = $2
                     WHERE t.id = $1 AND t.metadata->>'deleted_at' IS NULL
@@ -521,7 +528,7 @@ impl AdminConfigRepository {
     pub async fn tag_delete(&self, table: &str, id: Uuid) -> Result<bool, LivechatError> {
         let table = tag_table(table)?;
         let n = execute_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query(&format!(
                 r#"UPDATE {table}
                       SET metadata = jsonb_set(metadata, '{{deleted_at}}', to_jsonb(now()))
@@ -538,7 +545,7 @@ impl AdminConfigRepository {
     /// List rules (optionally one channel's), sequence-ordered.
     pub async fn rule_list(&self, channel_id: Option<Uuid>) -> Result<Vec<JsonRow>, LivechatError> {
         let rows = fetch_all_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"SELECT to_jsonb(e) FROM livechat.channel_rules e
                     WHERE e.metadata->>'deleted_at' IS NULL
@@ -554,7 +561,7 @@ impl AdminConfigRepository {
     /// One rule.
     pub async fn rule_get(&self, id: Uuid) -> Result<Option<JsonRow>, LivechatError> {
         let row = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"SELECT to_jsonb(e) FROM livechat.channel_rules e
                     WHERE e.id = $1 AND e.metadata->>'deleted_at' IS NULL"#,
@@ -571,7 +578,7 @@ impl AdminConfigRepository {
     pub async fn rule_create(&self, input: &RuleInput) -> Result<JsonRow, LivechatError> {
         validate_rule(input)?;
         let row = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"INSERT INTO livechat.channel_rules
                        (channel_id, regex_url, action, auto_popup_timer,
@@ -603,7 +610,7 @@ impl AdminConfigRepository {
     ) -> Result<Option<JsonRow>, LivechatError> {
         validate_rule(input)?;
         let row = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"UPDATE livechat.channel_rules SET
                        channel_id = $2, regex_url = $3, action = $4::livechat_rule_action,
@@ -630,7 +637,7 @@ impl AdminConfigRepository {
     /// Soft-delete a rule.
     pub async fn rule_delete(&self, id: Uuid) -> Result<bool, LivechatError> {
         let n = execute_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query(
                 r#"UPDATE livechat.channel_rules
                       SET metadata = jsonb_set(metadata, '{{deleted_at}}', to_jsonb(now()))
@@ -646,7 +653,7 @@ impl AdminConfigRepository {
 
     pub async fn script_list(&self) -> Result<Vec<JsonRow>, LivechatError> {
         let rows = fetch_all_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"SELECT to_jsonb(e) FROM livechat.chatbot_scripts e
                     WHERE e.metadata->>'deleted_at' IS NULL ORDER BY e.title"#,
@@ -658,7 +665,7 @@ impl AdminConfigRepository {
 
     pub async fn script_get(&self, id: Uuid) -> Result<Option<JsonRow>, LivechatError> {
         let row = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"SELECT to_jsonb(e) FROM livechat.chatbot_scripts e
                     WHERE e.id = $1 AND e.metadata->>'deleted_at' IS NULL"#,
@@ -676,7 +683,7 @@ impl AdminConfigRepository {
             return Err(LivechatError::Validation("script title is required".into()));
         }
         let row = match fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"INSERT INTO livechat.chatbot_scripts (title)
                    VALUES ($1)
@@ -715,7 +722,7 @@ impl AdminConfigRepository {
             }
         }
         let row = match fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"UPDATE livechat.chatbot_scripts SET
                        title = COALESCE($2, title), is_active = COALESCE($3, is_active)
@@ -746,7 +753,7 @@ impl AdminConfigRepository {
     /// routes to it (the rule's script reference must stay good).
     pub async fn script_delete(&self, id: Uuid) -> Result<bool, LivechatError> {
         let referencing = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (i64,)>(
                 r#"SELECT 1::int8 FROM livechat.channel_rules r
                     WHERE r.chatbot_script_id = $1
@@ -761,7 +768,7 @@ impl AdminConfigRepository {
             ));
         }
         let n = execute_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query(
                 r#"UPDATE livechat.chatbot_scripts
                       SET metadata = jsonb_set(metadata, '{{deleted_at}}', to_jsonb(now()))
@@ -778,7 +785,7 @@ impl AdminConfigRepository {
     /// List a script's steps (with their answers), sequence-ordered.
     pub async fn step_list(&self, script_id: Uuid) -> Result<Vec<JsonRow>, LivechatError> {
         let rows = fetch_all_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"SELECT to_jsonb(e) FROM livechat.chatbot_steps e
                     WHERE e.chatbot_script_id = $1 AND e.metadata->>'deleted_at' IS NULL
@@ -795,7 +802,7 @@ impl AdminConfigRepository {
     /// one); the script-sequence unique is the typed 422.
     pub async fn step_create(&self, input: &StepInput) -> Result<JsonRow, LivechatError> {
         validate_step(input)?;
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         let step_id = Uuid::new_v4();
         let row: Value = sqlx::query_scalar::<_, Value>(
@@ -836,7 +843,7 @@ impl AdminConfigRepository {
     /// it (the pointer law); its answers and triggers go with it.
     pub async fn step_delete(&self, id: Uuid) -> Result<bool, LivechatError> {
         let pointed = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (i64,)>(
                 r#"SELECT 1::int8 FROM livechat.sessions s
                     WHERE s.chatbot_current_step_id = $1 AND s.closed_at IS NULL LIMIT 1"#,
@@ -849,7 +856,7 @@ impl AdminConfigRepository {
                 "an open session's chatbot pointer references this step".into(),
             ));
         }
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         sqlx::query(
             r#"UPDATE livechat.chatbot_steps
@@ -884,7 +891,7 @@ impl AdminConfigRepository {
 
     pub async fn answer_list(&self, question_step_id: Uuid) -> Result<Vec<JsonRow>, LivechatError> {
         let rows = fetch_all_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"SELECT to_jsonb(e) FROM livechat.chatbot_answers e
                     WHERE e.question_step_id = $1 AND e.metadata->>'deleted_at' IS NULL
@@ -907,7 +914,7 @@ impl AdminConfigRepository {
             return Err(LivechatError::Validation("answer label is required".into()));
         }
         let row = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"INSERT INTO livechat.chatbot_answers
                        (question_step_id, sequence, label, redirect_url)
@@ -932,7 +939,7 @@ impl AdminConfigRepository {
 
     pub async fn answer_delete(&self, id: Uuid) -> Result<bool, LivechatError> {
         let n = execute_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query(
                 r#"UPDATE livechat.chatbot_answers
                       SET metadata = jsonb_set(metadata, '{{deleted_at}}', to_jsonb(now()))
@@ -951,7 +958,7 @@ impl AdminConfigRepository {
         answer_id: Option<Uuid>,
     ) -> Result<Vec<JsonRow>, LivechatError> {
         let rows = fetch_all_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"SELECT to_jsonb(e) FROM livechat.chatbot_step_triggers e
                     WHERE e.metadata->>'deleted_at' IS NULL
@@ -972,7 +979,7 @@ impl AdminConfigRepository {
         target_step_id: Uuid,
     ) -> Result<JsonRow, LivechatError> {
         let ok = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (i64,)>(
                 r#"SELECT 1::int8
                      FROM livechat.chatbot_answers a
@@ -993,7 +1000,7 @@ impl AdminConfigRepository {
             ));
         }
         let row = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (sqlx::types::Json<Value>,)>(
                 r#"INSERT INTO livechat.chatbot_step_triggers
                        (answer_id, target_step_id)
@@ -1010,7 +1017,7 @@ impl AdminConfigRepository {
 
     pub async fn trigger_delete(&self, id: Uuid) -> Result<bool, LivechatError> {
         let n = execute_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query(
                 r#"UPDATE livechat.chatbot_step_triggers
                       SET metadata = jsonb_set(metadata, '{{deleted_at}}', to_jsonb(now()))

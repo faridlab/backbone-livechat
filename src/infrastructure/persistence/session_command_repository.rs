@@ -130,6 +130,13 @@ impl SessionCommandRepository {
         Self { pool }
     }
 
+    /// The database this call runs on: the composer's request pool when one
+    /// is bound (a tenant mount, or a relay consumer wrapped by the host),
+    /// else the composed pool (ADR-0029 pool law).
+    fn rpool(&self) -> PgPool {
+        crate::request_pool::current().unwrap_or_else(|| self.pool.clone())
+    }
+
     /// Open a session: the row (born `waiting`; failure born
     /// `no_answer` on the human path / `no_failure` on the bot path),
     /// the visitor ledger row, and the audit row — one transaction.
@@ -141,7 +148,7 @@ impl SessionCommandRepository {
         input: &OpenSessionInput,
         actor: Option<Uuid>,
     ) -> Result<SessionRow, LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         let id = Uuid::new_v4();
         let row = sqlx::query_as::<_, SessionRow>(&format!(
@@ -204,7 +211,7 @@ impl SessionCommandRepository {
     /// family).
     pub async fn find(&self, session_id: Uuid) -> Result<Option<SessionRow>, LivechatError> {
         let row = backbone_orm::company_scope::fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, SessionRow>(&format!(
                 "SELECT {SESSION_COLUMNS} FROM livechat.sessions WHERE id = $1"
             ))
@@ -222,7 +229,7 @@ impl SessionCommandRepository {
         visitor_key: &str,
     ) -> Result<Option<SessionRow>, LivechatError> {
         let row = backbone_orm::company_scope::fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, SessionRow>(&format!(
                 r#"SELECT {SESSION_COLUMNS} FROM livechat.sessions
                     WHERE channel_id = $1
@@ -256,7 +263,7 @@ impl SessionCommandRepository {
         &self,
         command: &PostMessageCommand,
     ) -> Result<MessageDeltas, LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
 
         let deltas = apply_message_tx(&mut tx, command).await?;
@@ -275,7 +282,7 @@ impl SessionCommandRepository {
         reason: &str,
         actor: Option<Uuid>,
     ) -> Result<CloseOutcome, LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         let updated: Option<SessionRow> = sqlx::query_as::<_, SessionRow>(&format!(
             r#"UPDATE livechat.sessions
@@ -326,7 +333,7 @@ impl SessionCommandRepository {
         operator_user_id: Uuid,
         actor: Option<Uuid>,
     ) -> Result<SessionRow, LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         let won: Option<SessionRow> = sqlx::query_as::<_, SessionRow>(&format!(
             r#"UPDATE livechat.sessions
@@ -387,7 +394,7 @@ impl SessionCommandRepository {
         on: bool,
         actor: Option<Uuid>,
     ) -> Result<SessionRow, LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         let row: SessionRow = sqlx::query_as::<_, SessionRow>(&format!(
             r#"UPDATE livechat.sessions
@@ -434,7 +441,7 @@ impl SessionCommandRepository {
         reset_failure: bool,
         actor: Option<Uuid>,
     ) -> Result<SessionRow, LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         let reopened: Option<SessionRow> = sqlx::query_as::<_, SessionRow>(&format!(
             r#"UPDATE livechat.sessions
@@ -485,7 +492,7 @@ impl SessionCommandRepository {
         detail: &str,
         actor: Option<Uuid>,
     ) -> Result<(), LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         sqlx::query("UPDATE livechat.sessions SET error_detail = $2 WHERE id = $1")
             .bind(session_id)
@@ -508,7 +515,7 @@ impl SessionCommandRepository {
     /// Clear the parking lot (the retried step landed).
     pub async fn clear_error_detail(&self, session_id: Uuid) -> Result<(), LivechatError> {
         org_scope::execute_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query("UPDATE livechat.sessions SET error_detail = NULL WHERE id = $1")
                 .bind(session_id),
         )
@@ -519,7 +526,7 @@ impl SessionCommandRepository {
     /// Stamp a heartbeat on the operator's presence row.
     pub async fn heartbeat(&self, user_id: Uuid) -> Result<(), LivechatError> {
         let n = org_scope::execute_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query(
                 "UPDATE livechat.operator_profiles SET last_heartbeat_at = now() \
                  WHERE user_id = $1",
@@ -542,7 +549,7 @@ impl SessionCommandRepository {
         operator_user_id: Uuid,
     ) -> Result<Option<String>, LivechatError> {
         let name = backbone_orm::company_scope::fetch_optional_scalar_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_scalar::<_, String>(
                 "SELECT display_name FROM livechat.operator_profiles WHERE user_id = $1",
             )
@@ -556,7 +563,7 @@ impl SessionCommandRepository {
     /// `assignment_empty` audit row is already committed by the
     /// selection write): `no_agent` + the per-record recompute.
     pub async fn mark_no_agent(&self, session_id: Uuid) -> Result<(), LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         sqlx::query(
             "UPDATE livechat.sessions SET failure = 'no_agent' \
@@ -575,7 +582,7 @@ impl SessionCommandRepository {
     /// The tag rows ARE the record; the audit-event vocabulary carries
     /// no tagging arm, so none is minted here.
     pub async fn set_tags(&self, session_id: Uuid, tag_ids: &[Uuid]) -> Result<(), LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         let exists: Option<(i32,)> =
             sqlx::query_as("SELECT 1 FROM livechat.sessions WHERE id = $1")
@@ -623,7 +630,7 @@ impl SessionCommandRepository {
     /// closed windows REQUIRE explicit date bounds).
     pub async fn list(&self, filter: &SessionListFilter) -> Result<Vec<SessionRow>, LivechatError> {
         let rows = backbone_orm::company_scope::fetch_all_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, SessionRow>(&format!(
                 r#"SELECT {SESSION_COLUMNS} FROM livechat.sessions
                     WHERE ($1::bool OR closed_at IS NULL)

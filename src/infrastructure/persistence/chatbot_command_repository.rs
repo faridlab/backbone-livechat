@@ -69,11 +69,18 @@ impl ChatbotCommandRepository {
         Self { pool }
     }
 
+    /// The database this call runs on: the composer's request pool when one
+    /// is bound (a tenant mount, or a relay consumer wrapped by the host),
+    /// else the composed pool (ADR-0029 pool law).
+    fn rpool(&self) -> PgPool {
+        crate::request_pool::current().unwrap_or_else(|| self.pool.clone())
+    }
+
     /// The script's steps, ascending (the graph read; the welcome
     /// materialization walks the leading run off this).
     pub async fn steps_for_script(&self, script_id: Uuid) -> Result<Vec<StepRow>, LivechatError> {
         let rows = backbone_orm::company_scope::fetch_all_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, StepRow>(&format!(
                 "SELECT {STEP_COLUMNS} FROM livechat.chatbot_steps \
                  WHERE chatbot_script_id = $1 ORDER BY sequence, id"
@@ -87,7 +94,7 @@ impl ChatbotCommandRepository {
     /// One step (the pointer's read; the save-time trigger check).
     pub async fn step(&self, step_id: Uuid) -> Result<Option<StepRow>, LivechatError> {
         let row = backbone_orm::company_scope::fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, StepRow>(&format!(
                 "SELECT {STEP_COLUMNS} FROM livechat.chatbot_steps WHERE id = $1"
             ))
@@ -101,7 +108,7 @@ impl ChatbotCommandRepository {
     /// preview).
     pub async fn first_step(&self, script_id: Uuid) -> Result<Option<StepRow>, LivechatError> {
         let row = backbone_orm::company_scope::fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, StepRow>(&format!(
                 "SELECT {STEP_COLUMNS} FROM livechat.chatbot_steps \
                  WHERE chatbot_script_id = $1 ORDER BY sequence, id LIMIT 1"
@@ -115,7 +122,7 @@ impl ChatbotCommandRepository {
     /// Whether the script is routable: active AND non-empty.
     pub async fn script_is_routable(&self, script_id: Uuid) -> Result<bool, LivechatError> {
         let n: i64 = backbone_orm::company_scope::fetch_one_scalar_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_scalar::<_, i64>(
                 r#"SELECT (SELECT count(*) FROM livechat.chatbot_scripts s
                       WHERE s.id = $1 AND s.is_active
@@ -134,7 +141,7 @@ impl ChatbotCommandRepository {
     /// A question step's declared options (the answer-validity wall).
     pub async fn answers_for_step(&self, step_id: Uuid) -> Result<Vec<AnswerRow>, LivechatError> {
         let rows = backbone_orm::company_scope::fetch_all_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, AnswerRow>(
                 "SELECT id, question_step_id, sequence, label, redirect_url \
                  FROM livechat.chatbot_answers WHERE question_step_id = $1 \
@@ -154,7 +161,7 @@ impl ChatbotCommandRepository {
         selected_answer_ids: &[Uuid],
     ) -> Result<Option<StepRow>, LivechatError> {
         let row = backbone_orm::company_scope::fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, StepRow>(&format!(
                 r#"SELECT {STEP_COLUMNS}
                      FROM livechat.chatbot_steps cs
@@ -184,7 +191,7 @@ impl ChatbotCommandRepository {
         step_id: Option<Uuid>,
     ) -> Result<(), LivechatError> {
         backbone_orm::org_scope::execute_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query("UPDATE livechat.sessions SET chatbot_current_step_id = $2 WHERE id = $1")
                 .bind(session_id)
                 .bind(step_id),
@@ -200,7 +207,7 @@ impl ChatbotCommandRepository {
         session_id: Uuid,
     ) -> Result<Vec<ChatbotMessageRow>, LivechatError> {
         let rows = backbone_orm::company_scope::fetch_all_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, ChatbotMessageRow>(
                 "SELECT id, session_id, step_id, carrier_message_id, selected_answer_id, \
                  visitor_answer, created_at FROM livechat.chatbot_messages \
@@ -220,7 +227,7 @@ impl ChatbotCommandRepository {
             return Ok(Vec::new());
         }
         let rows = backbone_orm::company_scope::fetch_all_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, (String,)>(
                 "SELECT name FROM livechat.expertise_tags \
                  WHERE id = ANY($1::uuid[]) ORDER BY name",
@@ -239,7 +246,7 @@ impl ChatbotCommandRepository {
         expertise: &[String],
     ) -> Result<(), LivechatError> {
         backbone_orm::org_scope::execute_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query("UPDATE livechat.sessions SET expertise_names = $2::text[] WHERE id = $1")
                 .bind(session_id)
                 .bind(expertise),
@@ -256,7 +263,7 @@ impl ChatbotCommandRepository {
         actor: Option<Uuid>,
     ) -> Result<(), LivechatError> {
         super::selection_repository::record_audit(
-            &self.pool,
+            &self.rpool(),
             "chatbot_step_reached",
             actor,
             "session",
@@ -275,7 +282,7 @@ impl ChatbotCommandRepository {
         actor: Option<Uuid>,
     ) -> Result<(), LivechatError> {
         super::selection_repository::record_audit(
-            &self.pool,
+            &self.rpool(),
             "chatbot_forwarded",
             actor,
             "session",

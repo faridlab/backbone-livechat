@@ -56,6 +56,13 @@ impl WebsiteRequestRepository {
         Self { pool }
     }
 
+    /// The database this call runs on: the composer's request pool when one
+    /// is bound (a tenant mount, or a relay consumer wrapped by the host),
+    /// else the composed pool (ADR-0029 pool law).
+    fn rpool(&self) -> PgPool {
+        crate::request_pool::current().unwrap_or_else(|| self.pool.clone())
+    }
+
     /// The website's bound ACTIVE channel (one channel per website;
     /// a miss is the typed 404 family).
     pub async fn active_channel_for_website(
@@ -63,7 +70,7 @@ impl WebsiteRequestRepository {
         website_id: Uuid,
     ) -> Result<Option<ChannelSummary>, LivechatError> {
         let row = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, ChannelSummary>(
                 r#"SELECT id, name, button_text, welcome_message
                      FROM livechat.channels
@@ -88,7 +95,7 @@ impl WebsiteRequestRepository {
         referer: Option<&str>,
     ) -> Result<Option<RuleMatch>, LivechatError> {
         let row = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, RuleMatch>(
                 r#"SELECT action::text, auto_popup_timer, chatbot_script_id,
                           chatbot_enabled_condition::text
@@ -117,7 +124,7 @@ impl WebsiteRequestRepository {
         visitor_key: &str,
     ) -> Result<Option<SessionRow>, LivechatError> {
         let row = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, SessionRow>(
                 r#"SELECT id, channel_id, title, status::text, failure::text,
                           outcome::text, close_reason::text, closed_at, operator_user_id,
@@ -152,7 +159,7 @@ impl WebsiteRequestRepository {
         visitor_key: &str,
     ) -> Result<Option<SessionRow>, LivechatError> {
         let row = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, SessionRow>(
                 r#"SELECT id, channel_id, title, status::text, failure::text,
                           outcome::text, close_reason::text, closed_at, operator_user_id,
@@ -188,7 +195,7 @@ impl WebsiteRequestRepository {
         visitor_key: &str,
         actor: Option<Uuid>,
     ) -> Result<SessionRow, LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         let updated: Option<SessionRow> = sqlx::query_as::<_, SessionRow>(
             r#"UPDATE livechat.sessions
@@ -249,7 +256,7 @@ impl WebsiteRequestRepository {
         } else {
             "request_declined"
         };
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         let updated: Option<SessionRow> = sqlx::query_as::<_, SessionRow>(
             r#"UPDATE livechat.sessions
@@ -303,7 +310,7 @@ impl WebsiteRequestRepository {
         session_id: Uuid,
         actor: Option<Uuid>,
     ) -> Result<bool, LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         // The gate opens ONCE, atomically: the claim stamps the
         // delivery marker under the row lock, so exactly one caller
@@ -350,7 +357,7 @@ impl WebsiteRequestRepository {
         to_visitor_key: &str,
         actor: Option<Uuid>,
     ) -> Result<u64, LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         let rebound = sqlx::query(
             "UPDATE livechat.sessions SET website_visitor_id = $2 WHERE website_visitor_id = $1",

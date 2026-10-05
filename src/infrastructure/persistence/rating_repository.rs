@@ -81,6 +81,13 @@ impl RatingCommandRepository {
         Self { pool }
     }
 
+    /// The database this call runs on: the composer's request pool when one
+    /// is bound (a tenant mount, or a relay consumer wrapped by the host),
+    /// else the composed pool (ADR-0029 pool law).
+    fn rpool(&self) -> PgPool {
+        crate::request_pool::current().unwrap_or_else(|| self.pool.clone())
+    }
+
     /// Submit the session's rating. `rated_persona = 'agent'`
     /// attributes to the session's operator at rating time (the
     /// ledger's agent row); `'bot'` attributes to the bot row's
@@ -100,7 +107,7 @@ impl RatingCommandRepository {
                 "rating value must be one of 1, 5, 10".into(),
             ));
         }
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         // The session must exist and be fence-visible; a miss is the
         // uniform 404 family.
@@ -169,7 +176,7 @@ impl RatingCommandRepository {
         session_id: Uuid,
     ) -> Result<Option<RatingRow>, LivechatError> {
         let row = backbone_orm::company_scope::fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, RatingRow>(
                 "SELECT id, session_id, value, rated_persona::text, operator_user_id, \
                  chatbot_script_id, comment, created_at FROM livechat.ratings \
@@ -188,7 +195,7 @@ async fn audit_and_refuse(
     actor: Option<Uuid>,
     reason: &str,
 ) -> Result<(), LivechatError> {
-    let mut tx = repo.pool.begin().await?;
+    let mut tx = repo.rpool().begin().await?;
     relay_ambient_scope(&mut tx).await?;
     audit_tx(
         &mut tx,

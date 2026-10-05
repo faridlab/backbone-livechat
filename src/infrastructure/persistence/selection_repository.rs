@@ -160,6 +160,13 @@ impl SelectionRepository {
         Self { pool }
     }
 
+    /// The database this call runs on: the composer's request pool when one
+    /// is bound (a tenant mount, or a relay consumer wrapped by the host),
+    /// else the composed pool (ADR-0029 pool law).
+    fn rpool(&self) -> PgPool {
+        crate::request_pool::current().unwrap_or_else(|| self.pool.clone())
+    }
+
     /// The ONE-statement ladder: the pool, the rung CASE (0..9), and
     /// the total order — no per-operator probes, no N+1, no
     /// randomness. Returns the top candidate or `None` (the defined
@@ -196,7 +203,7 @@ ORDER BY rung ASC, ongoing ASC, last_assigned_at ASC NULLS FIRST, user_id ASC
 LIMIT 1"#
         );
         let row = backbone_orm::company_scope::fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, LadderRow>(&sql)
                 .bind(channel_id)
                 .bind(ONGOING_WINDOW_SECS)
@@ -221,7 +228,7 @@ LIMIT 1"#
     pub async fn eligible_operator_count(&self, channel_id: Uuid) -> Result<i64, LivechatError> {
         let sql = format!("WITH {POOL_CTE} SELECT count(*)::bigint FROM pool");
         let n: i64 = backbone_orm::company_scope::fetch_one_scalar_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_scalar::<_, i64>(&sql)
                 .bind(channel_id)
                 .bind(ONGOING_WINDOW_SECS)
@@ -240,7 +247,7 @@ LIMIT 1"#
     /// `last_assigned_at` stamp → the per-record outcome recompute →
     /// the `operator_assigned` audit row with the replay facts.
     pub async fn assign(&self, input: &AssignInput) -> Result<AssignOutcome, LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
 
         // The ladder (inside the same transaction — the pool the
@@ -433,7 +440,7 @@ impl SelectionRepository {
         &self,
         input: &ForwardAssignInput,
     ) -> Result<AssignOutcome, LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
 
         let pick_sql = format!(

@@ -44,13 +44,22 @@ impl SweepRepository {
         Self { pool }
     }
 
+    /// The database this call runs on: the composer's request pool when one
+    /// is bound (a tenant mount, or a relay consumer wrapped by the host),
+    /// else the composed pool (ADR-0029 pool law). The sweep rides the host
+    /// jobs loop: a loop that wraps each pass in the composer's pool scope
+    /// sweeps that unit's database, an unwrapped one the composed pool.
+    fn rpool(&self) -> PgPool {
+        crate::request_pool::current().unwrap_or_else(|| self.pool.clone())
+    }
+
     /// The idle-close pass: OPEN sessions whose `last_interest_at`
     /// is older than the cutoff (the caller derives it from
     /// `LIVECHAT_IDLE_CLOSE_HOURS`, default 24) close with reason
     /// `expired`; outcomes recompute per record; every close is
     /// audited `session_closed`.
     pub async fn idle_close(&self, idle_cutoff: DateTime<Utc>) -> Result<Vec<Uuid>, LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         let closed: Vec<(Uuid,)> = sqlx::query_as(
             r#"UPDATE livechat.sessions s
@@ -86,7 +95,7 @@ impl SweepRepository {
         &self,
         invite_cutoff: DateTime<Utc>,
     ) -> Result<Vec<Uuid>, LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         let expired: Vec<(Uuid,)> = sqlx::query_as(
             r#"UPDATE livechat.sessions s

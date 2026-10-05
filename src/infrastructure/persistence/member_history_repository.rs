@@ -94,6 +94,13 @@ impl MemberHistoryLedgerRepository {
         Self { pool }
     }
 
+    /// The database this call runs on: the composer's request pool when one
+    /// is bound (a tenant mount, or a relay consumer wrapped by the host),
+    /// else the composed pool (ADR-0029 pool law).
+    fn rpool(&self) -> PgPool {
+        crate::request_pool::current().unwrap_or_else(|| self.pool.clone())
+    }
+
     /// The session's ledger rows (the reporting read; the escalation
     /// derive keys off the agent subset).
     pub async fn list_for_session(
@@ -101,7 +108,7 @@ impl MemberHistoryLedgerRepository {
         session_id: Uuid,
     ) -> Result<Vec<MemberHistoryRow>, LivechatError> {
         let rows = backbone_orm::company_scope::fetch_all_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, MemberHistoryRow>(&format!(
                 "SELECT {HISTORY_COLUMNS} FROM livechat.member_histories \
                  WHERE session_id = $1 ORDER BY joined_at, id"
@@ -120,7 +127,7 @@ impl MemberHistoryLedgerRepository {
         session_id: Uuid,
         chatbot_script_id: Uuid,
     ) -> Result<(), LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         sqlx::query(
             r#"INSERT INTO livechat.member_histories
@@ -141,7 +148,7 @@ impl MemberHistoryLedgerRepository {
     /// The forward handoff's bot unfollow (the bot row's `left_at`).
     pub async fn leave_bot_row(&self, session_id: Uuid) -> Result<(), LivechatError> {
         backbone_orm::org_scope::execute_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query(
                 "UPDATE livechat.member_histories SET left_at = now() \
                  WHERE session_id = $1 AND persona = 'bot' AND left_at IS NULL",
@@ -161,7 +168,7 @@ impl MemberHistoryLedgerRepository {
         visitor_key: &str,
     ) -> Result<Option<Uuid>, LivechatError> {
         let op = backbone_orm::company_scope::fetch_optional_scalar_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_scalar::<_, Uuid>(
                 r#"SELECT s.operator_user_id
                      FROM livechat.sessions s

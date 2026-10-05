@@ -17,6 +17,11 @@
 # same change that lands it.
 
 user_owned:
+  # The composer-installed request-pool shim the verb repositories and
+  # services resolve their database through (ADR-0029 pool law):
+  # hand-written, never schema-derived.
+  - "src/request_pool.rs"
+
   # The shared-audit-trail funnel (hand-written; replaces this module's
   # retired per-module audit table).
   - "src/infrastructure/persistence/audit.rs"

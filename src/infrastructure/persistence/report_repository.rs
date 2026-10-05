@@ -67,6 +67,13 @@ impl ReportRepository {
         Self { pool }
     }
 
+    /// The database this call runs on: the composer's request pool when one
+    /// is bound (a tenant mount, or a relay consumer wrapped by the host),
+    /// else the composed pool (ADR-0029 pool law).
+    fn rpool(&self) -> PgPool {
+        crate::request_pool::current().unwrap_or_else(|| self.pool.clone())
+    }
+
     /// The windowed headline: counts, average time-to-answer, duration
     /// percentiles, and the windowed happiness KPI (the rating mix
     /// over sessions OPENED inside the window — not a lifetime
@@ -77,7 +84,7 @@ impl ReportRepository {
         to: DateTime<Utc>,
     ) -> Result<SessionSummaryRow, LivechatError> {
         let row = backbone_orm::company_scope::fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, SessionSummaryRow>(
                 r#"SELECT
                        count(*)                                                AS sessions_total,
@@ -133,7 +140,7 @@ impl ReportRepository {
         to: DateTime<Utc>,
     ) -> Result<Vec<OutcomeMixRow>, LivechatError> {
         let rows = backbone_orm::company_scope::fetch_all_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, OutcomeMixRow>(
                 r#"SELECT session_outcome AS outcome, count(*) AS sessions
                      FROM livechat.session_report
@@ -167,7 +174,7 @@ impl ReportRepository {
             "date_trunc('day', opened_at)"
         };
         let rows = backbone_orm::company_scope::fetch_all_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, SeriesBucketRow>(&format!(
                 r#"SELECT
                        {grouping}                                            AS bucket,

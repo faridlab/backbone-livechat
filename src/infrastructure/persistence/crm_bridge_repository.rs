@@ -47,6 +47,13 @@ impl CrmBridgeRepository {
         Self { pool }
     }
 
+    /// The database this call runs on: the composer's request pool when one
+    /// is bound (a tenant mount, or a relay consumer wrapped by the host),
+    /// else the composed pool (ADR-0029 pool law).
+    fn rpool(&self) -> PgPool {
+        crate::request_pool::current().unwrap_or_else(|| self.pool.clone())
+    }
+
     /// The session a lead was minted from (the lead-owner read grant's
     /// lookup). Served by the `session_crm_lead_uq` partial index —
     /// the donor's `has_crm_lead` partial-index translation: only
@@ -59,7 +66,7 @@ impl CrmBridgeRepository {
         lead_id: Uuid,
     ) -> Result<Option<SessionRow>, LivechatError> {
         let row = fetch_optional_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, SessionRow>(&format!(
                 "SELECT {SESSION_COLUMNS} FROM livechat.sessions WHERE crm_lead_id = $1"
             ))
@@ -79,7 +86,7 @@ impl CrmBridgeRepository {
         session_id: Uuid,
     ) -> Result<HarvestedContact, LivechatError> {
         let row = fetch_one_scoped(
-            &self.pool,
+            &self.rpool(),
             sqlx::query_as::<_, HarvestedContact>(
                 r#"SELECT
                        (SELECT m.visitor_answer FROM livechat.chatbot_messages m
@@ -112,7 +119,7 @@ impl CrmBridgeRepository {
         lead_id: Uuid,
         actor: Option<Uuid>,
     ) -> Result<SessionRow, LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         let updated = sqlx::query_as::<_, SessionRow>(&format!(
             r#"UPDATE livechat.sessions SET crm_lead_id = $2
@@ -185,7 +192,7 @@ impl CrmBridgeRepository {
         user_id: Uuid,
         actor: Option<Uuid>,
     ) -> Result<SessionRow, LivechatError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.rpool().begin().await?;
         relay_ambient_scope(&mut tx).await?;
         let row = match sqlx::query_as::<_, SessionRow>(&format!(
             "SELECT {SESSION_COLUMNS} FROM livechat.sessions WHERE crm_lead_id = $1"
