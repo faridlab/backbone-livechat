@@ -279,7 +279,7 @@ dependencies = [
 
 [[package]]
 name = "backbone-livechat"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -311,6 +311,7 @@ dependencies = [
  "tower 0.4.13",
  "tower-http",
  "tracing",
+ "utoipa",
  "uuid",
  "validator",
 ]

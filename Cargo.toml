@@ -1,6 +1,6 @@
 [package]
 name = "backbone-livechat"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2021"
 description = "The livechat module (Odoo im_livechat + website_livechat port) — the deterministic operator-selection ladder (capacity, the 120s anti-burst buffer on every path, the one 30-minute ongoing window, total-order tie-breaks with no randomness), the visitor conversation lifecycle behind Tier A guest capabilities on a declared nine-path public surface, the member-history ledger under three partial uniques plus a strict persona trichotomy, the chatbot pointer state machine closed at the seven community step types, and the website bridge overlays (operator-initiated invites, message-piggyback heartbeats, merge relink) as columns and behavior inside this one crate"
 license = "MIT OR Apache-2.0"
@@ -11,6 +11,8 @@ exclude = [".claude/", ".github/", "graphify-out/"]
 path = "src/lib.rs"
 
 [dependencies]
+# OpenAPI schema derive, only with the `openapi` feature.
+utoipa = { version = "5", optional = true, features = ["chrono", "uuid"] }
 # -----------------------------------------------------------------------------
 # Backbone Framework crates
 #
@@ -85,6 +87,15 @@ hmac = "0.12"
 sha2 = "0.10"
 rand = "0.8"
 subtle = "2.5"
+
+
+[features]
+# Generated code gates its OpenAPI derives, request validation and auth extraction
+# behind these features; declaring them keeps every cfg checked by the compiler.
+default = []
+auth = []
+openapi = ["dep:utoipa"]
+validation = []
 
 [dev-dependencies]
 tempfile = "3.0"
