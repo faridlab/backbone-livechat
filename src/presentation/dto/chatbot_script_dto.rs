@@ -237,7 +237,7 @@ impl backbone_core::ApplyUpdateDto<UpdateChatbotScriptDto> for ChatbotScript {
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to ChatbotScript here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

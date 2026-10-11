@@ -32,5 +32,3 @@ pub type OperatorProfileService = GenericCrudService<
     OperatorProfileRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

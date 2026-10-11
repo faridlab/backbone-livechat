@@ -32,5 +32,3 @@ pub type SessionTagService = GenericCrudService<
     SessionTagRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

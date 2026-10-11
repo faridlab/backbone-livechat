@@ -23,5 +23,3 @@ pub mod rating_specification;
 pub mod session_specification;
 pub mod session_tag_specification;
 
-// <<< CUSTOM
-// END CUSTOM

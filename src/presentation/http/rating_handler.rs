@@ -187,3 +187,4 @@ pub fn create_protected_rating_routes<A: AuthMiddleware + Send + Sync + 'static>
             }
         }))
 }
+

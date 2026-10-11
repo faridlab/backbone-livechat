@@ -17,9 +17,5 @@ pub fn chatbot_message_validator() -> ChatbotMessageValidator {
     EntityValidator::new()
         .rule(OptionalNotBlank::new("carrier_message_id", |e: &ChatbotMessage| e.carrier_message_id.as_deref()))
         .rule(OptionalNotBlank::new("visitor_answer", |e: &ChatbotMessage| e.visitor_answer.as_deref()))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

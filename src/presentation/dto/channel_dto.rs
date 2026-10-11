@@ -334,7 +334,7 @@ impl backbone_core::ApplyUpdateDto<UpdateChannelDto> for Channel {
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to Channel here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

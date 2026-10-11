@@ -266,7 +266,7 @@ impl backbone_core::ApplyUpdateDto<UpdateChatbotAnswerDto> for ChatbotAnswer {
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to ChatbotAnswer here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

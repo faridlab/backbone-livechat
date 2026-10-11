@@ -18,9 +18,5 @@ pub fn channel_rule_validator() -> ChannelRuleValidator {
         .rule(RequiredString::new("regex_url", |e: &ChannelRule| &e.regex_url))
         .rule(NonNegative::new("auto_popup_timer", |e: &ChannelRule| e.auto_popup_timer as i64))
         .rule(NonNegative::new("sequence", |e: &ChannelRule| e.sequence as i64))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

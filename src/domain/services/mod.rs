@@ -36,5 +36,3 @@ pub use rating_domain_policy::RatingDomainPolicy;
 pub use session_domain_policy::SessionDomainPolicy;
 pub use session_tag_domain_policy::SessionTagDomainPolicy;
 
-// <<< CUSTOM
-// END CUSTOM

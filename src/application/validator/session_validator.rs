@@ -21,9 +21,5 @@ pub fn session_validator() -> SessionValidator {
         .rule(OptionalNotBlank::new("visitor_language", |e: &Session| e.visitor_language.as_deref()))
         .rule(NonNegative::new("message_count", |e: &Session| e.message_count as i64))
         .rule(OptionalNotBlank::new("error_detail", |e: &Session| e.error_detail.as_deref()))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

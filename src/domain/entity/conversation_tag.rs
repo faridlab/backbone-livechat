@@ -136,8 +136,6 @@ impl ConversationTag {
         }
     }
 
-    // <<< CUSTOM METHODS START >>>
-    // <<< CUSTOM METHODS END >>>
 }
 
 impl super::Entity for ConversationTag {

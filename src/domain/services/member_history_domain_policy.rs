@@ -18,5 +18,3 @@ use crate::domain::entity::MemberHistory;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type MemberHistoryDomainPolicy = PermitAllPolicy<MemberHistory>;
 
-// <<< CUSTOM
-// END CUSTOM

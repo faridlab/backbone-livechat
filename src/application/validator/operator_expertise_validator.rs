@@ -14,10 +14,6 @@ pub type OperatorExpertiseValidator = EntityValidator<OperatorExpertise>;
 /// Build a validator for OperatorExpertise with all schema-defined field rules.
 pub fn operator_expertise_validator() -> OperatorExpertiseValidator {
     EntityValidator::new()
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
         // No schema-derived rules — add custom rules above.
 }
 
-// <<< CUSTOM
-// END CUSTOM

@@ -20,9 +20,5 @@ pub fn channel_validator() -> ChannelValidator {
         .rule(OptionalNotBlank::new("welcome_message", |e: &Channel| e.welcome_message.as_deref()))
         .rule(NonNegative::new("max_sessions", |e: &Channel| e.max_sessions as i64))
         .rule(OptionalNotBlank::new("review_link", |e: &Channel| e.review_link.as_deref()))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

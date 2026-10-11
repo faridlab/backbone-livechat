@@ -186,3 +186,4 @@ pub fn create_protected_channel_rule_routes<A: AuthMiddleware + Send + Sync + 's
             }
         }))
 }
+

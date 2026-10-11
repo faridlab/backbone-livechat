@@ -32,5 +32,3 @@ pub type ChannelMemberService = GenericCrudService<
     ChannelMemberRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

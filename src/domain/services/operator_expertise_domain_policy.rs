@@ -18,5 +18,3 @@ use crate::domain::entity::OperatorExpertise;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type OperatorExpertiseDomainPolicy = PermitAllPolicy<OperatorExpertise>;
 
-// <<< CUSTOM
-// END CUSTOM

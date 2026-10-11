@@ -32,5 +32,3 @@ pub type ChatbotMessageService = GenericCrudService<
     ChatbotMessageRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

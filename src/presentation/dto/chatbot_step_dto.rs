@@ -273,7 +273,7 @@ impl backbone_core::ApplyUpdateDto<UpdateChatbotStepDto> for ChatbotStep {
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to ChatbotStep here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

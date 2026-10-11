@@ -18,5 +18,3 @@ use crate::domain::entity::SessionTag;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type SessionTagDomainPolicy = PermitAllPolicy<SessionTag>;
 
-// <<< CUSTOM
-// END CUSTOM

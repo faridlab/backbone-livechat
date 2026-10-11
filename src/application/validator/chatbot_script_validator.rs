@@ -16,9 +16,5 @@ pub type ChatbotScriptValidator = EntityValidator<ChatbotScript>;
 pub fn chatbot_script_validator() -> ChatbotScriptValidator {
     EntityValidator::new()
         .rule(RequiredString::new("title", |e: &ChatbotScript| &e.title))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

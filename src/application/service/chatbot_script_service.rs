@@ -32,5 +32,3 @@ pub type ChatbotScriptService = GenericCrudService<
     ChatbotScriptRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

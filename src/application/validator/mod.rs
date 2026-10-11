@@ -39,5 +39,3 @@ pub use rating_validator::{RatingValidator, rating_validator};
 pub use session_validator::{SessionValidator, session_validator};
 pub use session_tag_validator::{SessionTagValidator, session_tag_validator};
 
-// <<< CUSTOM
-// END CUSTOM

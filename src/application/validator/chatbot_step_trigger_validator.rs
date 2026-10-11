@@ -14,10 +14,6 @@ pub type ChatbotStepTriggerValidator = EntityValidator<ChatbotStepTrigger>;
 /// Build a validator for ChatbotStepTrigger with all schema-defined field rules.
 pub fn chatbot_step_trigger_validator() -> ChatbotStepTriggerValidator {
     EntityValidator::new()
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
         // No schema-derived rules — add custom rules above.
 }
 
-// <<< CUSTOM
-// END CUSTOM

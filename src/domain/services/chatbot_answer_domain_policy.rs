@@ -18,5 +18,3 @@ use crate::domain::entity::ChatbotAnswer;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type ChatbotAnswerDomainPolicy = PermitAllPolicy<ChatbotAnswer>;
 
-// <<< CUSTOM
-// END CUSTOM

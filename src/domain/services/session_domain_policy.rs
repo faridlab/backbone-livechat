@@ -18,5 +18,3 @@ use crate::domain::entity::Session;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type SessionDomainPolicy = PermitAllPolicy<Session>;
 
-// <<< CUSTOM
-// END CUSTOM

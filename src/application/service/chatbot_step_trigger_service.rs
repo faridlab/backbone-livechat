@@ -32,5 +32,3 @@ pub type ChatbotStepTriggerService = GenericCrudService<
     ChatbotStepTriggerRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

@@ -16,9 +16,5 @@ pub type ExpertiseTagValidator = EntityValidator<ExpertiseTag>;
 pub fn expertise_tag_validator() -> ExpertiseTagValidator {
     EntityValidator::new()
         .rule(RequiredString::new("name", |e: &ExpertiseTag| &e.name))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

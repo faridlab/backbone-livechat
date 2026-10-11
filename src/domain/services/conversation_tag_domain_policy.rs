@@ -18,5 +18,3 @@ use crate::domain::entity::ConversationTag;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type ConversationTagDomainPolicy = PermitAllPolicy<ConversationTag>;
 
-// <<< CUSTOM
-// END CUSTOM

@@ -32,5 +32,3 @@ pub type ConversationTagService = GenericCrudService<
     ConversationTagRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

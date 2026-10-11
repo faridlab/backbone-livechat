@@ -24,8 +24,6 @@ pub mod rating_service;
 pub mod session_service;
 pub mod session_tag_service;
 
-// <<< CUSTOM
-// END CUSTOM
 
 pub use channel_service::ChannelService;
 pub use channel_member_service::ChannelMemberService;
@@ -43,8 +41,6 @@ pub use operator_profile_service::OperatorProfileService;
 pub use rating_service::RatingService;
 pub use session_service::SessionService;
 pub use session_tag_service::SessionTagService;
-// <<< CUSTOM
-// END CUSTOM
 
 // This directory's extension (hand-written; ADR-0031).
 include!("mod.ext.rs");

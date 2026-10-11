@@ -18,5 +18,3 @@ use crate::domain::entity::OperatorProfile;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type OperatorProfileDomainPolicy = PermitAllPolicy<OperatorProfile>;
 
-// <<< CUSTOM
-// END CUSTOM

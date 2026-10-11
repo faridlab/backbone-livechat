@@ -32,5 +32,3 @@ pub type ChannelRuleService = GenericCrudService<
     ChannelRuleRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

@@ -186,3 +186,4 @@ pub fn create_protected_session_tag_routes<A: AuthMiddleware + Send + Sync + 'st
             }
         }))
 }
+

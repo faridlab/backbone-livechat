@@ -11,8 +11,6 @@ use crate::domain::entity::ExpertiseTag;
 /// enum containing a `Crud(CrudEvent<ExpertiseTag>)` variant.
 pub type ExpertiseTagEvent = CrudEvent<ExpertiseTag>;
 
-// <<< CUSTOM
-// END CUSTOM
 
 use backbone_messaging::{CrudEventPublisher, NoOpCrudEventPublisher};
 use std::sync::Arc;

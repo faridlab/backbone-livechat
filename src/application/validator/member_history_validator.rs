@@ -17,9 +17,5 @@ pub fn member_history_validator() -> MemberHistoryValidator {
     EntityValidator::new()
         .rule(OptionalNotBlank::new("visitor_key", |e: &MemberHistory| e.visitor_key.as_deref()))
         .rule(NonNegative::new("message_count", |e: &MemberHistory| e.message_count as i64))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

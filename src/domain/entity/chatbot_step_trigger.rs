@@ -141,8 +141,6 @@ impl ChatbotStepTrigger {
         }
     }
 
-    // <<< CUSTOM METHODS START >>>
-    // <<< CUSTOM METHODS END >>>
 }
 
 impl super::Entity for ChatbotStepTrigger {

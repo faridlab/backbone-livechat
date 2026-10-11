@@ -18,5 +18,3 @@ use crate::domain::entity::ExpertiseTag;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type ExpertiseTagDomainPolicy = PermitAllPolicy<ExpertiseTag>;
 
-// <<< CUSTOM
-// END CUSTOM

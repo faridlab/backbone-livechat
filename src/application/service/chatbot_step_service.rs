@@ -32,5 +32,3 @@ pub type ChatbotStepService = GenericCrudService<
     ChatbotStepRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

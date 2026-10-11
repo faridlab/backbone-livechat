@@ -16,9 +16,5 @@ pub type ConversationTagValidator = EntityValidator<ConversationTag>;
 pub fn conversation_tag_validator() -> ConversationTagValidator {
     EntityValidator::new()
         .rule(RequiredString::new("name", |e: &ConversationTag| &e.name))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

@@ -18,5 +18,3 @@ use crate::domain::entity::ChatbotStepTrigger;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type ChatbotStepTriggerDomainPolicy = PermitAllPolicy<ChatbotStepTrigger>;
 
-// <<< CUSTOM
-// END CUSTOM

@@ -32,5 +32,3 @@ pub type MemberHistoryService = GenericCrudService<
     MemberHistoryRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

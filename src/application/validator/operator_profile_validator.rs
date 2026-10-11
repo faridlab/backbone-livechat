@@ -16,9 +16,5 @@ pub type OperatorProfileValidator = EntityValidator<OperatorProfile>;
 pub fn operator_profile_validator() -> OperatorProfileValidator {
     EntityValidator::new()
         .rule(OptionalNotBlank::new("display_name", |e: &OperatorProfile| e.display_name.as_deref()))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

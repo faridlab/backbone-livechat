@@ -18,9 +18,5 @@ pub fn chatbot_answer_validator() -> ChatbotAnswerValidator {
         .rule(NonNegative::new("sequence", |e: &ChatbotAnswer| e.sequence as i64))
         .rule(RequiredString::new("label", |e: &ChatbotAnswer| &e.label))
         .rule(OptionalNotBlank::new("redirect_url", |e: &ChatbotAnswer| e.redirect_url.as_deref()))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

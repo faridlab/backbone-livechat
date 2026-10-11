@@ -11,8 +11,6 @@ use crate::domain::entity::ChatbotStep;
 /// enum containing a `Crud(CrudEvent<ChatbotStep>)` variant.
 pub type ChatbotStepEvent = CrudEvent<ChatbotStep>;
 
-// <<< CUSTOM
-// END CUSTOM
 
 use backbone_messaging::{CrudEventPublisher, NoOpCrudEventPublisher};
 use std::sync::Arc;

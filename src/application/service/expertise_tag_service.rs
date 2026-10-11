@@ -32,5 +32,3 @@ pub type ExpertiseTagService = GenericCrudService<
     ExpertiseTagRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

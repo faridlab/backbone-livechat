@@ -68,5 +68,3 @@ pub use session_event_handlers::SessionEventHandler;
 pub use session_tag_events::{SessionTagEvent, SessionTagEventPublisher, NoopSessionTagEventPublisher};
 pub use session_tag_event_handlers::SessionTagEventHandler;
 
-// <<< CUSTOM
-// END CUSTOM

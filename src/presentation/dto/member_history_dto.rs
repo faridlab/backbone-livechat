@@ -332,7 +332,7 @@ impl backbone_core::ApplyUpdateDto<UpdateMemberHistoryDto> for MemberHistory {
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to MemberHistory here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

@@ -17,9 +17,5 @@ pub fn chatbot_step_validator() -> ChatbotStepValidator {
     EntityValidator::new()
         .rule(NonNegative::new("sequence", |e: &ChatbotStep| e.sequence as i64))
         .rule(OptionalNotBlank::new("message", |e: &ChatbotStep| e.message.as_deref()))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

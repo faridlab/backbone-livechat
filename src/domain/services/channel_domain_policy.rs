@@ -18,5 +18,3 @@ use crate::domain::entity::Channel;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type ChannelDomainPolicy = PermitAllPolicy<Channel>;
 
-// <<< CUSTOM
-// END CUSTOM

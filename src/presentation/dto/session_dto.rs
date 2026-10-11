@@ -498,7 +498,7 @@ impl backbone_core::ApplyUpdateDto<UpdateSessionDto> for Session {
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to Session here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

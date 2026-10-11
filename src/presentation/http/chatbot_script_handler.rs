@@ -186,3 +186,4 @@ pub fn create_protected_chatbot_script_routes<A: AuthMiddleware + Send + Sync + 
             }
         }))
 }
+

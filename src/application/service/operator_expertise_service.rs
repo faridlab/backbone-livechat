@@ -32,5 +32,3 @@ pub type OperatorExpertiseService = GenericCrudService<
     OperatorExpertiseRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

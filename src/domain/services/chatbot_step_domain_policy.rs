@@ -18,5 +18,3 @@ use crate::domain::entity::ChatbotStep;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type ChatbotStepDomainPolicy = PermitAllPolicy<ChatbotStep>;
 
-// <<< CUSTOM
-// END CUSTOM

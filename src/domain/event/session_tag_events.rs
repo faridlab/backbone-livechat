@@ -11,8 +11,6 @@ use crate::domain::entity::SessionTag;
 /// enum containing a `Crud(CrudEvent<SessionTag>)` variant.
 pub type SessionTagEvent = CrudEvent<SessionTag>;
 
-// <<< CUSTOM
-// END CUSTOM
 
 use backbone_messaging::{CrudEventPublisher, NoOpCrudEventPublisher};
 use std::sync::Arc;

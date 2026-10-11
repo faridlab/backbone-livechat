@@ -22,8 +22,6 @@ pub mod rating_handler;
 pub mod session_handler;
 pub mod session_tag_handler;
 
-// <<< CUSTOM
-// END CUSTOM
 
 // Re-exports
 pub use channel_handler::{create_channel_routes, create_channel_read_routes, create_channel_write_routes};
@@ -42,8 +40,6 @@ pub use operator_profile_handler::{create_operator_profile_routes, create_operat
 pub use rating_handler::{create_rating_routes, create_rating_read_routes, create_rating_write_routes};
 pub use session_handler::{create_session_routes, create_session_read_routes, create_session_write_routes};
 pub use session_tag_handler::{create_session_tag_routes, create_session_tag_read_routes, create_session_tag_write_routes};
-// <<< CUSTOM
-// END CUSTOM
 
 // This directory's extension (hand-written; ADR-0031).
 include!("mod.ext.rs");

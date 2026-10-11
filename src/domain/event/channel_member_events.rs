@@ -11,8 +11,6 @@ use crate::domain::entity::ChannelMember;
 /// enum containing a `Crud(CrudEvent<ChannelMember>)` variant.
 pub type ChannelMemberEvent = CrudEvent<ChannelMember>;
 
-// <<< CUSTOM
-// END CUSTOM
 
 use backbone_messaging::{CrudEventPublisher, NoOpCrudEventPublisher};
 use std::sync::Arc;

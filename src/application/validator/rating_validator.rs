@@ -16,9 +16,5 @@ pub type RatingValidator = EntityValidator<Rating>;
 pub fn rating_validator() -> RatingValidator {
     EntityValidator::new()
         .rule(OptionalNotBlank::new("comment", |e: &Rating| e.comment.as_deref()))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM
