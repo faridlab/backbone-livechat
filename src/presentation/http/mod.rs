@@ -23,12 +23,6 @@ pub mod session_handler;
 pub mod session_tag_handler;
 
 // <<< CUSTOM
-// The module's DECLARED hand surface (user-owned; see
-// `metaphor.codegen.yaml`): the public capability-token tree mounted
-// BARE (tokens + fixed windows are the fence) and the officer tree
-// the host mounts behind company_auth + the module write gate.
-pub mod admin_routes;
-pub mod public_routes;
 // END CUSTOM
 
 // Re-exports
@@ -49,6 +43,7 @@ pub use rating_handler::{create_rating_routes, create_rating_read_routes, create
 pub use session_handler::{create_session_routes, create_session_read_routes, create_session_write_routes};
 pub use session_tag_handler::{create_session_tag_routes, create_session_tag_read_routes, create_session_tag_write_routes};
 // <<< CUSTOM
-pub use admin_routes::{livechat_admin_routes, LivechatActor, LivechatAdminState};
-pub use public_routes::{livechat_public_routes, LivechatPublicState, PublicSessionView};
 // END CUSTOM
+
+// This directory's extension (hand-written; ADR-0031).
+include!("mod.ext.rs");
