@@ -32,15 +32,15 @@ codegen pipeline produces domain entity structs, DTOs, SQL migrations,
 repository newtypes, service type aliases, HTTP handlers, and route
 registration.
 
-**Regeneration preserves only code inside `// <<< CUSTOM ... // END CUSTOM`
-blocks.** Everything outside those markers is overwritten — hand files
+**Regeneration writes every generated file whole.** Hand code lives in
+`<name>.ext.rs` extension files beside generated ones (ADR-0031), never inside them — hand files
 inside generator-owned trees must be declared in `metaphor.codegen.yaml`
 `user_owned` **before** they land.
 
 ## Rules
 
-- **MUST** edit `schema/models/*.model.yaml` first for any entity change. Never hand-edit generated files outside CUSTOM markers.
-- **MUST** put custom logic inside `// <<< CUSTOM` / `// END CUSTOM` blocks, or in a `user_owned`-declared sibling file which is never regenerated.
+- **MUST** edit `schema/models/*.model.yaml` first for any entity change. **NEVER** hand-edit a generated file.
+- **MUST** put custom logic in an extension file (`<name>.ext.rs`, `mod.ext.rs`, `lib.ext.rs`) or in a `user_owned`-declared sibling file, which is never regenerated.
 - **MUST** define services as type aliases: `pub type SessionService = GenericCrudService<...>`. Don't hand-roll `impl` for CRUD.
 - **MUST** define repositories as thin newtypes over `GenericCrudRepository`.
 - **MUST** bind the company scope in EVERY transactional repository method (`bind_current_company(&mut tx)` after `pool.begin()`); direct-pool statements go through the `backbone_orm::company_scope` `*_scoped` helpers. This is RLS LAW — a missed bind is a fence hole, not a style fault.
