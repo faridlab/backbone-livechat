@@ -56,7 +56,7 @@ impl backbone_core::write_guard::WriteGuard<ChatbotMessage> for ChatbotMessageRo
         };
         let row = &row;
         let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
-        let mut shadow = Vec::new();
+        let shadow = Vec::new();
         let mut refuse = Vec::new();
         // `session_id_required` (@required on ChatbotMessage.session_id)
         if (create || (update && r::changed(old.as_ref(), row, &["session_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "session_id")), r::not(r::is_empty(r::trim(r::field(row, "session_id")))))) {
@@ -64,11 +64,11 @@ impl backbone_core::write_guard::WriteGuard<ChatbotMessage> for ChatbotMessageRo
         }
         // `carrier_message_id_max_length` (@max(200) on ChatbotMessage.carrier_message_id)
         if (create || (update && r::changed(old.as_ref(), row, &["carrier_message_id"]))) && !r::holds(&r::le(r::length(r::field(row, "carrier_message_id")), r::Val::Num(200.0_f64))) {
-            shadow.push(Violation::new("carrier_message_id", "max_length", "carrier_message_id must be at most 200 characters").with_param("max", 200_i64));
+            refuse.push(Violation::new("carrier_message_id", "max_length", "carrier_message_id must be at most 200 characters").with_param("max", 200_i64));
         }
         // `visitor_answer_max_length` (@max(2000) on ChatbotMessage.visitor_answer)
         if (create || (update && r::changed(old.as_ref(), row, &["visitor_answer"]))) && !r::holds(&r::le(r::length(r::field(row, "visitor_answer")), r::Val::Num(2000.0_f64))) {
-            shadow.push(Violation::new("visitor_answer", "max_length", "visitor_answer must be at most 2000 characters").with_param("max", 2000_i64));
+            refuse.push(Violation::new("visitor_answer", "max_length", "visitor_answer must be at most 2000 characters").with_param("max", 2000_i64));
         }
         GuardOutcome { refuse, shadow }
     }

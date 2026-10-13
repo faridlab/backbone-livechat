@@ -56,7 +56,7 @@ impl backbone_core::write_guard::WriteGuard<MemberHistory> for MemberHistoryRowR
         };
         let row = &row;
         let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
-        let mut shadow = Vec::new();
+        let shadow = Vec::new();
         let mut refuse = Vec::new();
         // `session_id_required` (@required on MemberHistory.session_id)
         if (create || (update && r::changed(old.as_ref(), row, &["session_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "session_id")), r::not(r::is_empty(r::trim(r::field(row, "session_id")))))) {
@@ -64,11 +64,11 @@ impl backbone_core::write_guard::WriteGuard<MemberHistory> for MemberHistoryRowR
         }
         // `visitor_key_max_length` (@max(120) on MemberHistory.visitor_key)
         if (create || (update && r::changed(old.as_ref(), row, &["visitor_key"]))) && !r::holds(&r::le(r::length(r::field(row, "visitor_key")), r::Val::Num(120.0_f64))) {
-            shadow.push(Violation::new("visitor_key", "max_length", "visitor_key must be at most 120 characters").with_param("max", 120_i64));
+            refuse.push(Violation::new("visitor_key", "max_length", "visitor_key must be at most 120 characters").with_param("max", 120_i64));
         }
         // `message_count_non_negative` (@non_negative on MemberHistory.message_count)
         if (create || (update && r::changed(old.as_ref(), row, &["message_count"]))) && !r::holds(&r::ge(r::field(row, "message_count"), r::Val::Num(0.0_f64))) {
-            shadow.push(Violation::new("message_count", "non_negative", "message_count must not be negative"));
+            refuse.push(Violation::new("message_count", "non_negative", "message_count must not be negative"));
         }
         GuardOutcome { refuse, shadow }
     }

@@ -56,7 +56,7 @@ impl backbone_core::write_guard::WriteGuard<Channel> for ChannelRowRules {
         };
         let row = &row;
         let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
-        let mut shadow = Vec::new();
+        let shadow = Vec::new();
         let mut refuse = Vec::new();
         // `name_required` (@required on Channel.name)
         if (create || (update && r::changed(old.as_ref(), row, &["name"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "name")), r::not(r::is_empty(r::trim(r::field(row, "name")))))) {
@@ -64,23 +64,23 @@ impl backbone_core::write_guard::WriteGuard<Channel> for ChannelRowRules {
         }
         // `name_max_length` (@max(200) on Channel.name)
         if (create || (update && r::changed(old.as_ref(), row, &["name"]))) && !r::holds(&r::le(r::length(r::field(row, "name")), r::Val::Num(200.0_f64))) {
-            shadow.push(Violation::new("name", "max_length", "name must be at most 200 characters").with_param("max", 200_i64));
+            refuse.push(Violation::new("name", "max_length", "name must be at most 200 characters").with_param("max", 200_i64));
         }
         // `button_text_max_length` (@max(120) on Channel.button_text)
         if (create || (update && r::changed(old.as_ref(), row, &["button_text"]))) && !r::holds(&r::le(r::length(r::field(row, "button_text")), r::Val::Num(120.0_f64))) {
-            shadow.push(Violation::new("button_text", "max_length", "button_text must be at most 120 characters").with_param("max", 120_i64));
+            refuse.push(Violation::new("button_text", "max_length", "button_text must be at most 120 characters").with_param("max", 120_i64));
         }
         // `welcome_message_max_length` (@max(1000) on Channel.welcome_message)
         if (create || (update && r::changed(old.as_ref(), row, &["welcome_message"]))) && !r::holds(&r::le(r::length(r::field(row, "welcome_message")), r::Val::Num(1000.0_f64))) {
-            shadow.push(Violation::new("welcome_message", "max_length", "welcome_message must be at most 1000 characters").with_param("max", 1000_i64));
+            refuse.push(Violation::new("welcome_message", "max_length", "welcome_message must be at most 1000 characters").with_param("max", 1000_i64));
         }
         // `max_sessions_non_negative` (@non_negative on Channel.max_sessions)
         if (create || (update && r::changed(old.as_ref(), row, &["max_sessions"]))) && !r::holds(&r::ge(r::field(row, "max_sessions"), r::Val::Num(0.0_f64))) {
-            shadow.push(Violation::new("max_sessions", "non_negative", "max_sessions must not be negative"));
+            refuse.push(Violation::new("max_sessions", "non_negative", "max_sessions must not be negative"));
         }
         // `review_link_url` (type url on Channel.review_link)
         if (create || (update && r::changed(old.as_ref(), row, &["review_link"]))) && !r::holds(&r::matches(r::field(row, "review_link"), "^[a-zA-Z][a-zA-Z0-9+.-]*://\\S+$")) {
-            shadow.push(Violation::new("review_link", "url", "review_link must be an absolute URL"));
+            refuse.push(Violation::new("review_link", "url", "review_link must be an absolute URL"));
         }
         GuardOutcome { refuse, shadow }
     }

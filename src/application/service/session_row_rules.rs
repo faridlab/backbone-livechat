@@ -29,7 +29,7 @@ impl backbone_core::write_guard::WriteGuard<Session> for SessionRowRules {
         };
         let row = &row;
         let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
-        let mut shadow = Vec::new();
+        let shadow = Vec::new();
         let mut refuse = Vec::new();
         // `channel_id_required` (@required on Session.channel_id)
         if (create || (update && r::changed(old.as_ref(), row, &["channel_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "channel_id")), r::not(r::is_empty(r::trim(r::field(row, "channel_id")))))) {
@@ -37,27 +37,27 @@ impl backbone_core::write_guard::WriteGuard<Session> for SessionRowRules {
         }
         // `title_max_length` (@max(300) on Session.title)
         if (create || (update && r::changed(old.as_ref(), row, &["title"]))) && !r::holds(&r::le(r::length(r::field(row, "title")), r::Val::Num(300.0_f64))) {
-            shadow.push(Violation::new("title", "max_length", "title must be at most 300 characters").with_param("max", 300_i64));
+            refuse.push(Violation::new("title", "max_length", "title must be at most 300 characters").with_param("max", 300_i64));
         }
         // `visitor_country_code_max_length` (@max(2) on Session.visitor_country_code)
         if (create || (update && r::changed(old.as_ref(), row, &["visitor_country_code"]))) && !r::holds(&r::le(r::length(r::field(row, "visitor_country_code")), r::Val::Num(2.0_f64))) {
-            shadow.push(Violation::new("visitor_country_code", "max_length", "visitor_country_code must be at most 2 characters").with_param("max", 2_i64));
+            refuse.push(Violation::new("visitor_country_code", "max_length", "visitor_country_code must be at most 2 characters").with_param("max", 2_i64));
         }
         // `visitor_timezone_max_length` (@max(60) on Session.visitor_timezone)
         if (create || (update && r::changed(old.as_ref(), row, &["visitor_timezone"]))) && !r::holds(&r::le(r::length(r::field(row, "visitor_timezone")), r::Val::Num(60.0_f64))) {
-            shadow.push(Violation::new("visitor_timezone", "max_length", "visitor_timezone must be at most 60 characters").with_param("max", 60_i64));
+            refuse.push(Violation::new("visitor_timezone", "max_length", "visitor_timezone must be at most 60 characters").with_param("max", 60_i64));
         }
         // `visitor_language_max_length` (@max(35) on Session.visitor_language)
         if (create || (update && r::changed(old.as_ref(), row, &["visitor_language"]))) && !r::holds(&r::le(r::length(r::field(row, "visitor_language")), r::Val::Num(35.0_f64))) {
-            shadow.push(Violation::new("visitor_language", "max_length", "visitor_language must be at most 35 characters").with_param("max", 35_i64));
+            refuse.push(Violation::new("visitor_language", "max_length", "visitor_language must be at most 35 characters").with_param("max", 35_i64));
         }
         // `message_count_non_negative` (@non_negative on Session.message_count)
         if (create || (update && r::changed(old.as_ref(), row, &["message_count"]))) && !r::holds(&r::ge(r::field(row, "message_count"), r::Val::Num(0.0_f64))) {
-            shadow.push(Violation::new("message_count", "non_negative", "message_count must not be negative"));
+            refuse.push(Violation::new("message_count", "non_negative", "message_count must not be negative"));
         }
         // `error_detail_max_length` (@max(500) on Session.error_detail)
         if (create || (update && r::changed(old.as_ref(), row, &["error_detail"]))) && !r::holds(&r::le(r::length(r::field(row, "error_detail")), r::Val::Num(500.0_f64))) {
-            shadow.push(Violation::new("error_detail", "max_length", "error_detail must be at most 500 characters").with_param("max", 500_i64));
+            refuse.push(Violation::new("error_detail", "max_length", "error_detail must be at most 500 characters").with_param("max", 500_i64));
         }
         GuardOutcome { refuse, shadow }
     }

@@ -56,7 +56,7 @@ impl backbone_core::write_guard::WriteGuard<ChannelRule> for ChannelRuleRowRules
         };
         let row = &row;
         let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
-        let mut shadow = Vec::new();
+        let shadow = Vec::new();
         let mut refuse = Vec::new();
         // `channel_id_required` (@required on ChannelRule.channel_id)
         if (create || (update && r::changed(old.as_ref(), row, &["channel_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "channel_id")), r::not(r::is_empty(r::trim(r::field(row, "channel_id")))))) {
@@ -68,15 +68,15 @@ impl backbone_core::write_guard::WriteGuard<ChannelRule> for ChannelRuleRowRules
         }
         // `regex_url_max_length` (@max(500) on ChannelRule.regex_url)
         if (create || (update && r::changed(old.as_ref(), row, &["regex_url"]))) && !r::holds(&r::le(r::length(r::field(row, "regex_url")), r::Val::Num(500.0_f64))) {
-            shadow.push(Violation::new("regex_url", "max_length", "regex_url must be at most 500 characters").with_param("max", 500_i64));
+            refuse.push(Violation::new("regex_url", "max_length", "regex_url must be at most 500 characters").with_param("max", 500_i64));
         }
         // `auto_popup_timer_non_negative` (@non_negative on ChannelRule.auto_popup_timer)
         if (create || (update && r::changed(old.as_ref(), row, &["auto_popup_timer"]))) && !r::holds(&r::ge(r::field(row, "auto_popup_timer"), r::Val::Num(0.0_f64))) {
-            shadow.push(Violation::new("auto_popup_timer", "non_negative", "auto_popup_timer must not be negative"));
+            refuse.push(Violation::new("auto_popup_timer", "non_negative", "auto_popup_timer must not be negative"));
         }
         // `sequence_non_negative` (@non_negative on ChannelRule.sequence)
         if (create || (update && r::changed(old.as_ref(), row, &["sequence"]))) && !r::holds(&r::ge(r::field(row, "sequence"), r::Val::Num(0.0_f64))) {
-            shadow.push(Violation::new("sequence", "non_negative", "sequence must not be negative"));
+            refuse.push(Violation::new("sequence", "non_negative", "sequence must not be negative"));
         }
         GuardOutcome { refuse, shadow }
     }

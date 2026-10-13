@@ -56,7 +56,7 @@ impl backbone_core::write_guard::WriteGuard<ChatbotAnswer> for ChatbotAnswerRowR
         };
         let row = &row;
         let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
-        let mut shadow = Vec::new();
+        let shadow = Vec::new();
         let mut refuse = Vec::new();
         // `question_step_id_required` (@required on ChatbotAnswer.question_step_id)
         if (create || (update && r::changed(old.as_ref(), row, &["question_step_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "question_step_id")), r::not(r::is_empty(r::trim(r::field(row, "question_step_id")))))) {
@@ -64,7 +64,7 @@ impl backbone_core::write_guard::WriteGuard<ChatbotAnswer> for ChatbotAnswerRowR
         }
         // `sequence_non_negative` (@non_negative on ChatbotAnswer.sequence)
         if (create || (update && r::changed(old.as_ref(), row, &["sequence"]))) && !r::holds(&r::ge(r::field(row, "sequence"), r::Val::Num(0.0_f64))) {
-            shadow.push(Violation::new("sequence", "non_negative", "sequence must not be negative"));
+            refuse.push(Violation::new("sequence", "non_negative", "sequence must not be negative"));
         }
         // `label_required` (@required on ChatbotAnswer.label)
         if (create || (update && r::changed(old.as_ref(), row, &["label"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "label")), r::not(r::is_empty(r::trim(r::field(row, "label")))))) {
@@ -72,11 +72,11 @@ impl backbone_core::write_guard::WriteGuard<ChatbotAnswer> for ChatbotAnswerRowR
         }
         // `label_max_length` (@max(200) on ChatbotAnswer.label)
         if (create || (update && r::changed(old.as_ref(), row, &["label"]))) && !r::holds(&r::le(r::length(r::field(row, "label")), r::Val::Num(200.0_f64))) {
-            shadow.push(Violation::new("label", "max_length", "label must be at most 200 characters").with_param("max", 200_i64));
+            refuse.push(Violation::new("label", "max_length", "label must be at most 200 characters").with_param("max", 200_i64));
         }
         // `redirect_url_url` (type url on ChatbotAnswer.redirect_url)
         if (create || (update && r::changed(old.as_ref(), row, &["redirect_url"]))) && !r::holds(&r::matches(r::field(row, "redirect_url"), "^[a-zA-Z][a-zA-Z0-9+.-]*://\\S+$")) {
-            shadow.push(Violation::new("redirect_url", "url", "redirect_url must be an absolute URL"));
+            refuse.push(Violation::new("redirect_url", "url", "redirect_url must be an absolute URL"));
         }
         GuardOutcome { refuse, shadow }
     }

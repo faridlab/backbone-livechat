@@ -56,7 +56,7 @@ impl backbone_core::write_guard::WriteGuard<ChatbotStep> for ChatbotStepRowRules
         };
         let row = &row;
         let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
-        let mut shadow = Vec::new();
+        let shadow = Vec::new();
         let mut refuse = Vec::new();
         // `chatbot_script_id_required` (@required on ChatbotStep.chatbot_script_id)
         if (create || (update && r::changed(old.as_ref(), row, &["chatbot_script_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "chatbot_script_id")), r::not(r::is_empty(r::trim(r::field(row, "chatbot_script_id")))))) {
@@ -64,11 +64,11 @@ impl backbone_core::write_guard::WriteGuard<ChatbotStep> for ChatbotStepRowRules
         }
         // `sequence_non_negative` (@non_negative on ChatbotStep.sequence)
         if (create || (update && r::changed(old.as_ref(), row, &["sequence"]))) && !r::holds(&r::ge(r::field(row, "sequence"), r::Val::Num(0.0_f64))) {
-            shadow.push(Violation::new("sequence", "non_negative", "sequence must not be negative"));
+            refuse.push(Violation::new("sequence", "non_negative", "sequence must not be negative"));
         }
         // `message_max_length` (@max(5000) on ChatbotStep.message)
         if (create || (update && r::changed(old.as_ref(), row, &["message"]))) && !r::holds(&r::le(r::length(r::field(row, "message")), r::Val::Num(5000.0_f64))) {
-            shadow.push(Violation::new("message", "max_length", "message must be at most 5000 characters").with_param("max", 5000_i64));
+            refuse.push(Violation::new("message", "max_length", "message must be at most 5000 characters").with_param("max", 5000_i64));
         }
         GuardOutcome { refuse, shadow }
     }
