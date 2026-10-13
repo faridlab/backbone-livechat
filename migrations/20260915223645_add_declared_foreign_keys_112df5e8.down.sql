@@ -1,0 +1,15 @@
+-- Down: drop the declared foreign keys for livechat module
+ALTER TABLE IF EXISTS livechat.session_tags DROP CONSTRAINT IF EXISTS fk_session_tags_tag_id;
+ALTER TABLE IF EXISTS livechat.session_tags DROP CONSTRAINT IF EXISTS fk_session_tags_session_id;
+ALTER TABLE IF EXISTS livechat.sessions DROP CONSTRAINT IF EXISTS fk_sessions_channel_id;
+ALTER TABLE IF EXISTS livechat.ratings DROP CONSTRAINT IF EXISTS fk_ratings_session_id;
+ALTER TABLE IF EXISTS livechat.operator_expertise DROP CONSTRAINT IF EXISTS fk_operator_expertise_expertise_tag_id;
+ALTER TABLE IF EXISTS livechat.operator_expertise DROP CONSTRAINT IF EXISTS fk_operator_expertise_operator_profile_id;
+ALTER TABLE IF EXISTS livechat.member_histories DROP CONSTRAINT IF EXISTS fk_member_histories_session_id;
+ALTER TABLE IF EXISTS livechat.chatbot_step_triggers DROP CONSTRAINT IF EXISTS fk_chatbot_step_triggers_target_step_id;
+ALTER TABLE IF EXISTS livechat.chatbot_step_triggers DROP CONSTRAINT IF EXISTS fk_chatbot_step_triggers_answer_id;
+ALTER TABLE IF EXISTS livechat.chatbot_steps DROP CONSTRAINT IF EXISTS fk_chatbot_steps_chatbot_script_id;
+ALTER TABLE IF EXISTS livechat.chatbot_messages DROP CONSTRAINT IF EXISTS fk_chatbot_messages_session_id;
+ALTER TABLE IF EXISTS livechat.chatbot_answers DROP CONSTRAINT IF EXISTS fk_chatbot_answers_question_step_id;
+ALTER TABLE IF EXISTS livechat.channel_rules DROP CONSTRAINT IF EXISTS fk_channel_rules_channel_id;
+ALTER TABLE IF EXISTS livechat.channel_members DROP CONSTRAINT IF EXISTS fk_channel_members_channel_id;
