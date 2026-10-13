@@ -41,6 +41,24 @@ pub use operator_profile_service::OperatorProfileService;
 pub use rating_service::RatingService;
 pub use session_service::SessionService;
 pub use session_tag_service::SessionTagService;
+pub use channel_service::ChannelRowRules;
+pub use channel_member_service::ChannelMemberRowRules;
+pub use channel_rule_service::ChannelRuleRowRules;
+pub use chatbot_answer_service::ChatbotAnswerRowRules;
+pub use chatbot_message_service::ChatbotMessageRowRules;
+pub use chatbot_script_service::ChatbotScriptRowRules;
+pub use chatbot_step_service::ChatbotStepRowRules;
+pub use chatbot_step_trigger_service::ChatbotStepTriggerRowRules;
+pub use conversation_tag_service::ConversationTagRowRules;
+pub use expertise_tag_service::ExpertiseTagRowRules;
+pub use member_history_service::MemberHistoryRowRules;
+pub use operator_expertise_service::OperatorExpertiseRowRules;
+pub use operator_profile_service::OperatorProfileRowRules;
+pub mod rating_row_rules;
+pub use rating_row_rules::RatingRowRules;
+pub mod session_row_rules;
+pub use session_row_rules::SessionRowRules;
+pub use session_tag_service::SessionTagRowRules;
 
 // This directory's extension (hand-written; ADR-0031).
 include!("mod.ext.rs");

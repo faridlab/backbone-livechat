@@ -32,3 +32,41 @@ pub type ChatbotStepTriggerService = GenericCrudService<
     ChatbotStepTriggerRepository,
 >;
 
+/// The rules the schema declares for ChatbotStepTrigger, checked against the row a create or update
+/// would store. The generated build attaches it to [`ChatbotStepTriggerService`]. A refusing rule's
+/// break answers 422; a rule in shadow is logged under `backbone::write_guard` and the
+/// write goes ahead.
+pub struct ChatbotStepTriggerRowRules;
+
+#[async_trait::async_trait]
+impl backbone_core::write_guard::WriteGuard<ChatbotStepTrigger> for ChatbotStepTriggerRowRules {
+    async fn check(
+        &self,
+        ctx: &backbone_core::write_guard::WriteCtx<'_, ChatbotStepTrigger>,
+    ) -> backbone_core::write_guard::GuardOutcome {
+        use backbone_core::row_rule as r;
+        use backbone_core::violation::Violation;
+        use backbone_core::write_guard::{GuardOutcome, WriteKind};
+        let (create, update) = (ctx.kind == WriteKind::Create, ctx.kind == WriteKind::Update);
+        let Some(after) = ctx.after.filter(|_| create || update) else {
+            return GuardOutcome::allow();
+        };
+        let Ok(row) = serde_json::to_value(after) else {
+            return GuardOutcome::allow();
+        };
+        let row = &row;
+        let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
+        let shadow = Vec::new();
+        let mut refuse = Vec::new();
+        // `answer_id_required` (@required on ChatbotStepTrigger.answer_id)
+        if (create || (update && r::changed(old.as_ref(), row, &["answer_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "answer_id")), r::not(r::is_empty(r::trim(r::field(row, "answer_id")))))) {
+            refuse.push(Violation::new("answer_id", "required", "answer_id is required"));
+        }
+        // `target_step_id_required` (@required on ChatbotStepTrigger.target_step_id)
+        if (create || (update && r::changed(old.as_ref(), row, &["target_step_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "target_step_id")), r::not(r::is_empty(r::trim(r::field(row, "target_step_id")))))) {
+            refuse.push(Violation::new("target_step_id", "required", "target_step_id is required"));
+        }
+        GuardOutcome { refuse, shadow }
+    }
+}
+

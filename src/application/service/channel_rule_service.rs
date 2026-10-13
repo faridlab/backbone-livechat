@@ -32,3 +32,53 @@ pub type ChannelRuleService = GenericCrudService<
     ChannelRuleRepository,
 >;
 
+/// The rules the schema declares for ChannelRule, checked against the row a create or update
+/// would store. The generated build attaches it to [`ChannelRuleService`]. A refusing rule's
+/// break answers 422; a rule in shadow is logged under `backbone::write_guard` and the
+/// write goes ahead.
+pub struct ChannelRuleRowRules;
+
+#[async_trait::async_trait]
+impl backbone_core::write_guard::WriteGuard<ChannelRule> for ChannelRuleRowRules {
+    async fn check(
+        &self,
+        ctx: &backbone_core::write_guard::WriteCtx<'_, ChannelRule>,
+    ) -> backbone_core::write_guard::GuardOutcome {
+        use backbone_core::row_rule as r;
+        use backbone_core::violation::Violation;
+        use backbone_core::write_guard::{GuardOutcome, WriteKind};
+        let (create, update) = (ctx.kind == WriteKind::Create, ctx.kind == WriteKind::Update);
+        let Some(after) = ctx.after.filter(|_| create || update) else {
+            return GuardOutcome::allow();
+        };
+        let Ok(row) = serde_json::to_value(after) else {
+            return GuardOutcome::allow();
+        };
+        let row = &row;
+        let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
+        let mut shadow = Vec::new();
+        let mut refuse = Vec::new();
+        // `channel_id_required` (@required on ChannelRule.channel_id)
+        if (create || (update && r::changed(old.as_ref(), row, &["channel_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "channel_id")), r::not(r::is_empty(r::trim(r::field(row, "channel_id")))))) {
+            refuse.push(Violation::new("channel_id", "required", "channel_id is required"));
+        }
+        // `regex_url_required` (@required on ChannelRule.regex_url)
+        if (create || (update && r::changed(old.as_ref(), row, &["regex_url"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "regex_url")), r::not(r::is_empty(r::trim(r::field(row, "regex_url")))))) {
+            refuse.push(Violation::new("regex_url", "required", "regex_url is required"));
+        }
+        // `regex_url_max_length` (@max(500) on ChannelRule.regex_url)
+        if (create || (update && r::changed(old.as_ref(), row, &["regex_url"]))) && !r::holds(&r::le(r::length(r::field(row, "regex_url")), r::Val::Num(500.0_f64))) {
+            shadow.push(Violation::new("regex_url", "max_length", "regex_url must be at most 500 characters").with_param("max", 500_i64));
+        }
+        // `auto_popup_timer_non_negative` (@non_negative on ChannelRule.auto_popup_timer)
+        if (create || (update && r::changed(old.as_ref(), row, &["auto_popup_timer"]))) && !r::holds(&r::ge(r::field(row, "auto_popup_timer"), r::Val::Num(0.0_f64))) {
+            shadow.push(Violation::new("auto_popup_timer", "non_negative", "auto_popup_timer must not be negative"));
+        }
+        // `sequence_non_negative` (@non_negative on ChannelRule.sequence)
+        if (create || (update && r::changed(old.as_ref(), row, &["sequence"]))) && !r::holds(&r::ge(r::field(row, "sequence"), r::Val::Num(0.0_f64))) {
+            shadow.push(Violation::new("sequence", "non_negative", "sequence must not be negative"));
+        }
+        GuardOutcome { refuse, shadow }
+    }
+}
+

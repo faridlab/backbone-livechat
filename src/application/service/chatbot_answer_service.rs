@@ -32,3 +32,53 @@ pub type ChatbotAnswerService = GenericCrudService<
     ChatbotAnswerRepository,
 >;
 
+/// The rules the schema declares for ChatbotAnswer, checked against the row a create or update
+/// would store. The generated build attaches it to [`ChatbotAnswerService`]. A refusing rule's
+/// break answers 422; a rule in shadow is logged under `backbone::write_guard` and the
+/// write goes ahead.
+pub struct ChatbotAnswerRowRules;
+
+#[async_trait::async_trait]
+impl backbone_core::write_guard::WriteGuard<ChatbotAnswer> for ChatbotAnswerRowRules {
+    async fn check(
+        &self,
+        ctx: &backbone_core::write_guard::WriteCtx<'_, ChatbotAnswer>,
+    ) -> backbone_core::write_guard::GuardOutcome {
+        use backbone_core::row_rule as r;
+        use backbone_core::violation::Violation;
+        use backbone_core::write_guard::{GuardOutcome, WriteKind};
+        let (create, update) = (ctx.kind == WriteKind::Create, ctx.kind == WriteKind::Update);
+        let Some(after) = ctx.after.filter(|_| create || update) else {
+            return GuardOutcome::allow();
+        };
+        let Ok(row) = serde_json::to_value(after) else {
+            return GuardOutcome::allow();
+        };
+        let row = &row;
+        let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
+        let mut shadow = Vec::new();
+        let mut refuse = Vec::new();
+        // `question_step_id_required` (@required on ChatbotAnswer.question_step_id)
+        if (create || (update && r::changed(old.as_ref(), row, &["question_step_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "question_step_id")), r::not(r::is_empty(r::trim(r::field(row, "question_step_id")))))) {
+            refuse.push(Violation::new("question_step_id", "required", "question_step_id is required"));
+        }
+        // `sequence_non_negative` (@non_negative on ChatbotAnswer.sequence)
+        if (create || (update && r::changed(old.as_ref(), row, &["sequence"]))) && !r::holds(&r::ge(r::field(row, "sequence"), r::Val::Num(0.0_f64))) {
+            shadow.push(Violation::new("sequence", "non_negative", "sequence must not be negative"));
+        }
+        // `label_required` (@required on ChatbotAnswer.label)
+        if (create || (update && r::changed(old.as_ref(), row, &["label"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "label")), r::not(r::is_empty(r::trim(r::field(row, "label")))))) {
+            refuse.push(Violation::new("label", "required", "label is required"));
+        }
+        // `label_max_length` (@max(200) on ChatbotAnswer.label)
+        if (create || (update && r::changed(old.as_ref(), row, &["label"]))) && !r::holds(&r::le(r::length(r::field(row, "label")), r::Val::Num(200.0_f64))) {
+            shadow.push(Violation::new("label", "max_length", "label must be at most 200 characters").with_param("max", 200_i64));
+        }
+        // `redirect_url_url` (type url on ChatbotAnswer.redirect_url)
+        if (create || (update && r::changed(old.as_ref(), row, &["redirect_url"]))) && !r::holds(&r::matches(r::field(row, "redirect_url"), "^[a-zA-Z][a-zA-Z0-9+.-]*://\\S+$")) {
+            shadow.push(Violation::new("redirect_url", "url", "redirect_url must be an absolute URL"));
+        }
+        GuardOutcome { refuse, shadow }
+    }
+}
+
