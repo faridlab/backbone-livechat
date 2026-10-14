@@ -60,5 +60,133 @@ pub mod session_row_rules;
 pub use session_row_rules::SessionRowRules;
 pub use session_tag_service::SessionTagRowRules;
 
+/// A `ChannelService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_channel_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::ChannelRepository>,
+) -> ChannelService {
+    ChannelService::with_repository(repository).with_guard(std::sync::Arc::new(ChannelRowRules))
+}
+
+/// A `ChannelMemberService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_channel_member_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::ChannelMemberRepository>,
+) -> ChannelMemberService {
+    ChannelMemberService::with_repository(repository).with_guard(std::sync::Arc::new(ChannelMemberRowRules))
+}
+
+/// A `ChannelRuleService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_channel_rule_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::ChannelRuleRepository>,
+) -> ChannelRuleService {
+    ChannelRuleService::with_repository(repository).with_guard(std::sync::Arc::new(ChannelRuleRowRules))
+}
+
+/// A `ChatbotAnswerService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_chatbot_answer_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::ChatbotAnswerRepository>,
+) -> ChatbotAnswerService {
+    ChatbotAnswerService::with_repository(repository).with_guard(std::sync::Arc::new(ChatbotAnswerRowRules))
+}
+
+/// A `ChatbotMessageService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_chatbot_message_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::ChatbotMessageRepository>,
+) -> ChatbotMessageService {
+    ChatbotMessageService::with_repository(repository).with_guard(std::sync::Arc::new(ChatbotMessageRowRules))
+}
+
+/// A `ChatbotScriptService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_chatbot_script_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::ChatbotScriptRepository>,
+) -> ChatbotScriptService {
+    ChatbotScriptService::with_repository(repository).with_guard(std::sync::Arc::new(ChatbotScriptRowRules))
+}
+
+/// A `ChatbotStepService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_chatbot_step_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::ChatbotStepRepository>,
+) -> ChatbotStepService {
+    ChatbotStepService::with_repository(repository).with_guard(std::sync::Arc::new(ChatbotStepRowRules))
+}
+
+/// A `ChatbotStepTriggerService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_chatbot_step_trigger_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::ChatbotStepTriggerRepository>,
+) -> ChatbotStepTriggerService {
+    ChatbotStepTriggerService::with_repository(repository).with_guard(std::sync::Arc::new(ChatbotStepTriggerRowRules))
+}
+
+/// A `ConversationTagService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_conversation_tag_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::ConversationTagRepository>,
+) -> ConversationTagService {
+    ConversationTagService::with_repository(repository).with_guard(std::sync::Arc::new(ConversationTagRowRules))
+}
+
+/// A `ExpertiseTagService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_expertise_tag_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::ExpertiseTagRepository>,
+) -> ExpertiseTagService {
+    ExpertiseTagService::with_repository(repository).with_guard(std::sync::Arc::new(ExpertiseTagRowRules))
+}
+
+/// A `MemberHistoryService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_member_history_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::MemberHistoryRepository>,
+) -> MemberHistoryService {
+    MemberHistoryService::with_repository(repository).with_guard(std::sync::Arc::new(MemberHistoryRowRules))
+}
+
+/// A `OperatorExpertiseService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_operator_expertise_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::OperatorExpertiseRepository>,
+) -> OperatorExpertiseService {
+    OperatorExpertiseService::with_repository(repository).with_guard(std::sync::Arc::new(OperatorExpertiseRowRules))
+}
+
+/// A `OperatorProfileService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_operator_profile_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::OperatorProfileRepository>,
+) -> OperatorProfileService {
+    OperatorProfileService::with_repository(repository).with_guard(std::sync::Arc::new(OperatorProfileRowRules))
+}
+
+/// A `RatingService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_rating_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::RatingRepository>,
+) -> RatingService {
+    RatingService::with_repository(repository).with_guard(std::sync::Arc::new(RatingRowRules))
+}
+
+/// A `SessionService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_session_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::SessionRepository>,
+) -> SessionService {
+    SessionService::with_repository(repository).with_guard(std::sync::Arc::new(SessionRowRules))
+}
+
+/// A `SessionTagService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_session_tag_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::SessionTagRepository>,
+) -> SessionTagService {
+    SessionTagService::with_repository(repository).with_guard(std::sync::Arc::new(SessionTagRowRules))
+}
+
 // This directory's extension (hand-written; ADR-0031).
 include!("mod.ext.rs");

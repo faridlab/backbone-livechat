@@ -302,95 +302,95 @@ impl LivechatModuleBuilder {
 
         // Channel service
         let channel_repository = Arc::new(ChannelRepository::new(db_pool.clone()));
-        let channel_service = Arc::new(ChannelService::with_repository(channel_repository.clone()).with_guard(Arc::new(crate::application::service::ChannelRowRules)));
+        let channel_service = Arc::new(crate::application::service::build_channel_service(channel_repository.clone()));
 
         // ChannelMember service
         let channel_member_repository = Arc::new(ChannelMemberRepository::new(db_pool.clone()));
-        let channel_member_service = Arc::new(ChannelMemberService::with_repository(
+        let channel_member_service = Arc::new(crate::application::service::build_channel_member_service(
             channel_member_repository.clone(),
-        ).with_guard(Arc::new(crate::application::service::ChannelMemberRowRules)));
+        ));
 
         // ChannelRule service
         let channel_rule_repository = Arc::new(ChannelRuleRepository::new(db_pool.clone()));
-        let channel_rule_service = Arc::new(ChannelRuleService::with_repository(
+        let channel_rule_service = Arc::new(crate::application::service::build_channel_rule_service(
             channel_rule_repository.clone(),
-        ).with_guard(Arc::new(crate::application::service::ChannelRuleRowRules)));
+        ));
 
         // ChatbotAnswer service
         let chatbot_answer_repository = Arc::new(ChatbotAnswerRepository::new(db_pool.clone()));
-        let chatbot_answer_service = Arc::new(ChatbotAnswerService::with_repository(
+        let chatbot_answer_service = Arc::new(crate::application::service::build_chatbot_answer_service(
             chatbot_answer_repository.clone(),
-        ).with_guard(Arc::new(crate::application::service::ChatbotAnswerRowRules)));
+        ));
 
         // ChatbotMessage service
         let chatbot_message_repository = Arc::new(ChatbotMessageRepository::new(db_pool.clone()));
-        let chatbot_message_service = Arc::new(ChatbotMessageService::with_repository(
+        let chatbot_message_service = Arc::new(crate::application::service::build_chatbot_message_service(
             chatbot_message_repository.clone(),
-        ).with_guard(Arc::new(crate::application::service::ChatbotMessageRowRules)));
+        ));
 
         // ChatbotScript service
         let chatbot_script_repository = Arc::new(ChatbotScriptRepository::new(db_pool.clone()));
-        let chatbot_script_service = Arc::new(ChatbotScriptService::with_repository(
+        let chatbot_script_service = Arc::new(crate::application::service::build_chatbot_script_service(
             chatbot_script_repository.clone(),
-        ).with_guard(Arc::new(crate::application::service::ChatbotScriptRowRules)));
+        ));
 
         // ChatbotStep service
         let chatbot_step_repository = Arc::new(ChatbotStepRepository::new(db_pool.clone()));
-        let chatbot_step_service = Arc::new(ChatbotStepService::with_repository(
+        let chatbot_step_service = Arc::new(crate::application::service::build_chatbot_step_service(
             chatbot_step_repository.clone(),
-        ).with_guard(Arc::new(crate::application::service::ChatbotStepRowRules)));
+        ));
 
         // ChatbotStepTrigger service
         let chatbot_step_trigger_repository =
             Arc::new(ChatbotStepTriggerRepository::new(db_pool.clone()));
-        let chatbot_step_trigger_service = Arc::new(ChatbotStepTriggerService::with_repository(
+        let chatbot_step_trigger_service = Arc::new(crate::application::service::build_chatbot_step_trigger_service(
             chatbot_step_trigger_repository.clone(),
-        ).with_guard(Arc::new(crate::application::service::ChatbotStepTriggerRowRules)));
+        ));
 
         // ConversationTag service
         let conversation_tag_repository = Arc::new(ConversationTagRepository::new(db_pool.clone()));
-        let conversation_tag_service = Arc::new(ConversationTagService::with_repository(
+        let conversation_tag_service = Arc::new(crate::application::service::build_conversation_tag_service(
             conversation_tag_repository.clone(),
-        ).with_guard(Arc::new(crate::application::service::ConversationTagRowRules)));
+        ));
 
         // ExpertiseTag service
         let expertise_tag_repository = Arc::new(ExpertiseTagRepository::new(db_pool.clone()));
-        let expertise_tag_service = Arc::new(ExpertiseTagService::with_repository(
+        let expertise_tag_service = Arc::new(crate::application::service::build_expertise_tag_service(
             expertise_tag_repository.clone(),
-        ).with_guard(Arc::new(crate::application::service::ExpertiseTagRowRules)));
+        ));
 
         // MemberHistory service
         let member_history_repository = Arc::new(MemberHistoryRepository::new(db_pool.clone()));
-        let member_history_service = Arc::new(MemberHistoryService::with_repository(
+        let member_history_service = Arc::new(crate::application::service::build_member_history_service(
             member_history_repository.clone(),
-        ).with_guard(Arc::new(crate::application::service::MemberHistoryRowRules)));
+        ));
 
         // OperatorExpertise service
         let operator_expertise_repository =
             Arc::new(OperatorExpertiseRepository::new(db_pool.clone()));
-        let operator_expertise_service = Arc::new(OperatorExpertiseService::with_repository(
+        let operator_expertise_service = Arc::new(crate::application::service::build_operator_expertise_service(
             operator_expertise_repository.clone(),
-        ).with_guard(Arc::new(crate::application::service::OperatorExpertiseRowRules)));
+        ));
 
         // OperatorProfile service
         let operator_profile_repository = Arc::new(OperatorProfileRepository::new(db_pool.clone()));
-        let operator_profile_service = Arc::new(OperatorProfileService::with_repository(
+        let operator_profile_service = Arc::new(crate::application::service::build_operator_profile_service(
             operator_profile_repository.clone(),
-        ).with_guard(Arc::new(crate::application::service::OperatorProfileRowRules)));
+        ));
 
         // Rating service
         let rating_repository = Arc::new(RatingRepository::new(db_pool.clone()));
-        let rating_service = Arc::new(RatingService::with_repository(rating_repository.clone()).with_guard(Arc::new(crate::application::service::RatingRowRules)));
+        let rating_service = Arc::new(crate::application::service::build_rating_service(rating_repository.clone()));
 
         // Session service
         let session_repository = Arc::new(SessionRepository::new(db_pool.clone()));
-        let session_service = Arc::new(SessionService::with_repository(session_repository.clone()).with_guard(Arc::new(crate::application::service::SessionRowRules)));
+        let session_service = Arc::new(crate::application::service::build_session_service(session_repository.clone()));
 
         // SessionTag service
         let session_tag_repository = Arc::new(SessionTagRepository::new(db_pool.clone()));
-        let session_tag_service = Arc::new(SessionTagService::with_repository(
+        let session_tag_service = Arc::new(crate::application::service::build_session_tag_service(
             session_tag_repository.clone(),
-        ).with_guard(Arc::new(crate::application::service::SessionTagRowRules)));
+        ));
 
         // <<< CUSTOM
         // END CUSTOM
