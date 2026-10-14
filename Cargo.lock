@@ -191,9 +191,9 @@ dependencies = [
 
 [[package]]
 name = "backbone-auditlog"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bffcdfd76f2cc7ffe3b28fc75f0498e9e00dc820749c87897f34f14f89927e23"
+checksum = "a2b318913f0f81720e4d62862df4c93552ba125fb6aad74bf4b6932d68de35f0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -279,7 +279,7 @@ dependencies = [
 
 [[package]]
 name = "backbone-livechat"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "anyhow",
  "async-trait",
