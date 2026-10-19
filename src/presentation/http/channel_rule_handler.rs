@@ -80,6 +80,13 @@ impl axum::response::IntoResponse for ChannelRuleError {
 // Route Configuration
 // =============================================================================
 
+/// The permissions this entity's generic routes require: `channel_rule:<action>` for `read`, `create`,
+/// `update`, `delete`, `restore` and `purge`, with any rename the schema's `requires:` declares.
+pub fn channel_rule_permissions() -> backbone_core::http::CrudPermissions {
+    backbone_core::http::CrudPermissions::new("channel_rule")
+        .in_module("livechat")
+}
+
 /// Create Axum router with all 16 Backbone endpoints for ChannelRule.
 ///
 /// # Routes
@@ -109,21 +116,23 @@ impl axum::response::IntoResponse for ChannelRuleError {
 /// let router = create_channel_rule_routes(service);
 /// ```
 pub fn create_channel_rule_routes(service: Arc<ChannelRuleService>) -> Router {
-    BackboneCrudHandler::<ChannelRuleService, ChannelRule, CreateChannelRuleDto, UpdateChannelRuleDto, ChannelRuleResponseDto>::routes(
+    BackboneCrudHandler::<ChannelRuleService, ChannelRule, CreateChannelRuleDto, UpdateChannelRuleDto, ChannelRuleResponseDto>::routes_guarded(
         service,
         "/channel_rules",
+        channel_rule_permissions(),
     )
 }
 
 /// Create Axum router with only the read (GET) endpoints for ChannelRule.
 ///
-/// Safe for public, unauthenticated exposure (e.g., reference data).
+/// Each route requires the entity's `read` permission, so it needs an authenticated caller.
 /// Mutations must be served separately via `create_channel_rule_write_routes`,
 /// typically wrapped in an auth middleware layer.
 pub fn create_channel_rule_read_routes(service: Arc<ChannelRuleService>) -> Router {
-    BackboneCrudHandler::<ChannelRuleService, ChannelRule, CreateChannelRuleDto, UpdateChannelRuleDto, ChannelRuleResponseDto>::read_routes(
+    BackboneCrudHandler::<ChannelRuleService, ChannelRule, CreateChannelRuleDto, UpdateChannelRuleDto, ChannelRuleResponseDto>::read_routes_guarded(
         service,
         "/channel_rules",
+        channel_rule_permissions(),
     )
 }
 
@@ -139,9 +148,10 @@ pub fn create_channel_rule_read_routes(service: Arc<ChannelRuleService>) -> Rout
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
 pub fn create_channel_rule_write_routes(service: Arc<ChannelRuleService>) -> Router {
-    BackboneCrudHandler::<ChannelRuleService, ChannelRule, CreateChannelRuleDto, UpdateChannelRuleDto, ChannelRuleResponseDto>::write_routes(
+    BackboneCrudHandler::<ChannelRuleService, ChannelRule, CreateChannelRuleDto, UpdateChannelRuleDto, ChannelRuleResponseDto>::write_routes_guarded(
         service,
         "/channel_rules",
+        channel_rule_permissions(),
     )
 }
 

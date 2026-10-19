@@ -226,11 +226,3 @@ impl backbone_core::ApplyUpdateDto<UpdateChatbotStepTriggerDto> for ChatbotStepT
     }
 }
 
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to ChatbotStepTrigger here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
-

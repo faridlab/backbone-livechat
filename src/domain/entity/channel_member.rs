@@ -156,6 +156,12 @@ impl super::Entity for ChannelMember {
 }
 
 impl backbone_core::PersistentEntity for ChannelMember {
+    fn references() -> &'static [backbone_core::Reference] {
+        const REFERENCES: &[backbone_core::Reference] = &[
+            backbone_core::Reference::new("channel_id", "livechat.channels", "id"),
+        ];
+        REFERENCES
+    }
     fn entity_id(&self) -> String {
         self.id.to_string()
     }

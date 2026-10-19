@@ -34,12 +34,16 @@ pub struct CreateChatbotStepDto {
     pub chatbot_script_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     pub sequence: i32,
-    #[serde(alias = "step_type")]
+    #[serde(default = "default_create_chatbot_step_step_type", alias = "step_type")]
     pub step_type: LivechatStepType,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,
     #[serde(alias = "expertise_tag_ids")]
     pub expertise_tag_ids: Vec<Uuid>,
+}
+
+fn default_create_chatbot_step_step_type() -> LivechatStepType {
+    LivechatStepType::Text
 }
 
 // =============================================================================
@@ -87,8 +91,8 @@ pub struct PatchChatbotStepDto {
     pub sequence: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "step_type")]
     pub step_type: Option<LivechatStepType>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub message: Option<String>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option")]
+    pub message: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "expertise_tag_ids")]
     pub expertise_tag_ids: Option<Vec<Uuid>>,
 }
@@ -259,12 +263,4 @@ impl backbone_core::ApplyUpdateDto<UpdateChatbotStepDto> for ChatbotStep {
         Ok(self)
     }
 }
-
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to ChatbotStep here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
 

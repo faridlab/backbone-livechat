@@ -81,6 +81,13 @@ impl axum::response::IntoResponse for OperatorProfileError {
 // Route Configuration
 // =============================================================================
 
+/// The permissions this entity's generic routes require: `operator_profile:<action>` for `read`, `create`,
+/// `update`, `delete`, `restore` and `purge`, with any rename the schema's `requires:` declares.
+pub fn operator_profile_permissions() -> backbone_core::http::CrudPermissions {
+    backbone_core::http::CrudPermissions::new("operator_profile")
+        .in_module("livechat")
+}
+
 /// Create Axum router with all 16 Backbone endpoints for OperatorProfile.
 ///
 /// # Routes
@@ -110,21 +117,23 @@ impl axum::response::IntoResponse for OperatorProfileError {
 /// let router = create_operator_profile_routes(service);
 /// ```
 pub fn create_operator_profile_routes(service: Arc<OperatorProfileService>) -> Router {
-    BackboneCrudHandler::<OperatorProfileService, OperatorProfile, CreateOperatorProfileDto, UpdateOperatorProfileDto, OperatorProfileResponseDto>::routes(
+    BackboneCrudHandler::<OperatorProfileService, OperatorProfile, CreateOperatorProfileDto, UpdateOperatorProfileDto, OperatorProfileResponseDto>::routes_guarded(
         service,
         "/operator_profiles",
+        operator_profile_permissions(),
     )
 }
 
 /// Create Axum router with only the read (GET) endpoints for OperatorProfile.
 ///
-/// Safe for public, unauthenticated exposure (e.g., reference data).
+/// Each route requires the entity's `read` permission, so it needs an authenticated caller.
 /// Mutations must be served separately via `create_operator_profile_write_routes`,
 /// typically wrapped in an auth middleware layer.
 pub fn create_operator_profile_read_routes(service: Arc<OperatorProfileService>) -> Router {
-    BackboneCrudHandler::<OperatorProfileService, OperatorProfile, CreateOperatorProfileDto, UpdateOperatorProfileDto, OperatorProfileResponseDto>::read_routes(
+    BackboneCrudHandler::<OperatorProfileService, OperatorProfile, CreateOperatorProfileDto, UpdateOperatorProfileDto, OperatorProfileResponseDto>::read_routes_guarded(
         service,
         "/operator_profiles",
+        operator_profile_permissions(),
     )
 }
 
@@ -140,9 +149,10 @@ pub fn create_operator_profile_read_routes(service: Arc<OperatorProfileService>)
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
 pub fn create_operator_profile_write_routes(service: Arc<OperatorProfileService>) -> Router {
-    BackboneCrudHandler::<OperatorProfileService, OperatorProfile, CreateOperatorProfileDto, UpdateOperatorProfileDto, OperatorProfileResponseDto>::write_routes(
+    BackboneCrudHandler::<OperatorProfileService, OperatorProfile, CreateOperatorProfileDto, UpdateOperatorProfileDto, OperatorProfileResponseDto>::write_routes_guarded(
         service,
         "/operator_profiles",
+        operator_profile_permissions(),
     )
 }
 

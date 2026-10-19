@@ -199,6 +199,13 @@ impl super::Entity for ChannelRule {
 }
 
 impl backbone_core::PersistentEntity for ChannelRule {
+    fn references() -> &'static [backbone_core::Reference] {
+        const REFERENCES: &[backbone_core::Reference] = &[
+            backbone_core::Reference::new("channel_id", "livechat.channels", "id"),
+            backbone_core::Reference::new("chatbot_script_id", "livechat.chatbot_scripts", "id"),
+        ];
+        REFERENCES
+    }
     fn entity_id(&self) -> String {
         self.id.to_string()
     }

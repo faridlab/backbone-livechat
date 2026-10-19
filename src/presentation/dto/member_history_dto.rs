@@ -40,17 +40,21 @@ pub struct CreateMemberHistoryDto {
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "chatbot_script_id")]
     pub chatbot_script_id: Option<Uuid>,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
-    #[serde(alias = "joined_at")]
+    #[serde(default = "default_create_member_history_joined_at", alias = "joined_at")]
     pub joined_at: DateTime<Utc>,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "left_at")]
     pub left_at: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
-    #[serde(alias = "message_count")]
+    #[serde(default, alias = "message_count")]
     pub message_count: i32,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "response_time_secs")]
     pub response_time_secs: Option<i32>,
     #[serde(alias = "expertise_names")]
     pub expertise_names: Vec<String>,
+}
+
+fn default_create_member_history_joined_at() -> DateTime<Utc> {
+    Utc::now()
 }
 
 // =============================================================================
@@ -106,22 +110,22 @@ pub struct PatchMemberHistoryDto {
     pub session_id: Option<Uuid>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub persona: Option<LivechatPersona>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "operator_user_id")]
-    pub operator_user_id: Option<Uuid>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "visitor_key")]
-    pub visitor_key: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "chatbot_script_id")]
-    pub chatbot_script_id: Option<Uuid>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "operator_user_id")]
+    pub operator_user_id: Option<Option<Uuid>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "visitor_key")]
+    pub visitor_key: Option<Option<String>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "chatbot_script_id")]
+    pub chatbot_script_id: Option<Option<Uuid>>,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "joined_at")]
     pub joined_at: Option<DateTime<Utc>>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "left_at")]
-    pub left_at: Option<DateTime<Utc>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "left_at")]
+    pub left_at: Option<Option<DateTime<Utc>>>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "message_count")]
     pub message_count: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "response_time_secs")]
-    pub response_time_secs: Option<i32>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "response_time_secs")]
+    pub response_time_secs: Option<Option<i32>>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "expertise_names")]
     pub expertise_names: Option<Vec<String>>,
 }
@@ -318,12 +322,4 @@ impl backbone_core::ApplyUpdateDto<UpdateMemberHistoryDto> for MemberHistory {
         Ok(self)
     }
 }
-
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to MemberHistory here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
 

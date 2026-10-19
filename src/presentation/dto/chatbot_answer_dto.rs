@@ -83,8 +83,8 @@ pub struct PatchChatbotAnswerDto {
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "redirect_url")]
-    pub redirect_url: Option<String>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "redirect_url")]
+    pub redirect_url: Option<Option<String>>,
 }
 
 impl PatchChatbotAnswerDto {
@@ -249,12 +249,4 @@ impl backbone_core::ApplyUpdateDto<UpdateChatbotAnswerDto> for ChatbotAnswer {
         Ok(self)
     }
 }
-
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to ChatbotAnswer here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
 

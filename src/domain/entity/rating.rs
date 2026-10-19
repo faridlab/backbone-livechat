@@ -205,6 +205,12 @@ impl backbone_core::PersistentEntity for Rating {
     fn write_protected_fields() -> &'static [&'static str] {
         &["created_at"]
     }
+    fn references() -> &'static [backbone_core::Reference] {
+        const REFERENCES: &[backbone_core::Reference] = &[
+            backbone_core::Reference::new("session_id", "livechat.sessions", "id"),
+        ];
+        REFERENCES
+    }
     fn entity_id(&self) -> String {
         self.id.to_string()
     }

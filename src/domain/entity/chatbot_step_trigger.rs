@@ -156,6 +156,13 @@ impl super::Entity for ChatbotStepTrigger {
 }
 
 impl backbone_core::PersistentEntity for ChatbotStepTrigger {
+    fn references() -> &'static [backbone_core::Reference] {
+        const REFERENCES: &[backbone_core::Reference] = &[
+            backbone_core::Reference::new("answer_id", "livechat.chatbot_answers", "id"),
+            backbone_core::Reference::new("target_step_id", "livechat.chatbot_steps", "id"),
+        ];
+        REFERENCES
+    }
     fn entity_id(&self) -> String {
         self.id.to_string()
     }

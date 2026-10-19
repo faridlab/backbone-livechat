@@ -24,22 +24,22 @@ pub mod session_tag_handler;
 
 
 // Re-exports
-pub use channel_handler::{create_channel_routes, create_channel_read_routes, create_channel_write_routes};
-pub use channel_member_handler::{create_channel_member_routes, create_channel_member_read_routes, create_channel_member_write_routes};
-pub use channel_rule_handler::{create_channel_rule_routes, create_channel_rule_read_routes, create_channel_rule_write_routes};
-pub use chatbot_answer_handler::{create_chatbot_answer_routes, create_chatbot_answer_read_routes, create_chatbot_answer_write_routes};
-pub use chatbot_message_handler::{create_chatbot_message_routes, create_chatbot_message_read_routes, create_chatbot_message_write_routes};
-pub use chatbot_script_handler::{create_chatbot_script_routes, create_chatbot_script_read_routes, create_chatbot_script_write_routes};
-pub use chatbot_step_handler::{create_chatbot_step_routes, create_chatbot_step_read_routes, create_chatbot_step_write_routes};
-pub use chatbot_step_trigger_handler::{create_chatbot_step_trigger_routes, create_chatbot_step_trigger_read_routes, create_chatbot_step_trigger_write_routes};
-pub use conversation_tag_handler::{create_conversation_tag_routes, create_conversation_tag_read_routes, create_conversation_tag_write_routes};
-pub use expertise_tag_handler::{create_expertise_tag_routes, create_expertise_tag_read_routes, create_expertise_tag_write_routes};
-pub use member_history_handler::{create_member_history_routes, create_member_history_read_routes, create_member_history_write_routes};
-pub use operator_expertise_handler::{create_operator_expertise_routes, create_operator_expertise_read_routes, create_operator_expertise_write_routes};
-pub use operator_profile_handler::{create_operator_profile_routes, create_operator_profile_read_routes, create_operator_profile_write_routes};
-pub use rating_handler::{create_rating_routes, create_rating_read_routes, create_rating_write_routes};
-pub use session_handler::{create_session_routes, create_session_read_routes, create_session_write_routes};
-pub use session_tag_handler::{create_session_tag_routes, create_session_tag_read_routes, create_session_tag_write_routes};
+pub use channel_handler::{create_channel_routes, create_channel_read_routes, create_channel_write_routes, channel_permissions};
+pub use channel_member_handler::{create_channel_member_routes, create_channel_member_read_routes, create_channel_member_write_routes, channel_member_permissions};
+pub use channel_rule_handler::{create_channel_rule_routes, create_channel_rule_read_routes, create_channel_rule_write_routes, channel_rule_permissions};
+pub use chatbot_answer_handler::{create_chatbot_answer_routes, create_chatbot_answer_read_routes, create_chatbot_answer_write_routes, chatbot_answer_permissions};
+pub use chatbot_message_handler::{create_chatbot_message_routes, create_chatbot_message_read_routes, create_chatbot_message_write_routes, chatbot_message_permissions};
+pub use chatbot_script_handler::{create_chatbot_script_routes, create_chatbot_script_read_routes, create_chatbot_script_write_routes, chatbot_script_permissions};
+pub use chatbot_step_handler::{create_chatbot_step_routes, create_chatbot_step_read_routes, create_chatbot_step_write_routes, chatbot_step_permissions};
+pub use chatbot_step_trigger_handler::{create_chatbot_step_trigger_routes, create_chatbot_step_trigger_read_routes, create_chatbot_step_trigger_write_routes, chatbot_step_trigger_permissions};
+pub use conversation_tag_handler::{create_conversation_tag_routes, create_conversation_tag_read_routes, create_conversation_tag_write_routes, conversation_tag_permissions};
+pub use expertise_tag_handler::{create_expertise_tag_routes, create_expertise_tag_read_routes, create_expertise_tag_write_routes, expertise_tag_permissions};
+pub use member_history_handler::{create_member_history_routes, create_member_history_read_routes, create_member_history_write_routes, member_history_permissions};
+pub use operator_expertise_handler::{create_operator_expertise_routes, create_operator_expertise_read_routes, create_operator_expertise_write_routes, operator_expertise_permissions};
+pub use operator_profile_handler::{create_operator_profile_routes, create_operator_profile_read_routes, create_operator_profile_write_routes, operator_profile_permissions};
+pub use rating_handler::{create_rating_routes, create_rating_read_routes, create_rating_write_routes, rating_permissions};
+pub use session_handler::{create_session_routes, create_session_read_routes, create_session_write_routes, session_permissions};
+pub use session_tag_handler::{create_session_tag_routes, create_session_tag_read_routes, create_session_tag_write_routes, session_tag_permissions};
 
 // This directory's extension (hand-written; ADR-0031).
 include!("mod.ext.rs");

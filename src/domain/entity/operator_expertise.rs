@@ -156,6 +156,13 @@ impl super::Entity for OperatorExpertise {
 }
 
 impl backbone_core::PersistentEntity for OperatorExpertise {
+    fn references() -> &'static [backbone_core::Reference] {
+        const REFERENCES: &[backbone_core::Reference] = &[
+            backbone_core::Reference::new("operator_profile_id", "livechat.operator_profiles", "id"),
+            backbone_core::Reference::new("expertise_tag_id", "livechat.expertise_tags", "id"),
+        ];
+        REFERENCES
+    }
     fn entity_id(&self) -> String {
         self.id.to_string()
     }

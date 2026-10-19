@@ -207,11 +207,3 @@ impl backbone_core::ApplyUpdateDto<UpdateExpertiseTagDto> for ExpertiseTag {
     }
 }
 
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to ExpertiseTag here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
-

@@ -80,6 +80,13 @@ impl axum::response::IntoResponse for ChatbotScriptError {
 // Route Configuration
 // =============================================================================
 
+/// The permissions this entity's generic routes require: `chatbot_script:<action>` for `read`, `create`,
+/// `update`, `delete`, `restore` and `purge`, with any rename the schema's `requires:` declares.
+pub fn chatbot_script_permissions() -> backbone_core::http::CrudPermissions {
+    backbone_core::http::CrudPermissions::new("chatbot_script")
+        .in_module("livechat")
+}
+
 /// Create Axum router with all 16 Backbone endpoints for ChatbotScript.
 ///
 /// # Routes
@@ -109,21 +116,23 @@ impl axum::response::IntoResponse for ChatbotScriptError {
 /// let router = create_chatbot_script_routes(service);
 /// ```
 pub fn create_chatbot_script_routes(service: Arc<ChatbotScriptService>) -> Router {
-    BackboneCrudHandler::<ChatbotScriptService, ChatbotScript, CreateChatbotScriptDto, UpdateChatbotScriptDto, ChatbotScriptResponseDto>::routes(
+    BackboneCrudHandler::<ChatbotScriptService, ChatbotScript, CreateChatbotScriptDto, UpdateChatbotScriptDto, ChatbotScriptResponseDto>::routes_guarded(
         service,
         "/chatbot_scripts",
+        chatbot_script_permissions(),
     )
 }
 
 /// Create Axum router with only the read (GET) endpoints for ChatbotScript.
 ///
-/// Safe for public, unauthenticated exposure (e.g., reference data).
+/// Each route requires the entity's `read` permission, so it needs an authenticated caller.
 /// Mutations must be served separately via `create_chatbot_script_write_routes`,
 /// typically wrapped in an auth middleware layer.
 pub fn create_chatbot_script_read_routes(service: Arc<ChatbotScriptService>) -> Router {
-    BackboneCrudHandler::<ChatbotScriptService, ChatbotScript, CreateChatbotScriptDto, UpdateChatbotScriptDto, ChatbotScriptResponseDto>::read_routes(
+    BackboneCrudHandler::<ChatbotScriptService, ChatbotScript, CreateChatbotScriptDto, UpdateChatbotScriptDto, ChatbotScriptResponseDto>::read_routes_guarded(
         service,
         "/chatbot_scripts",
+        chatbot_script_permissions(),
     )
 }
 
@@ -139,9 +148,10 @@ pub fn create_chatbot_script_read_routes(service: Arc<ChatbotScriptService>) -> 
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
 pub fn create_chatbot_script_write_routes(service: Arc<ChatbotScriptService>) -> Router {
-    BackboneCrudHandler::<ChatbotScriptService, ChatbotScript, CreateChatbotScriptDto, UpdateChatbotScriptDto, ChatbotScriptResponseDto>::write_routes(
+    BackboneCrudHandler::<ChatbotScriptService, ChatbotScript, CreateChatbotScriptDto, UpdateChatbotScriptDto, ChatbotScriptResponseDto>::write_routes_guarded(
         service,
         "/chatbot_scripts",
+        chatbot_script_permissions(),
     )
 }
 

@@ -156,6 +156,13 @@ impl super::Entity for SessionTag {
 }
 
 impl backbone_core::PersistentEntity for SessionTag {
+    fn references() -> &'static [backbone_core::Reference] {
+        const REFERENCES: &[backbone_core::Reference] = &[
+            backbone_core::Reference::new("session_id", "livechat.sessions", "id"),
+            backbone_core::Reference::new("tag_id", "livechat.conversation_tags", "id"),
+        ];
+        REFERENCES
+    }
     fn entity_id(&self) -> String {
         self.id.to_string()
     }

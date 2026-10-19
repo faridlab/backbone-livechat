@@ -80,6 +80,13 @@ impl axum::response::IntoResponse for ChatbotStepError {
 // Route Configuration
 // =============================================================================
 
+/// The permissions this entity's generic routes require: `chatbot_step:<action>` for `read`, `create`,
+/// `update`, `delete`, `restore` and `purge`, with any rename the schema's `requires:` declares.
+pub fn chatbot_step_permissions() -> backbone_core::http::CrudPermissions {
+    backbone_core::http::CrudPermissions::new("chatbot_step")
+        .in_module("livechat")
+}
+
 /// Create Axum router with all 16 Backbone endpoints for ChatbotStep.
 ///
 /// # Routes
@@ -109,21 +116,23 @@ impl axum::response::IntoResponse for ChatbotStepError {
 /// let router = create_chatbot_step_routes(service);
 /// ```
 pub fn create_chatbot_step_routes(service: Arc<ChatbotStepService>) -> Router {
-    BackboneCrudHandler::<ChatbotStepService, ChatbotStep, CreateChatbotStepDto, UpdateChatbotStepDto, ChatbotStepResponseDto>::routes(
+    BackboneCrudHandler::<ChatbotStepService, ChatbotStep, CreateChatbotStepDto, UpdateChatbotStepDto, ChatbotStepResponseDto>::routes_guarded(
         service,
         "/chatbot_steps",
+        chatbot_step_permissions(),
     )
 }
 
 /// Create Axum router with only the read (GET) endpoints for ChatbotStep.
 ///
-/// Safe for public, unauthenticated exposure (e.g., reference data).
+/// Each route requires the entity's `read` permission, so it needs an authenticated caller.
 /// Mutations must be served separately via `create_chatbot_step_write_routes`,
 /// typically wrapped in an auth middleware layer.
 pub fn create_chatbot_step_read_routes(service: Arc<ChatbotStepService>) -> Router {
-    BackboneCrudHandler::<ChatbotStepService, ChatbotStep, CreateChatbotStepDto, UpdateChatbotStepDto, ChatbotStepResponseDto>::read_routes(
+    BackboneCrudHandler::<ChatbotStepService, ChatbotStep, CreateChatbotStepDto, UpdateChatbotStepDto, ChatbotStepResponseDto>::read_routes_guarded(
         service,
         "/chatbot_steps",
+        chatbot_step_permissions(),
     )
 }
 
@@ -139,9 +148,10 @@ pub fn create_chatbot_step_read_routes(service: Arc<ChatbotStepService>) -> Rout
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
 pub fn create_chatbot_step_write_routes(service: Arc<ChatbotStepService>) -> Router {
-    BackboneCrudHandler::<ChatbotStepService, ChatbotStep, CreateChatbotStepDto, UpdateChatbotStepDto, ChatbotStepResponseDto>::write_routes(
+    BackboneCrudHandler::<ChatbotStepService, ChatbotStep, CreateChatbotStepDto, UpdateChatbotStepDto, ChatbotStepResponseDto>::write_routes_guarded(
         service,
         "/chatbot_steps",
+        chatbot_step_permissions(),
     )
 }
 

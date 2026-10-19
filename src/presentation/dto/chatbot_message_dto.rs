@@ -81,14 +81,14 @@ pub struct PatchChatbotMessageDto {
     #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "session_id")]
     pub session_id: Option<Uuid>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "step_id")]
-    pub step_id: Option<Uuid>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "carrier_message_id")]
-    pub carrier_message_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "selected_answer_id")]
-    pub selected_answer_id: Option<Uuid>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "visitor_answer")]
-    pub visitor_answer: Option<String>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "step_id")]
+    pub step_id: Option<Option<Uuid>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "carrier_message_id")]
+    pub carrier_message_id: Option<Option<String>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "selected_answer_id")]
+    pub selected_answer_id: Option<Option<Uuid>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "visitor_answer")]
+    pub visitor_answer: Option<Option<String>>,
 }
 
 impl PatchChatbotMessageDto {
@@ -260,12 +260,4 @@ impl backbone_core::ApplyUpdateDto<UpdateChatbotMessageDto> for ChatbotMessage {
         Ok(self)
     }
 }
-
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to ChatbotMessage here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
 

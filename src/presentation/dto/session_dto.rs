@@ -39,6 +39,7 @@ pub struct CreateSessionDto {
     pub title: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub status: Option<LivechatSessionStatus>,
+    #[serde(default = "default_create_session_failure")]
     pub failure: LivechatFailure,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub outcome: Option<LivechatSessionOutcome>,
@@ -59,29 +60,37 @@ pub struct CreateSessionDto {
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "visitor_timezone")]
     pub visitor_timezone: Option<String>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
-    #[serde(alias = "is_pending_request")]
+    #[serde(default, alias = "is_pending_request")]
     pub is_pending_request: bool,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "crm_lead_id")]
     pub crm_lead_id: Option<Uuid>,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "visitor_language")]
     pub visitor_language: Option<String>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
-    #[serde(alias = "message_count")]
+    #[serde(default, alias = "message_count")]
     pub message_count: i32,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "first_response_at")]
     pub first_response_at: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
-    #[serde(alias = "last_interest_at")]
+    #[serde(default = "default_create_session_last_interest_at", alias = "last_interest_at")]
     pub last_interest_at: DateTime<Utc>,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "last_visitor_message_at")]
     pub last_visitor_message_at: Option<DateTime<Utc>>,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "last_operator_message_at")]
     pub last_operator_message_at: Option<DateTime<Utc>>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
-    #[serde(alias = "is_test")]
+    #[serde(default, alias = "is_test")]
     pub is_test: bool,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "error_detail")]
     pub error_detail: Option<String>,
+}
+
+fn default_create_session_failure() -> LivechatFailure {
+    LivechatFailure::NoFailure
+}
+
+fn default_create_session_last_interest_at() -> DateTime<Utc> {
+    Utc::now()
 }
 
 // =============================================================================
@@ -163,54 +172,54 @@ pub struct PatchSessionDto {
     #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "channel_id")]
     pub channel_id: Option<Uuid>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub title: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub status: Option<LivechatSessionStatus>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option")]
+    pub title: Option<Option<String>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option")]
+    pub status: Option<Option<LivechatSessionStatus>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub failure: Option<LivechatFailure>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub outcome: Option<LivechatSessionOutcome>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "close_reason")]
-    pub close_reason: Option<LivechatCloseReason>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "closed_at")]
-    pub closed_at: Option<DateTime<Utc>>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "operator_user_id")]
-    pub operator_user_id: Option<Uuid>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "chatbot_current_step_id")]
-    pub chatbot_current_step_id: Option<Uuid>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option")]
+    pub outcome: Option<Option<LivechatSessionOutcome>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "close_reason")]
+    pub close_reason: Option<Option<LivechatCloseReason>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "closed_at")]
+    pub closed_at: Option<Option<DateTime<Utc>>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "operator_user_id")]
+    pub operator_user_id: Option<Option<Uuid>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "chatbot_current_step_id")]
+    pub chatbot_current_step_id: Option<Option<Uuid>>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "expertise_names")]
     pub expertise_names: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "website_visitor_id")]
-    pub website_visitor_id: Option<Uuid>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "visitor_country_code")]
-    pub visitor_country_code: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "visitor_timezone")]
-    pub visitor_timezone: Option<String>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "website_visitor_id")]
+    pub website_visitor_id: Option<Option<Uuid>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "visitor_country_code")]
+    pub visitor_country_code: Option<Option<String>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "visitor_timezone")]
+    pub visitor_timezone: Option<Option<String>>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "is_pending_request")]
     pub is_pending_request: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "crm_lead_id")]
-    pub crm_lead_id: Option<Uuid>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "visitor_language")]
-    pub visitor_language: Option<String>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "crm_lead_id")]
+    pub crm_lead_id: Option<Option<Uuid>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "visitor_language")]
+    pub visitor_language: Option<Option<String>>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "message_count")]
     pub message_count: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "first_response_at")]
-    pub first_response_at: Option<DateTime<Utc>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "first_response_at")]
+    pub first_response_at: Option<Option<DateTime<Utc>>>,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "last_interest_at")]
     pub last_interest_at: Option<DateTime<Utc>>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "last_visitor_message_at")]
-    pub last_visitor_message_at: Option<DateTime<Utc>>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "last_operator_message_at")]
-    pub last_operator_message_at: Option<DateTime<Utc>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "last_visitor_message_at")]
+    pub last_visitor_message_at: Option<Option<DateTime<Utc>>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "last_operator_message_at")]
+    pub last_operator_message_at: Option<Option<DateTime<Utc>>>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "is_test")]
     pub is_test: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "error_detail")]
-    pub error_detail: Option<String>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "error_detail")]
+    pub error_detail: Option<Option<String>>,
 }
 
 impl PatchSessionDto {
@@ -472,12 +481,4 @@ impl backbone_core::ApplyUpdateDto<UpdateSessionDto> for Session {
         Ok(self)
     }
 }
-
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to Session here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
 

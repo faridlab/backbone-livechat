@@ -81,6 +81,13 @@ impl axum::response::IntoResponse for RatingError {
 // Route Configuration
 // =============================================================================
 
+/// The permissions this entity's generic routes require: `rating:<action>` for `read`, `create`,
+/// `update`, `delete`, `restore` and `purge`, with any rename the schema's `requires:` declares.
+pub fn rating_permissions() -> backbone_core::http::CrudPermissions {
+    backbone_core::http::CrudPermissions::new("rating")
+        .in_module("livechat")
+}
+
 /// Create Axum router with all 16 Backbone endpoints for Rating.
 ///
 /// # Routes
@@ -110,21 +117,23 @@ impl axum::response::IntoResponse for RatingError {
 /// let router = create_rating_routes(service);
 /// ```
 pub fn create_rating_routes(service: Arc<RatingService>) -> Router {
-    BackboneCrudHandler::<RatingService, Rating, CreateRatingDto, UpdateRatingDto, RatingResponseDto>::routes(
+    BackboneCrudHandler::<RatingService, Rating, CreateRatingDto, UpdateRatingDto, RatingResponseDto>::routes_guarded(
         service,
         "/ratings",
+        rating_permissions(),
     )
 }
 
 /// Create Axum router with only the read (GET) endpoints for Rating.
 ///
-/// Safe for public, unauthenticated exposure (e.g., reference data).
+/// Each route requires the entity's `read` permission, so it needs an authenticated caller.
 /// Mutations must be served separately via `create_rating_write_routes`,
 /// typically wrapped in an auth middleware layer.
 pub fn create_rating_read_routes(service: Arc<RatingService>) -> Router {
-    BackboneCrudHandler::<RatingService, Rating, CreateRatingDto, UpdateRatingDto, RatingResponseDto>::read_routes(
+    BackboneCrudHandler::<RatingService, Rating, CreateRatingDto, UpdateRatingDto, RatingResponseDto>::read_routes_guarded(
         service,
         "/ratings",
+        rating_permissions(),
     )
 }
 
@@ -140,9 +149,10 @@ pub fn create_rating_read_routes(service: Arc<RatingService>) -> Router {
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
 pub fn create_rating_write_routes(service: Arc<RatingService>) -> Router {
-    BackboneCrudHandler::<RatingService, Rating, CreateRatingDto, UpdateRatingDto, RatingResponseDto>::write_routes(
+    BackboneCrudHandler::<RatingService, Rating, CreateRatingDto, UpdateRatingDto, RatingResponseDto>::write_routes_guarded(
         service,
         "/ratings",
+        rating_permissions(),
     )
 }
 

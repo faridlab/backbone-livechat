@@ -176,6 +176,12 @@ impl super::Entity for ChatbotAnswer {
 }
 
 impl backbone_core::PersistentEntity for ChatbotAnswer {
+    fn references() -> &'static [backbone_core::Reference] {
+        const REFERENCES: &[backbone_core::Reference] = &[
+            backbone_core::Reference::new("question_step_id", "livechat.chatbot_steps", "id"),
+        ];
+        REFERENCES
+    }
     fn entity_id(&self) -> String {
         self.id.to_string()
     }

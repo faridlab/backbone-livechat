@@ -37,19 +37,31 @@ pub struct CreateChannelDto {
     pub button_text: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "welcome_message")]
     pub welcome_message: Option<String>,
-    #[serde(alias = "max_sessions_mode")]
+    #[serde(default = "default_create_channel_max_sessions_mode", alias = "max_sessions_mode")]
     pub max_sessions_mode: LivechatMaxSessionsMode,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
-    #[serde(alias = "max_sessions")]
+    #[serde(default = "default_create_channel_max_sessions", alias = "max_sessions")]
     pub max_sessions: i32,
     #[cfg_attr(feature = "openapi", schema(example = true))]
-    #[serde(alias = "block_assignment_during_call")]
+    #[serde(default, alias = "block_assignment_during_call")]
     pub block_assignment_during_call: bool,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "review_link")]
     pub review_link: Option<String>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
-    #[serde(alias = "is_active")]
+    #[serde(default = "default_create_channel_is_active", alias = "is_active")]
     pub is_active: bool,
+}
+
+fn default_create_channel_max_sessions_mode() -> LivechatMaxSessionsMode {
+    LivechatMaxSessionsMode::Unlimited
+}
+
+fn default_create_channel_max_sessions() -> i32 {
+    1
+}
+
+fn default_create_channel_is_active() -> bool {
+    true
 }
 
 // =============================================================================
@@ -102,12 +114,12 @@ pub struct PatchChannelDto {
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "website_id")]
-    pub website_id: Option<Uuid>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "button_text")]
-    pub button_text: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "welcome_message")]
-    pub welcome_message: Option<String>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "website_id")]
+    pub website_id: Option<Option<Uuid>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "button_text")]
+    pub button_text: Option<Option<String>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "welcome_message")]
+    pub welcome_message: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "max_sessions_mode")]
     pub max_sessions_mode: Option<LivechatMaxSessionsMode>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
@@ -116,8 +128,8 @@ pub struct PatchChannelDto {
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "block_assignment_during_call")]
     pub block_assignment_during_call: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "review_link")]
-    pub review_link: Option<String>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "review_link")]
+    pub review_link: Option<Option<String>>,
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "is_active")]
     pub is_active: Option<bool>,
@@ -311,12 +323,4 @@ impl backbone_core::ApplyUpdateDto<UpdateChannelDto> for Channel {
         Ok(self)
     }
 }
-
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to Channel here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
 

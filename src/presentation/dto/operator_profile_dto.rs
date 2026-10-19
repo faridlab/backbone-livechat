@@ -79,14 +79,14 @@ pub struct PatchOperatorProfileDto {
     #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "user_id")]
     pub user_id: Option<Uuid>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "display_name")]
-    pub display_name: Option<String>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "display_name")]
+    pub display_name: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub languages: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "last_heartbeat_at")]
-    pub last_heartbeat_at: Option<DateTime<Utc>>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "last_assigned_at")]
-    pub last_assigned_at: Option<DateTime<Utc>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "last_heartbeat_at")]
+    pub last_heartbeat_at: Option<Option<DateTime<Utc>>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "last_assigned_at")]
+    pub last_assigned_at: Option<Option<DateTime<Utc>>>,
 }
 
 impl PatchOperatorProfileDto {
@@ -254,12 +254,4 @@ impl backbone_core::ApplyUpdateDto<UpdateOperatorProfileDto> for OperatorProfile
         Ok(self)
     }
 }
-
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to OperatorProfile here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
 

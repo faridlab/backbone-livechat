@@ -31,8 +31,12 @@ pub struct CreateChatbotScriptDto {
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub title: String,
     #[cfg_attr(feature = "openapi", schema(example = true))]
-    #[serde(alias = "is_active")]
+    #[serde(default = "default_create_chatbot_script_is_active", alias = "is_active")]
     pub is_active: bool,
+}
+
+fn default_create_chatbot_script_is_active() -> bool {
+    true
 }
 
 // =============================================================================
@@ -223,12 +227,4 @@ impl backbone_core::ApplyUpdateDto<UpdateChatbotScriptDto> for ChatbotScript {
         Ok(self)
     }
 }
-
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to ChatbotScript here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
 

@@ -81,6 +81,13 @@ impl axum::response::IntoResponse for MemberHistoryError {
 // Route Configuration
 // =============================================================================
 
+/// The permissions this entity's generic routes require: `member_history:<action>` for `read`, `create`,
+/// `update`, `delete`, `restore` and `purge`, with any rename the schema's `requires:` declares.
+pub fn member_history_permissions() -> backbone_core::http::CrudPermissions {
+    backbone_core::http::CrudPermissions::new("member_history")
+        .in_module("livechat")
+}
+
 /// Create Axum router with all 16 Backbone endpoints for MemberHistory.
 ///
 /// # Routes
@@ -110,21 +117,23 @@ impl axum::response::IntoResponse for MemberHistoryError {
 /// let router = create_member_history_routes(service);
 /// ```
 pub fn create_member_history_routes(service: Arc<MemberHistoryService>) -> Router {
-    BackboneCrudHandler::<MemberHistoryService, MemberHistory, CreateMemberHistoryDto, UpdateMemberHistoryDto, MemberHistoryResponseDto>::routes(
+    BackboneCrudHandler::<MemberHistoryService, MemberHistory, CreateMemberHistoryDto, UpdateMemberHistoryDto, MemberHistoryResponseDto>::routes_guarded(
         service,
         "/member_histories",
+        member_history_permissions(),
     )
 }
 
 /// Create Axum router with only the read (GET) endpoints for MemberHistory.
 ///
-/// Safe for public, unauthenticated exposure (e.g., reference data).
+/// Each route requires the entity's `read` permission, so it needs an authenticated caller.
 /// Mutations must be served separately via `create_member_history_write_routes`,
 /// typically wrapped in an auth middleware layer.
 pub fn create_member_history_read_routes(service: Arc<MemberHistoryService>) -> Router {
-    BackboneCrudHandler::<MemberHistoryService, MemberHistory, CreateMemberHistoryDto, UpdateMemberHistoryDto, MemberHistoryResponseDto>::read_routes(
+    BackboneCrudHandler::<MemberHistoryService, MemberHistory, CreateMemberHistoryDto, UpdateMemberHistoryDto, MemberHistoryResponseDto>::read_routes_guarded(
         service,
         "/member_histories",
+        member_history_permissions(),
     )
 }
 
@@ -140,9 +149,10 @@ pub fn create_member_history_read_routes(service: Arc<MemberHistoryService>) -> 
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
 pub fn create_member_history_write_routes(service: Arc<MemberHistoryService>) -> Router {
-    BackboneCrudHandler::<MemberHistoryService, MemberHistory, CreateMemberHistoryDto, UpdateMemberHistoryDto, MemberHistoryResponseDto>::write_routes(
+    BackboneCrudHandler::<MemberHistoryService, MemberHistory, CreateMemberHistoryDto, UpdateMemberHistoryDto, MemberHistoryResponseDto>::write_routes_guarded(
         service,
         "/member_histories",
+        member_history_permissions(),
     )
 }
 

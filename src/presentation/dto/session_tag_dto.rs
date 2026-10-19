@@ -226,11 +226,3 @@ impl backbone_core::ApplyUpdateDto<UpdateSessionTagDto> for SessionTag {
     }
 }
 
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to SessionTag here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
-

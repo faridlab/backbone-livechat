@@ -183,6 +183,12 @@ impl super::Entity for ChatbotStep {
 }
 
 impl backbone_core::PersistentEntity for ChatbotStep {
+    fn references() -> &'static [backbone_core::Reference] {
+        const REFERENCES: &[backbone_core::Reference] = &[
+            backbone_core::Reference::new("chatbot_script_id", "livechat.chatbot_scripts", "id"),
+        ];
+        REFERENCES
+    }
     fn entity_id(&self) -> String {
         self.id.to_string()
     }

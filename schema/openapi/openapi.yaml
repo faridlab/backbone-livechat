@@ -1531,30 +1531,6 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-    post:
-      tags:
-        - ChatbotMessages
-      summary: Create ChatbotMessage
-      description: Create a new ChatbotMessage
-      operationId: createChatbotMessage
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateChatbotMessageRequest'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ChatbotMessage'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
   /api/v1/livechat/chatbot_messages/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
@@ -1574,181 +1550,6 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-    put:
-      tags:
-        - ChatbotMessages
-      summary: Update ChatbotMessage (full)
-      operationId: updateChatbotMessage
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateChatbotMessageRequest'
-      responses:
-        '200':
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ChatbotMessage'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-    patch:
-      tags:
-        - ChatbotMessages
-      summary: Update ChatbotMessage (partial)
-      operationId: patchChatbotMessage
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchChatbotMessageRequest'
-      responses:
-        '200':
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ChatbotMessage'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-    delete:
-      tags:
-        - ChatbotMessages
-      summary: Delete ChatbotMessage (soft)
-      operationId: deleteChatbotMessage
-      responses:
-        '204':
-          description: Deleted
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /api/v1/livechat/chatbot_messages/bulk:
-    post:
-      tags:
-        - ChatbotMessages
-      summary: Bulk create ChatbotMessages
-      operationId: bulkCreateChatbotMessages
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/CreateChatbotMessageRequest'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ChatbotMessage'
-    put:
-      tags:
-        - ChatbotMessages
-      summary: Bulk update ChatbotMessages (full, atomic)
-      operationId: bulkUpdateChatbotMessages
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                allOf:
-                  - type: object
-                    required: [id]
-                    properties:
-                      id:
-                        type: string
-                  - $ref: '#/components/schemas/UpdateChatbotMessageRequest'
-      responses:
-        '200':
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ChatbotMessageBulkResult'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-    patch:
-      tags:
-        - ChatbotMessages
-      summary: Bulk partial-update ChatbotMessages (atomic)
-      operationId: bulkPatchChatbotMessages
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              oneOf:
-                - type: object
-                  required: [ids, patch]
-                  properties:
-                    ids:
-                      type: array
-                      items: { type: string }
-                    patch:
-                      type: object
-                      additionalProperties: true
-                - type: object
-                  required: [items]
-                  properties:
-                    items:
-                      type: array
-                      items:
-                        type: object
-                        required: [id, patch]
-                        properties:
-                          id: { type: string }
-                          patch: { type: object, additionalProperties: true }
-      responses:
-        '200':
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ChatbotMessageBulkResult'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  /api/v1/livechat/chatbot_messages/upsert:
-    post:
-      tags:
-        - ChatbotMessages
-      summary: Upsert ChatbotMessage
-      operationId: upsertChatbotMessage
-      parameters:
-        - name: key_field
-          in: query
-          schema:
-            type: string
-        - name: key_value
-          in: query
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateChatbotMessageRequest'
-      responses:
-        '200':
-          description: Upserted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ChatbotMessage'
-
   /api/v1/livechat/chatbot_messages/trash:
     get:
       tags:
@@ -1765,115 +1566,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ChatbotMessageList'
-
-  /api/v1/livechat/chatbot_messages/{id}/restore:
-    parameters:
-      - $ref: '#/components/parameters/IdParam'
-    post:
-      tags:
-        - ChatbotMessages
-      summary: Restore deleted ChatbotMessage
-      operationId: restoreChatbotMessage
-      responses:
-        '200':
-          description: Restored
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ChatbotMessage'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /api/v1/livechat/chatbot_messages/empty:
-    delete:
-      tags:
-        - ChatbotMessages
-      summary: Empty trash for ChatbotMessages
-      operationId: emptyTrashChatbotMessages
-      responses:
-        '200':
-          description: Trash emptied
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  deleted_count:
-                    type: integer
-
-  /api/v1/livechat/chatbot_messages/delete/bulk:
-    post:
-      tags:
-        - ChatbotMessages
-      summary: Bulk soft-delete ChatbotMessages by ids (atomic)
-      operationId: bulkDeleteChatbotMessages
-      requestBody:
-        $ref: '#/components/requestBodies/BatchIds'
-      responses:
-        '200':
-          description: Soft-deleted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  soft_deleted: { type: integer }
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  /api/v1/livechat/chatbot_messages/restore/bulk:
-    post:
-      tags:
-        - ChatbotMessages
-      summary: Bulk restore ChatbotMessages by ids (atomic)
-      operationId: bulkRestoreChatbotMessages
-      requestBody:
-        $ref: '#/components/requestBodies/BatchIds'
-      responses:
-        '200':
-          description: Restored
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ChatbotMessageBulkResult'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  /api/v1/livechat/chatbot_messages/restore/all:
-    post:
-      tags:
-        - ChatbotMessages
-      summary: Restore all soft-deleted ChatbotMessages
-      operationId: restoreAllChatbotMessages
-      responses:
-        '200':
-          description: Restored
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  restored: { type: integer }
-
-  /api/v1/livechat/chatbot_messages/trash/bulk:
-    delete:
-      tags:
-        - ChatbotMessages
-      summary: Bulk permanently-delete ChatbotMessages from trash by ids (atomic)
-      operationId: bulkPermanentDeleteChatbotMessages
-      requestBody:
-        $ref: '#/components/requestBodies/BatchIds'
-      responses:
-        '200':
-          description: Permanently deleted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  permanently_deleted: { type: integer }
-        '400':
-          $ref: '#/components/responses/BadRequest'
 
   /api/v1/livechat/chatbot_scripts:
     get:
@@ -3727,30 +3419,6 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-    post:
-      tags:
-        - MemberHistories
-      summary: Create MemberHistory
-      description: Create a new MemberHistory
-      operationId: createMemberHistory
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateMemberHistoryRequest'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MemberHistory'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
   /api/v1/livechat/member_histories/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
@@ -3770,181 +3438,6 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-    put:
-      tags:
-        - MemberHistories
-      summary: Update MemberHistory (full)
-      operationId: updateMemberHistory
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateMemberHistoryRequest'
-      responses:
-        '200':
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MemberHistory'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-    patch:
-      tags:
-        - MemberHistories
-      summary: Update MemberHistory (partial)
-      operationId: patchMemberHistory
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchMemberHistoryRequest'
-      responses:
-        '200':
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MemberHistory'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-    delete:
-      tags:
-        - MemberHistories
-      summary: Delete MemberHistory (soft)
-      operationId: deleteMemberHistory
-      responses:
-        '204':
-          description: Deleted
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /api/v1/livechat/member_histories/bulk:
-    post:
-      tags:
-        - MemberHistories
-      summary: Bulk create MemberHistories
-      operationId: bulkCreateMemberHistories
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/CreateMemberHistoryRequest'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/MemberHistory'
-    put:
-      tags:
-        - MemberHistories
-      summary: Bulk update MemberHistories (full, atomic)
-      operationId: bulkUpdateMemberHistories
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                allOf:
-                  - type: object
-                    required: [id]
-                    properties:
-                      id:
-                        type: string
-                  - $ref: '#/components/schemas/UpdateMemberHistoryRequest'
-      responses:
-        '200':
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MemberHistoryBulkResult'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-    patch:
-      tags:
-        - MemberHistories
-      summary: Bulk partial-update MemberHistories (atomic)
-      operationId: bulkPatchMemberHistories
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              oneOf:
-                - type: object
-                  required: [ids, patch]
-                  properties:
-                    ids:
-                      type: array
-                      items: { type: string }
-                    patch:
-                      type: object
-                      additionalProperties: true
-                - type: object
-                  required: [items]
-                  properties:
-                    items:
-                      type: array
-                      items:
-                        type: object
-                        required: [id, patch]
-                        properties:
-                          id: { type: string }
-                          patch: { type: object, additionalProperties: true }
-      responses:
-        '200':
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MemberHistoryBulkResult'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  /api/v1/livechat/member_histories/upsert:
-    post:
-      tags:
-        - MemberHistories
-      summary: Upsert MemberHistory
-      operationId: upsertMemberHistory
-      parameters:
-        - name: key_field
-          in: query
-          schema:
-            type: string
-        - name: key_value
-          in: query
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateMemberHistoryRequest'
-      responses:
-        '200':
-          description: Upserted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MemberHistory'
-
   /api/v1/livechat/member_histories/trash:
     get:
       tags:
@@ -3961,115 +3454,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MemberHistoryList'
-
-  /api/v1/livechat/member_histories/{id}/restore:
-    parameters:
-      - $ref: '#/components/parameters/IdParam'
-    post:
-      tags:
-        - MemberHistories
-      summary: Restore deleted MemberHistory
-      operationId: restoreMemberHistory
-      responses:
-        '200':
-          description: Restored
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MemberHistory'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /api/v1/livechat/member_histories/empty:
-    delete:
-      tags:
-        - MemberHistories
-      summary: Empty trash for MemberHistories
-      operationId: emptyTrashMemberHistories
-      responses:
-        '200':
-          description: Trash emptied
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  deleted_count:
-                    type: integer
-
-  /api/v1/livechat/member_histories/delete/bulk:
-    post:
-      tags:
-        - MemberHistories
-      summary: Bulk soft-delete MemberHistories by ids (atomic)
-      operationId: bulkDeleteMemberHistories
-      requestBody:
-        $ref: '#/components/requestBodies/BatchIds'
-      responses:
-        '200':
-          description: Soft-deleted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  soft_deleted: { type: integer }
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  /api/v1/livechat/member_histories/restore/bulk:
-    post:
-      tags:
-        - MemberHistories
-      summary: Bulk restore MemberHistories by ids (atomic)
-      operationId: bulkRestoreMemberHistories
-      requestBody:
-        $ref: '#/components/requestBodies/BatchIds'
-      responses:
-        '200':
-          description: Restored
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MemberHistoryBulkResult'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  /api/v1/livechat/member_histories/restore/all:
-    post:
-      tags:
-        - MemberHistories
-      summary: Restore all soft-deleted MemberHistories
-      operationId: restoreAllMemberHistories
-      responses:
-        '200':
-          description: Restored
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  restored: { type: integer }
-
-  /api/v1/livechat/member_histories/trash/bulk:
-    delete:
-      tags:
-        - MemberHistories
-      summary: Bulk permanently-delete MemberHistories from trash by ids (atomic)
-      operationId: bulkPermanentDeleteMemberHistories
-      requestBody:
-        $ref: '#/components/requestBodies/BatchIds'
-      responses:
-        '200':
-          description: Permanently deleted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  permanently_deleted: { type: integer }
-        '400':
-          $ref: '#/components/responses/BadRequest'
 
   /api/v1/livechat/operator_expertises:
     get:
@@ -5191,30 +4575,6 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-    post:
-      tags:
-        - Sessions
-      summary: Create Session
-      description: Create a new Session
-      operationId: createSession
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateSessionRequest'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Session'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
   /api/v1/livechat/sessions/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
@@ -5234,181 +4594,6 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-    put:
-      tags:
-        - Sessions
-      summary: Update Session (full)
-      operationId: updateSession
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateSessionRequest'
-      responses:
-        '200':
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Session'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-    patch:
-      tags:
-        - Sessions
-      summary: Update Session (partial)
-      operationId: patchSession
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchSessionRequest'
-      responses:
-        '200':
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Session'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-    delete:
-      tags:
-        - Sessions
-      summary: Delete Session (soft)
-      operationId: deleteSession
-      responses:
-        '204':
-          description: Deleted
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /api/v1/livechat/sessions/bulk:
-    post:
-      tags:
-        - Sessions
-      summary: Bulk create Sessions
-      operationId: bulkCreateSessions
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/CreateSessionRequest'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Session'
-    put:
-      tags:
-        - Sessions
-      summary: Bulk update Sessions (full, atomic)
-      operationId: bulkUpdateSessions
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                allOf:
-                  - type: object
-                    required: [id]
-                    properties:
-                      id:
-                        type: string
-                  - $ref: '#/components/schemas/UpdateSessionRequest'
-      responses:
-        '200':
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SessionBulkResult'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-    patch:
-      tags:
-        - Sessions
-      summary: Bulk partial-update Sessions (atomic)
-      operationId: bulkPatchSessions
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              oneOf:
-                - type: object
-                  required: [ids, patch]
-                  properties:
-                    ids:
-                      type: array
-                      items: { type: string }
-                    patch:
-                      type: object
-                      additionalProperties: true
-                - type: object
-                  required: [items]
-                  properties:
-                    items:
-                      type: array
-                      items:
-                        type: object
-                        required: [id, patch]
-                        properties:
-                          id: { type: string }
-                          patch: { type: object, additionalProperties: true }
-      responses:
-        '200':
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SessionBulkResult'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  /api/v1/livechat/sessions/upsert:
-    post:
-      tags:
-        - Sessions
-      summary: Upsert Session
-      operationId: upsertSession
-      parameters:
-        - name: key_field
-          in: query
-          schema:
-            type: string
-        - name: key_value
-          in: query
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateSessionRequest'
-      responses:
-        '200':
-          description: Upserted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Session'
-
   /api/v1/livechat/sessions/trash:
     get:
       tags:
@@ -5425,115 +4610,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SessionList'
-
-  /api/v1/livechat/sessions/{id}/restore:
-    parameters:
-      - $ref: '#/components/parameters/IdParam'
-    post:
-      tags:
-        - Sessions
-      summary: Restore deleted Session
-      operationId: restoreSession
-      responses:
-        '200':
-          description: Restored
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Session'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /api/v1/livechat/sessions/empty:
-    delete:
-      tags:
-        - Sessions
-      summary: Empty trash for Sessions
-      operationId: emptyTrashSessions
-      responses:
-        '200':
-          description: Trash emptied
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  deleted_count:
-                    type: integer
-
-  /api/v1/livechat/sessions/delete/bulk:
-    post:
-      tags:
-        - Sessions
-      summary: Bulk soft-delete Sessions by ids (atomic)
-      operationId: bulkDeleteSessions
-      requestBody:
-        $ref: '#/components/requestBodies/BatchIds'
-      responses:
-        '200':
-          description: Soft-deleted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  soft_deleted: { type: integer }
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  /api/v1/livechat/sessions/restore/bulk:
-    post:
-      tags:
-        - Sessions
-      summary: Bulk restore Sessions by ids (atomic)
-      operationId: bulkRestoreSessions
-      requestBody:
-        $ref: '#/components/requestBodies/BatchIds'
-      responses:
-        '200':
-          description: Restored
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SessionBulkResult'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  /api/v1/livechat/sessions/restore/all:
-    post:
-      tags:
-        - Sessions
-      summary: Restore all soft-deleted Sessions
-      operationId: restoreAllSessions
-      responses:
-        '200':
-          description: Restored
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  restored: { type: integer }
-
-  /api/v1/livechat/sessions/trash/bulk:
-    delete:
-      tags:
-        - Sessions
-      summary: Bulk permanently-delete Sessions from trash by ids (atomic)
-      operationId: bulkPermanentDeleteSessions
-      requestBody:
-        $ref: '#/components/requestBodies/BatchIds'
-      responses:
-        '200':
-          description: Permanently deleted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  permanently_deleted: { type: integer }
-        '400':
-          $ref: '#/components/responses/BadRequest'
 
   /api/v1/livechat/session_tags:
     get:
@@ -5965,11 +5041,6 @@ components:
       type: object
       required:
         - name
-        - max_sessions_mode
-        - max_sessions
-        - block_assignment_during_call
-        - is_active
-        - metadata
       properties:
         name:
           type: string
@@ -5999,8 +5070,6 @@ components:
           format: uri
         is_active:
           type: boolean
-        metadata:
-          type: object
 
     UpdateChannelRequest:
       type: object
@@ -6010,7 +5079,6 @@ components:
         - max_sessions
         - block_assignment_during_call
         - is_active
-        - metadata
       properties:
         name:
           type: string
@@ -6040,8 +5108,6 @@ components:
           format: uri
         is_active:
           type: boolean
-        metadata:
-          type: object
 
     PatchChannelRequest:
       type: object
@@ -6074,8 +5140,6 @@ components:
           format: uri
         is_active:
           type: boolean
-        metadata:
-          type: object
 
     ChannelList:
       type: object
@@ -6125,7 +5189,6 @@ components:
       required:
         - channel_id
         - user_id
-        - metadata
       properties:
         channel_id:
           type: string
@@ -6133,15 +5196,12 @@ components:
         user_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     UpdateChannelMemberRequest:
       type: object
       required:
         - channel_id
         - user_id
-        - metadata
       properties:
         channel_id:
           type: string
@@ -6149,8 +5209,6 @@ components:
         user_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     PatchChannelMemberRequest:
       type: object
@@ -6161,8 +5219,6 @@ components:
         user_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     ChannelMemberList:
       type: object
@@ -6233,12 +5289,7 @@ components:
       required:
         - channel_id
         - regex_url
-        - action
-        - auto_popup_timer
-        - chatbot_enabled_condition
         - country_codes
-        - sequence
-        - metadata
       properties:
         channel_id:
           type: string
@@ -6262,8 +5313,6 @@ components:
         sequence:
           type: integer
           format: int32
-        metadata:
-          type: object
 
     UpdateChannelRuleRequest:
       type: object
@@ -6275,7 +5324,6 @@ components:
         - chatbot_enabled_condition
         - country_codes
         - sequence
-        - metadata
       properties:
         channel_id:
           type: string
@@ -6299,8 +5347,6 @@ components:
         sequence:
           type: integer
           format: int32
-        metadata:
-          type: object
 
     PatchChannelRuleRequest:
       type: object
@@ -6327,8 +5373,6 @@ components:
         sequence:
           type: integer
           format: int32
-        metadata:
-          type: object
 
     ChannelRuleList:
       type: object
@@ -6387,7 +5431,6 @@ components:
         - question_step_id
         - sequence
         - label
-        - metadata
       properties:
         question_step_id:
           type: string
@@ -6402,8 +5445,6 @@ components:
           nullable: true
           type: string
           format: uri
-        metadata:
-          type: object
 
     UpdateChatbotAnswerRequest:
       type: object
@@ -6411,7 +5452,6 @@ components:
         - question_step_id
         - sequence
         - label
-        - metadata
       properties:
         question_step_id:
           type: string
@@ -6426,8 +5466,6 @@ components:
           nullable: true
           type: string
           format: uri
-        metadata:
-          type: object
 
     PatchChatbotAnswerRequest:
       type: object
@@ -6445,8 +5483,6 @@ components:
           nullable: true
           type: string
           format: uri
-        metadata:
-          type: object
 
     ChatbotAnswerList:
       type: object
@@ -6511,7 +5547,6 @@ components:
       type: object
       required:
         - session_id
-        - metadata
       properties:
         session_id:
           type: string
@@ -6532,14 +5567,11 @@ components:
           nullable: true
           type: string
           maxLength: 2000
-        metadata:
-          type: object
 
     UpdateChatbotMessageRequest:
       type: object
       required:
         - session_id
-        - metadata
       properties:
         session_id:
           type: string
@@ -6560,8 +5592,6 @@ components:
           nullable: true
           type: string
           maxLength: 2000
-        metadata:
-          type: object
 
     PatchChatbotMessageRequest:
       type: object
@@ -6585,8 +5615,6 @@ components:
           nullable: true
           type: string
           maxLength: 2000
-        metadata:
-          type: object
 
     ChatbotMessageList:
       type: object
@@ -6634,31 +5662,24 @@ components:
       type: object
       required:
         - title
-        - is_active
-        - metadata
       properties:
         title:
           type: string
           maxLength: 200
         is_active:
           type: boolean
-        metadata:
-          type: object
 
     UpdateChatbotScriptRequest:
       type: object
       required:
         - title
         - is_active
-        - metadata
       properties:
         title:
           type: string
           maxLength: 200
         is_active:
           type: boolean
-        metadata:
-          type: object
 
     PatchChatbotScriptRequest:
       type: object
@@ -6668,8 +5689,6 @@ components:
           maxLength: 200
         is_active:
           type: boolean
-        metadata:
-          type: object
 
     ChatbotScriptList:
       type: object
@@ -6729,9 +5748,7 @@ components:
       required:
         - chatbot_script_id
         - sequence
-        - step_type
         - expertise_tag_ids
-        - metadata
       properties:
         chatbot_script_id:
           type: string
@@ -6747,8 +5764,6 @@ components:
           maxLength: 5000
         expertise_tag_ids:
           type: array
-        metadata:
-          type: object
 
     UpdateChatbotStepRequest:
       type: object
@@ -6757,7 +5772,6 @@ components:
         - sequence
         - step_type
         - expertise_tag_ids
-        - metadata
       properties:
         chatbot_script_id:
           type: string
@@ -6773,8 +5787,6 @@ components:
           maxLength: 5000
         expertise_tag_ids:
           type: array
-        metadata:
-          type: object
 
     PatchChatbotStepRequest:
       type: object
@@ -6793,8 +5805,6 @@ components:
           maxLength: 5000
         expertise_tag_ids:
           type: array
-        metadata:
-          type: object
 
     ChatbotStepList:
       type: object
@@ -6844,7 +5854,6 @@ components:
       required:
         - answer_id
         - target_step_id
-        - metadata
       properties:
         answer_id:
           type: string
@@ -6852,15 +5861,12 @@ components:
         target_step_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     UpdateChatbotStepTriggerRequest:
       type: object
       required:
         - answer_id
         - target_step_id
-        - metadata
       properties:
         answer_id:
           type: string
@@ -6868,8 +5874,6 @@ components:
         target_step_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     PatchChatbotStepTriggerRequest:
       type: object
@@ -6880,8 +5884,6 @@ components:
         target_step_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     ChatbotStepTriggerList:
       type: object
@@ -6926,25 +5928,19 @@ components:
       type: object
       required:
         - name
-        - metadata
       properties:
         name:
           type: string
           maxLength: 120
-        metadata:
-          type: object
 
     UpdateConversationTagRequest:
       type: object
       required:
         - name
-        - metadata
       properties:
         name:
           type: string
           maxLength: 120
-        metadata:
-          type: object
 
     PatchConversationTagRequest:
       type: object
@@ -6952,8 +5948,6 @@ components:
         name:
           type: string
           maxLength: 120
-        metadata:
-          type: object
 
     ConversationTagList:
       type: object
@@ -6998,25 +5992,19 @@ components:
       type: object
       required:
         - name
-        - metadata
       properties:
         name:
           type: string
           maxLength: 120
-        metadata:
-          type: object
 
     UpdateExpertiseTagRequest:
       type: object
       required:
         - name
-        - metadata
       properties:
         name:
           type: string
           maxLength: 120
-        metadata:
-          type: object
 
     PatchExpertiseTagRequest:
       type: object
@@ -7024,8 +6012,6 @@ components:
         name:
           type: string
           maxLength: 120
-        metadata:
-          type: object
 
     ExpertiseTagList:
       type: object
@@ -7105,10 +6091,7 @@ components:
       required:
         - session_id
         - persona
-        - joined_at
-        - message_count
         - expertise_names
-        - metadata
       properties:
         session_id:
           type: string
@@ -7143,8 +6126,6 @@ components:
           format: int32
         expertise_names:
           type: array
-        metadata:
-          type: object
 
     UpdateMemberHistoryRequest:
       type: object
@@ -7154,7 +6135,6 @@ components:
         - joined_at
         - message_count
         - expertise_names
-        - metadata
       properties:
         session_id:
           type: string
@@ -7189,8 +6169,6 @@ components:
           format: int32
         expertise_names:
           type: array
-        metadata:
-          type: object
 
     PatchMemberHistoryRequest:
       type: object
@@ -7228,8 +6206,6 @@ components:
           format: int32
         expertise_names:
           type: array
-        metadata:
-          type: object
 
     MemberHistoryList:
       type: object
@@ -7279,7 +6255,6 @@ components:
       required:
         - operator_profile_id
         - expertise_tag_id
-        - metadata
       properties:
         operator_profile_id:
           type: string
@@ -7287,15 +6262,12 @@ components:
         expertise_tag_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     UpdateOperatorExpertiseRequest:
       type: object
       required:
         - operator_profile_id
         - expertise_tag_id
-        - metadata
       properties:
         operator_profile_id:
           type: string
@@ -7303,8 +6275,6 @@ components:
         expertise_tag_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     PatchOperatorExpertiseRequest:
       type: object
@@ -7315,8 +6285,6 @@ components:
         expertise_tag_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     OperatorExpertiseList:
       type: object
@@ -7377,7 +6345,6 @@ components:
       required:
         - user_id
         - languages
-        - metadata
       properties:
         user_id:
           type: string
@@ -7396,15 +6363,12 @@ components:
           nullable: true
           type: string
           format: date-time
-        metadata:
-          type: object
 
     UpdateOperatorProfileRequest:
       type: object
       required:
         - user_id
         - languages
-        - metadata
       properties:
         user_id:
           type: string
@@ -7423,8 +6387,6 @@ components:
           nullable: true
           type: string
           format: date-time
-        metadata:
-          type: object
 
     PatchOperatorProfileRequest:
       type: object
@@ -7446,8 +6408,6 @@ components:
           nullable: true
           type: string
           format: date-time
-        metadata:
-          type: object
 
     OperatorProfileList:
       type: object
@@ -7516,8 +6476,6 @@ components:
       required:
         - session_id
         - value
-        - rated_persona
-        - metadata
       properties:
         session_id:
           type: string
@@ -7539,8 +6497,6 @@ components:
           nullable: true
           type: string
           maxLength: 2000
-        metadata:
-          type: object
 
     UpdateRatingRequest:
       type: object
@@ -7548,7 +6504,6 @@ components:
         - session_id
         - value
         - rated_persona
-        - metadata
       properties:
         session_id:
           type: string
@@ -7570,8 +6525,6 @@ components:
           nullable: true
           type: string
           maxLength: 2000
-        metadata:
-          type: object
 
     PatchRatingRequest:
       type: object
@@ -7596,8 +6549,6 @@ components:
           nullable: true
           type: string
           maxLength: 2000
-        metadata:
-          type: object
 
     RatingList:
       type: object
@@ -7723,13 +6674,7 @@ components:
       type: object
       required:
         - channel_id
-        - failure
         - expertise_names
-        - is_pending_request
-        - message_count
-        - last_interest_at
-        - is_test
-        - metadata
       properties:
         channel_id:
           type: string
@@ -7809,8 +6754,6 @@ components:
           nullable: true
           type: string
           maxLength: 500
-        metadata:
-          type: object
 
     UpdateSessionRequest:
       type: object
@@ -7822,7 +6765,6 @@ components:
         - message_count
         - last_interest_at
         - is_test
-        - metadata
       properties:
         channel_id:
           type: string
@@ -7902,8 +6844,6 @@ components:
           nullable: true
           type: string
           maxLength: 500
-        metadata:
-          type: object
 
     PatchSessionRequest:
       type: object
@@ -7986,8 +6926,6 @@ components:
           nullable: true
           type: string
           maxLength: 500
-        metadata:
-          type: object
 
     SessionList:
       type: object
@@ -8037,7 +6975,6 @@ components:
       required:
         - session_id
         - tag_id
-        - metadata
       properties:
         session_id:
           type: string
@@ -8045,15 +6982,12 @@ components:
         tag_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     UpdateSessionTagRequest:
       type: object
       required:
         - session_id
         - tag_id
-        - metadata
       properties:
         session_id:
           type: string
@@ -8061,8 +6995,6 @@ components:
         tag_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     PatchSessionTagRequest:
       type: object
@@ -8073,8 +7005,6 @@ components:
         tag_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     SessionTagList:
       type: object

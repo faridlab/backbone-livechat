@@ -34,7 +34,7 @@ pub struct CreateRatingDto {
     pub session_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     pub value: i32,
-    #[serde(alias = "rated_persona")]
+    #[serde(default = "default_create_rating_rated_persona", alias = "rated_persona")]
     pub rated_persona: LivechatRatedPersona,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "operator_user_id")]
     pub operator_user_id: Option<Uuid>,
@@ -42,6 +42,10 @@ pub struct CreateRatingDto {
     pub chatbot_script_id: Option<Uuid>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
+}
+
+fn default_create_rating_rated_persona() -> LivechatRatedPersona {
+    LivechatRatedPersona::Agent
 }
 
 // =============================================================================
@@ -91,12 +95,12 @@ pub struct PatchRatingDto {
     pub value: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "rated_persona")]
     pub rated_persona: Option<LivechatRatedPersona>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "operator_user_id")]
-    pub operator_user_id: Option<Uuid>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "chatbot_script_id")]
-    pub chatbot_script_id: Option<Uuid>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub comment: Option<String>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "operator_user_id")]
+    pub operator_user_id: Option<Option<Uuid>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "chatbot_script_id")]
+    pub chatbot_script_id: Option<Option<Uuid>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option")]
+    pub comment: Option<Option<String>>,
 }
 
 impl PatchRatingDto {
@@ -274,12 +278,4 @@ impl backbone_core::ApplyUpdateDto<UpdateRatingDto> for Rating {
         Ok(self)
     }
 }
-
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to Rating here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
 

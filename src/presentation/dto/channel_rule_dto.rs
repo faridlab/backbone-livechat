@@ -36,18 +36,32 @@ pub struct CreateChannelRuleDto {
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     #[serde(alias = "regex_url")]
     pub regex_url: String,
+    #[serde(default = "default_create_channel_rule_action")]
     pub action: LivechatRuleAction,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
-    #[serde(alias = "auto_popup_timer")]
+    #[serde(default, alias = "auto_popup_timer")]
     pub auto_popup_timer: i32,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "chatbot_script_id")]
     pub chatbot_script_id: Option<Uuid>,
-    #[serde(alias = "chatbot_enabled_condition")]
+    #[serde(default = "default_create_channel_rule_chatbot_enabled_condition", alias = "chatbot_enabled_condition")]
     pub chatbot_enabled_condition: LivechatChatbotCondition,
     #[serde(alias = "country_codes")]
     pub country_codes: Vec<String>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
+    #[serde(default = "default_create_channel_rule_sequence")]
     pub sequence: i32,
+}
+
+fn default_create_channel_rule_action() -> LivechatRuleAction {
+    LivechatRuleAction::DisplayButton
+}
+
+fn default_create_channel_rule_chatbot_enabled_condition() -> LivechatChatbotCondition {
+    LivechatChatbotCondition::Always
+}
+
+fn default_create_channel_rule_sequence() -> i32 {
+    1
 }
 
 // =============================================================================
@@ -105,8 +119,8 @@ pub struct PatchChannelRuleDto {
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "auto_popup_timer")]
     pub auto_popup_timer: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "chatbot_script_id")]
-    pub chatbot_script_id: Option<Uuid>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "chatbot_script_id")]
+    pub chatbot_script_id: Option<Option<Uuid>>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "chatbot_enabled_condition")]
     pub chatbot_enabled_condition: Option<LivechatChatbotCondition>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "country_codes")]
@@ -299,12 +313,4 @@ impl backbone_core::ApplyUpdateDto<UpdateChannelRuleDto> for ChannelRule {
         Ok(self)
     }
 }
-
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to ChannelRule here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
 

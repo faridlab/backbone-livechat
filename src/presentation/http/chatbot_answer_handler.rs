@@ -80,6 +80,13 @@ impl axum::response::IntoResponse for ChatbotAnswerError {
 // Route Configuration
 // =============================================================================
 
+/// The permissions this entity's generic routes require: `chatbot_answer:<action>` for `read`, `create`,
+/// `update`, `delete`, `restore` and `purge`, with any rename the schema's `requires:` declares.
+pub fn chatbot_answer_permissions() -> backbone_core::http::CrudPermissions {
+    backbone_core::http::CrudPermissions::new("chatbot_answer")
+        .in_module("livechat")
+}
+
 /// Create Axum router with all 16 Backbone endpoints for ChatbotAnswer.
 ///
 /// # Routes
@@ -109,21 +116,23 @@ impl axum::response::IntoResponse for ChatbotAnswerError {
 /// let router = create_chatbot_answer_routes(service);
 /// ```
 pub fn create_chatbot_answer_routes(service: Arc<ChatbotAnswerService>) -> Router {
-    BackboneCrudHandler::<ChatbotAnswerService, ChatbotAnswer, CreateChatbotAnswerDto, UpdateChatbotAnswerDto, ChatbotAnswerResponseDto>::routes(
+    BackboneCrudHandler::<ChatbotAnswerService, ChatbotAnswer, CreateChatbotAnswerDto, UpdateChatbotAnswerDto, ChatbotAnswerResponseDto>::routes_guarded(
         service,
         "/chatbot_answers",
+        chatbot_answer_permissions(),
     )
 }
 
 /// Create Axum router with only the read (GET) endpoints for ChatbotAnswer.
 ///
-/// Safe for public, unauthenticated exposure (e.g., reference data).
+/// Each route requires the entity's `read` permission, so it needs an authenticated caller.
 /// Mutations must be served separately via `create_chatbot_answer_write_routes`,
 /// typically wrapped in an auth middleware layer.
 pub fn create_chatbot_answer_read_routes(service: Arc<ChatbotAnswerService>) -> Router {
-    BackboneCrudHandler::<ChatbotAnswerService, ChatbotAnswer, CreateChatbotAnswerDto, UpdateChatbotAnswerDto, ChatbotAnswerResponseDto>::read_routes(
+    BackboneCrudHandler::<ChatbotAnswerService, ChatbotAnswer, CreateChatbotAnswerDto, UpdateChatbotAnswerDto, ChatbotAnswerResponseDto>::read_routes_guarded(
         service,
         "/chatbot_answers",
+        chatbot_answer_permissions(),
     )
 }
 
@@ -139,9 +148,10 @@ pub fn create_chatbot_answer_read_routes(service: Arc<ChatbotAnswerService>) -> 
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
 pub fn create_chatbot_answer_write_routes(service: Arc<ChatbotAnswerService>) -> Router {
-    BackboneCrudHandler::<ChatbotAnswerService, ChatbotAnswer, CreateChatbotAnswerDto, UpdateChatbotAnswerDto, ChatbotAnswerResponseDto>::write_routes(
+    BackboneCrudHandler::<ChatbotAnswerService, ChatbotAnswer, CreateChatbotAnswerDto, UpdateChatbotAnswerDto, ChatbotAnswerResponseDto>::write_routes_guarded(
         service,
         "/chatbot_answers",
+        chatbot_answer_permissions(),
     )
 }
 
